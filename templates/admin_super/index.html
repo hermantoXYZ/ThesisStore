@@ -1,0 +1,66 @@
+{% extends "admin_super/base.html" %}
+
+{% block content1 %}
+
+<div class="dashboard-content">
+    <div class="hero-profile-elegant">
+        <div class="hero-photo-elegant">
+            <img src="{% if photo %}/media/{{ photo }}{% else %}https://ui-avatars.com/api/?name={{ request.user.first_name|default:request.user.username|urlencode }}&background=1d84c6&color=fff&size=140{% endif %}" alt="Profile Picture">
+        </div>
+        <div class="hero-info-elegant">
+            <p class="hero-welcome-text">Selamat Datang Administrator</p>
+            <h1 class="hero-name-display">{{ request.user.first_name|default:request.user.username }}</h1>
+            <div class="hero-details-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Username</span>
+                    <span class="detail-value">{{ request.user.username }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Email</span>
+                    <span class="detail-value">{{ request.user.email|default:'-' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Kontak / No. WA</span>
+                    <span class="detail-value">{{ userdetail.telp|default:'-' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Jenis Kelamin</span>
+                    <span class="detail-value">{{ userdetail.gender|default:'-' }}</span>
+                </div>
+            </div>
+            <div class="hero-action-area" style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                <a href="{% url 'app:profile_admin' %}">
+                    {% if not userdetail or not userdetail.photo %}
+                        <button class="btn danger small">
+                            <i class="ri-alert-line"></i> Lengkapi profil Anda!
+                        </button>
+                    {% else %}
+                        <button class="btn primary medium">
+                            <i class="ri-user-settings-line"></i> Edit Profil
+                        </button>
+                    {% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATS CARDS -->
+    <div class="stats-cards" style="margin-top: 20px;">
+        <div class="stat-card blue">          
+            <i class="ri-group-line"></i>
+            <div class="stat-info">
+                <p>Total Pengguna</p>
+                <h1>{{ total_pengguna|default:0 }}</h1>
+            </div>          
+        </div>      
+        <div class="stat-card green">   
+            <i class="ri-map-pin-2-line"></i>
+            <div class="stat-info">
+                <p>Total Provinsi</p>
+                <h1>{{ total_provinsi|default:0 }}</h1>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock content1 %}

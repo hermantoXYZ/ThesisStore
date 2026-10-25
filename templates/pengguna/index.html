@@ -1,0 +1,104 @@
+{% extends "pengguna/base.html" %}
+
+{% block content1 %}
+
+<div class="dashboard-content">
+
+    <!-- HERO PROFILE -->
+    <div class="hero-profile-elegant">
+        <div class="hero-photo-elegant">
+            <img src="{% if photo %}/media/{{ photo }}{% else %}https://ui-avatars.com/api/?name={{ request.user.first_name|default:request.user.username|urlencode }}&background=1d84c6&color=fff&size=140{% endif %}" alt="Profile Picture">
+        </div>
+        <div class="hero-info-elegant">
+            <p class="hero-welcome-text">Selamat Datang</p>
+            <h1 class="hero-name-display">{{ request.user.first_name|default:request.user.username }}</h1>
+            <div class="hero-details-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Email</span>
+                    <span class="detail-value">{{ request.user.email|default:'-' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">No. Telepon / WhatsApp</span>
+                    <span class="detail-value">{{ userdetail.telp|default:'-' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Jenis Kelamin</span>
+                    <span class="detail-value">{{ userdetail.gender|default:'-' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Alamat Domisili</span>
+                    <span class="detail-value">{{ userdetail.alamat|default:'-' }}</span>
+                </div>
+            </div>
+            <div class="hero-action-area" style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                <a href="{% url 'app:profile_pengguna' %}">
+                    <button class="btn secondary medium">
+                        <i class="ri-user-settings-line"></i> Edit Profil
+                    </button>
+                </a>
+            </div> 
+        </div>
+    </div>
+    <!-- PROFIL AKADEMIK & PUBLIKASI ILMIAH -->
+    <div class="settings-section" style="margin-top: 20px;">
+        <h3 style="font-size: 16px; font-weight: 600; color: #333; margin-bottom: 12px; border-bottom: 2px solid #f0f0f0; padding-bottom: 8px;">Tautan Profil Ilmiah & Publikasi
+        </h3>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+            <div style="background: #f9fbfd; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h4 style="font-size: 14px; color: #1d84c6; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                        <i class="ri-search-line"></i>Link SINTA
+                    </h4>
+                </div>
+                {% if userdetail.link_sinta %}
+                <a href="{{ userdetail.link_sinta }}" target="_blank" rel="noopener noreferrer" class="btn primary small" style="align-self: flex-start;">
+                    <i class="ri-external-link-line"></i> Kunjungi SINTA
+                </a>
+                {% endif %}
+            </div>
+
+            <div style="background: #f9fbfd; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h4 style="font-size: 14px; color: #1d84c6; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                        <i class="ri-search-line"></i> Link Scopus
+                    </h4>
+                </div>
+                {% if userdetail.link_scopus %}
+                <a href="{{ userdetail.link_scopus }}" target="_blank" rel="noopener noreferrer" class="btn primary small" style="align-self: flex-start;">
+                    <i class="ri-external-link-line"></i> Kunjungi Scopus
+                </a>
+                {% endif %}
+            </div>
+
+            <div style="background: #f9fbfd; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h4 style="font-size: 14px; color: #1d84c6; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                        <i class="ri-search-line"></i>Google Scholar
+                    </h4>
+                </div>
+                {% if userdetail.link_google_scholar %}
+                <a href="{{ userdetail.link_google_scholar }}" target="_blank" rel="noopener noreferrer" class="btn primary small" style="align-self: flex-start;">
+                    <i class="ri-external-link-line"></i> Kunjungi Scholar
+                </a>
+                {% endif %}
+            </div>
+
+            <div style="background: #f9fbfd; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h4 style="font-size: 14px; color: #1d84c6; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                         <i class="ri-search-line"></i> Link ORCID
+                    </h4>
+                </div>
+                {% if userdetail.link_orcid %}
+                <a href="{{ userdetail.link_orcid }}" target="_blank" rel="noopener noreferrer" class="btn primary small" style="align-self: flex-start;">
+                    <i class="ri-external-link-line"></i> Kunjungi ORCID
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock content1 %}

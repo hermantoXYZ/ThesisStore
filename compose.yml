@@ -1,0 +1,38 @@
+services:
+  db:
+    image: mariadb:10.11.15
+    container_name: db_thesisstore
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: thesisstore_user
+      MYSQL_PASSWORD: thesisstore_pass
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3309:3306"
+    networks:
+      - thesisstore_network
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: pma_thesisstore
+    restart: always
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: rootpassword
+    ports:
+      - "8888:80"
+    networks:
+      - thesisstore_network
+
+volumes:
+  db_data:
+
+networks:
+  thesisstore_network:
+    driver: bridge

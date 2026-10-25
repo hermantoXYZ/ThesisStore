@@ -1,0 +1,228 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} | {{ webname }}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v={{ STATIC_VERSION }}"> 
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <div class="logo-text">
+                    <img src="/static/img/logo.png" style="width: 180px;">
+                </div>
+            </div>
+          
+            <nav class="sidebar-menu">
+                <ul>
+                    <li class="{% if title == 'Dashboard' %}active{% endif %}">
+                        <a href="{% url 'app:dashboard' %}"><i class="ri-dashboard-line"></i> Dashboard</a>
+                    </li>
+                    <li class="{% if title == 'Profil Pengguna' or title == 'Edit Profile' %}active{% endif %}">
+                        <a href="{% url 'app:profile_pengguna' %}"><i class="ri-user-settings-line"></i> Profil Pengguna</a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="btn logout" onclick="openModal('logout')">
+                    <i class="ri-logout-box-line"></i>
+                    Logout
+                </button>
+                <div class="sidebar-footer-p">
+                    <p>{{ create_by|default:"Thesis Edukasi Nusantara" }}</p>
+                    <p>Version: {{ versi|default:"v1.2.0" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <button id="toggle-sidebar"><i class="ri-menu-line"></i></button>
+                    <h2>{{ heading }}</h2>
+                </div>
+                <div class="header-right">
+                    <div class="user-menu">
+                        <i class="ri-contrast-2-fill" title="Dark Mode Toggle"></i>
+                        <i class="ri-notification-3-line" title="Notifikasi"></i>
+                        <img src="{% if photo %}/media/{{ photo }}{% else %}https://ui-avatars.com/api/?name={{ request.user.first_name|default:request.user.username|urlencode }}&background=1d84c6&color=fff&size=40{% endif %}" alt="User Avatar" class="avatar">
+                    </div>
+                </div>
+            </header>
+
+            <div class="alert2-container">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert2 alert2-{{ message.tags }}">
+                            <i class="{% if message.tags == 'success' %}ri-checkbox-circle-line{% elif message.tags == 'warning' %}ri-alert-line{% elif message.tags == 'info' %}ri-information-line{% else %}ri-error-warning-line{% endif %}"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            {% block content1 %}
+            {% endblock content1 %}
+
+            <!-- FOOTER DASHBOARD -->
+            <footer class="dashboard-footer">
+                <div class="footer-content">
+                    <div class="footer-left">
+                        <p>&copy; 2025 Thesis Edukasi Nusantara. All rights reserved.</p>
+                    </div>
+                    <div class="footer-center">
+                        <a href="#">Terms of Service</a>
+                        <a href="#">Privacy Policy</a>
+                        <a href="#">Manual Guide</a>
+                    </div>
+                    <div class="footer-right">
+                        <div class="social-links">
+                            <a href="#"><i class="ri-facebook-fill"></i></a>
+                            <a href="#"><i class="ri-twitter-fill"></i></a>
+                            <a href="#"><i class="ri-instagram-line"></i></a>
+                            <a href="#"><i class="ri-github-fill"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- MODAL NOTIFIKASI -->
+    <div class="notification-modal" id="notificationModal">
+        <div class="notification-header">
+            <h2>Notifications</h2>
+        </div>
+        <div class="notification-list">
+            <div class="notification-item">
+                <div class="notification-content">
+                    <p><strong>Selamat Datang!</strong> Anda telah terverifikasi sebagai Anggota Resmi APBISDI.</p>
+                    <span class="notification-time">Sekarang</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL LOGOUT -->
+    <div id="logout" class="modal-edit">
+        <div class="modal-content-edit">
+            <span class="close" onclick="closeModal('logout')">&times;</span>
+            <div class="modal-icon"><i class="ri-logout-box-r-line"></i></div>
+            <h2>Konfirmasi Logout</h2>
+            <p>Yakin ingin keluar dari aplikasi?</p>
+            <div class="modal-actions">
+                <button class="btn" onclick="closeModal('logout')">Batal</button>
+                <a href="{% url 'logout' %}" class="logout">
+                    <button class="btn danger">Keluar</button>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS FOR ALERT -->
+    <script>
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert2');
+            alerts.forEach(alert => {
+                alert.style.transition = "opacity 0.5s ease-out";
+                alert.style.opacity = "0";
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 4000);
+    </script>
+
+    <!-- JS FOR SIDEBAR & UI -->
+    <script>
+        const toggleButton = document.getElementById('toggle-sidebar');
+        const dashboardContainer = document.querySelector('.dashboard-container');
+        const sidebar = document.querySelector('.sidebar');
+
+        const checkScreenWidth = () => {
+            if (window.innerWidth <= 768) {
+                dashboardContainer.classList.add('sidebar-collapsed');
+            }
+        };
+        checkScreenWidth();
+        window.addEventListener('resize', checkScreenWidth);
+
+        if (toggleButton) {
+            toggleButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dashboardContainer.classList.toggle('sidebar-collapsed');
+            });
+        }
+
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768) {
+                if (sidebar && toggleButton && !sidebar.contains(e.target) && !toggleButton.contains(e.target)) {
+                    dashboardContainer.classList.add('sidebar-collapsed');
+                }
+            }
+        });
+
+        // Dark mode toggle
+        const darkModeToggle = document.querySelector('.ri-contrast-2-fill');
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            document.body.classList.add('dark-mode');
+        }
+        if (darkModeToggle) {
+            darkModeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                if (document.body.classList.contains('dark-mode')) {
+                    localStorage.setItem('darkMode', 'enabled');
+                } else {
+                    localStorage.setItem('darkMode', null);
+                }
+            });
+        }
+
+        // Notification Modal
+        const notificationButton = document.querySelector('.ri-notification-3-line');
+        const notificationModal = document.getElementById('notificationModal');
+        if (notificationButton && notificationModal) {
+            notificationButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                notificationModal.classList.toggle('show-notification');
+            });
+            document.addEventListener('click', (e) => {
+                if (!notificationModal.contains(e.target) && !notificationButton.contains(e.target)) {
+                    notificationModal.classList.remove('show-notification');
+                }
+            });
+        }
+
+        function openModal(modalId) {
+            var modal = document.getElementById(modalId);
+            if (modal) modal.style.display = "block";
+        }
+
+        function closeModal(modalId) {
+            var modal = document.getElementById(modalId);
+            if (modal) modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            var modals = document.getElementsByClassName('modal-edit');
+            for (var i = 0; i < modals.length; i++) {
+                if (event.target == modals[i]) {
+                    modals[i].style.display = "none";
+                }
+            }
+        }
+    </script>
+
+    {% block script_costum %}
+    {% endblock script_costum %}
+
+</body>
+</html>

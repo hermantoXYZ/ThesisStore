@@ -1,0 +1,201 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} | {{webname}}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v={{ STATIC_VERSION }}"> 
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+             <div class="logo">
+                
+                <div class="logo-text">
+                    <img src="/static/img/logo.png" style="width: 200px;">
+                </div>
+            </div>
+          
+            
+            <nav class="sidebar-menu">
+                <ul>
+                    <li class="{% if title == 'Dashboard' %}active{% endif %}">
+                        <a href="{% url "app:dashboard" %}"><i class="ri-dashboard-line"></i> Dashboard</a>
+                    </li>  
+                    <li class="{% if title == 'Profile Admin' or title == 'Edit Profile' %}active{% endif %}">
+                        <a href="{% url "app:profile_admin" %}"><i class="ri-user-settings-line"></i> Profile</a>
+                    </li>                 
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="btn logout " onclick="openModal('logout')">
+                    <i class="ri-logout-box-line"></i>
+                    Logout
+                </button>
+                <div class="sidebar-footer-p">
+                    <p>{{ create_by|default:"Thesis Edukasi Nusantara" }}</p>
+                        <p>Version: {{ versi|default:"1.0.0" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <button id="toggle-sidebar"><i class="ri-menu-line"></i></button>
+                    <h2>{{heading}}</h2>
+                </div>
+                <div class="header-right">
+                    <div class="user-menu">
+                        <i class="ri-contrast-2-fill"></i>
+                        <i class="ri-notification-3-line"></i>
+                        <img src="{% if photo %}/media/{{ photo }}{% else %}https://ui-avatars.com/api/?name={{ request.user.first_name|default:request.user.username|urlencode }}&background=1d84c6&color=fff&size=40{% endif %}" alt="User Avatar" class="avatar">
+                    </div>
+                </div>
+            </header>
+
+            <div class="alert2-container">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert2 alert2-{{ message.tags }}">
+                            <i class="{% if message.tags == 'success' %}ri-checkbox-circle-line{% elif message.tags == 'warning' %}ri-alert-line{% elif message.tags == 'info' %}ri-information-line{% else %}ri-error-warning-line{% endif %}"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+
+            {% block content1 %}
+            {% endblock content1 %}
+
+
+
+            <!-- START FOOTER DASHBAORD -->
+            <footer class="dashboard-footer">
+                <div class="footer-content">
+                    <div class="footer-left">
+                        <p>&copy; 2025 Thesis Edukasi Nusantara. All rights reserved.
+                        </p>
+                    </div>
+                    <div class="footer-center">
+                        <a href="#">Terms of Service</a>
+                        <a href="#">Privacy Police</a>
+                        <a href="#">Manual Guide</a>
+                    </div>
+                    <div class="footer-right">
+                        <div class="social-links">
+                            <a href="#"><i class="ri-facebook-fill"></i></a>
+                            <a href="#"><i class="ri-twitter-fill"></i></a>
+                            <a href="#"><i class="ri-instagram-line"></i></a>
+                            <a href="#"><i class="ri-github-fill"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+            </footer>
+            <!-- FOOTER DASHBOARD -->
+        </div>
+    </div>
+
+
+
+<!-- MODAL NOTIFIKASI -->
+<div class="notification-modal" id="notificationModal">
+    <div class="notification-header">
+        <h2>Notifications</h2>
+    </div>
+    <div class="notification-list">
+        <div class="notification-item">
+            <img src="https://padinusantara.co.id/media/team/andi.jpg" alt="User Avatar" class="notification-avatar">
+            <div class="notification-content">
+                <p><strong>Pesan baru dari Admin Fakultas</strong> "Kesalahan dalam dokumen A"</p>
+                <span class="notification-time">a few moments ago</span>
+            </div>
+        </div>
+        <div class="notification-item">
+            <img src="https://padinusantara.co.id/media/team/andi.jpg" alt="User Avatar" class="notification-avatar">
+            <div class="notification-content">
+                <p><strong>HermantoXYZ</strong> and <strong>5 others</strong> ujian sidang akan segera di mulai.</p>
+                <span class="notification-time">10 minutes ago</span>
+            </div>
+        </div>
+        <div class="notification-item">
+            <img src="https://padinusantara.co.id/media/team/andi.jpg" alt="User Avatar" class="notification-avatar">
+            <div class="notification-content">
+                <p><strong>Aco</strong> and <strong>141 others</strong> telah menyelesaikan ujian proposal</p>
+                <span class="notification-time">44 minutes ago</span>
+            </div>
+        </div>
+        <div class="notification-footer">
+            <a href="#" class="view-all">View all</a>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- MODAL LOGOUT -->
+<div id="logout" class="modal-edit">
+	<div class="modal-content-edit">
+		<span class="close" onclick="closeModal('logout')">&times;</span>
+		<div class="modal-icon"><i class="ri-logout-box-r-line"></i></div>
+		<h2>Konfirmasi Logout</h2>
+        <p>Yakin ingin keluar dari aplikasi?</p>
+        <div class="modal-actions">
+            <button class="btn" onclick="closeModal('logout')">
+                Batal
+            </button>
+            <a href="{% url 'logout' %}" class="logout">
+                <button class="btn danger">
+                    Keluar
+                </button>
+            </a>
+        </div>
+	</div>
+</div>
+
+
+
+<script src="{% static 'js/acd/main.js' %}?v={{ STATIC_VERSION }}"></script>
+
+<!-- DataTables CSS & JS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.colVis.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script>
+    $(document).ready(function() {
+      $('#layananTable').DataTable({
+        dom: 'Bfrtip',
+        buttons: ['csv', 'excel'],
+        responsive: true,
+        pageLength: 30, // Jumlah default baris per halaman
+      });
+    });
+  </script>
+  
+
+{% block script_costum %}
+{% endblock script_costum %} 
+
+
+
+</body>
+</html>

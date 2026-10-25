@@ -1,0 +1,122 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - {{ web_name }}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v={{ STATIC_VERSION }}">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/favicon-32x32.png' %}">
+</head>
+
+<body class="login-page">
+    <div class="alert2-container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert2 alert2-{{ message.tags }}">
+                    <i class="
+                        {% if message.tags == 'success' %}
+                            ri-checkbox-circle-line
+                        {% elif message.tags == 'warning' %}
+                            ri-alert-line
+                        {% elif message.tags == 'info' %}
+                            ri-information-line
+                        {% else %}
+                            ri-error-warning-line
+                        {% endif %}
+                    "></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="logo-container">
+                    <img src="{% static 'img/logo.png' %}"
+                         alt="{{ web_name }}"
+                         class="login-logo">
+                </div>
+                <p style="font-size: 12px; color: #64748b; margin: 0;">Register untuk mengakses Academy Thesis Edu</p>
+            </div>
+            <form method="POST" class="login-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <i class="ri-user-line input-icon"></i>
+                        <input
+                            type="text"
+                            name="first_name"
+                            id="input-name"
+                            placeholder="Nama Lengkap"
+                            value="{{ first_name|default:'' }}"
+                            required
+                            class="form-input"
+                            autocomplete="name">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <i class="ri-mail-line input-icon"></i>
+                        <input
+                            type="email"
+                            name="email"
+                            placeholder="Email (digunakan untuk login)"
+                            value="{{ email|default:'' }}"
+                            required
+                            class="form-input"
+                            autocomplete="email">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <i class="ri-lock-line input-icon"></i>
+                        <input
+                            type="password"
+                            name="password"
+                            placeholder="Password"
+                            required
+                            class="form-input"
+                            autocomplete="new-password">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <i class="ri-lock-line input-icon"></i>
+                        <input
+                            type="password"
+                            name="confirm_password"
+                            placeholder="Konfirmasi Password"
+                            required
+                            class="form-input"
+                            autocomplete="new-password">
+                    </div>
+                </div>
+                <button type="submit" class="login-btn">
+                    <span id="btn-submit-text">Daftar Akun</span>
+                    <i class="ri-arrow-right-line"></i>
+                </button>
+
+                <!-- Login Link -->
+                <div style="text-align:center; margin-top:15px;">
+                    <p style="font-size:13px; color:#666;">
+                        Sudah punya akun?
+                        <a href="{% url 'login' %}"
+                           style="color:#0d6efd; font-weight:500; text-decoration:none;">
+                            Login di sini
+                        </a>
+                    </p>
+                </div>
+
+            </form>
+
+            <div class="login-footer">
+                <p>&copy; 2026 Thesis Edukasi Nusantara.</p>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>
