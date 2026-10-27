@@ -1,0 +1,867 @@
+{% extends 'homepage/base_public.html' %}
+{% load static %}
+{% block title %}{{ book.judul }} | {{ webname|default:"ThesisStore" }}{% endblock %}
+{% block meta_description %}{{ book.deskripsi|striptags|truncatewords:25 }}{% endblock %}
+{% block content %}
+<div style="background-color: #ffffff; border-bottom: 1px solid #f1f5f9; padding: 1rem 0;">
+  <div class="apb-container">
+    <nav class="book-breadcrumb" aria-label="Breadcrumb">
+      <a href="{% url 'homepage' %}">Beranda</a>
+      <span class="breadcrumb-separator"><i class="ri-arrow-right-s-line"></i></span>
+      <a href="{% url 'homepage' %}#katalog-buku">Buku</a>
+      <span class="breadcrumb-separator"><i class="ri-arrow-right-s-line"></i></span>
+      {% if book.kategori %}
+        <a href="{% url 'homepage' %}#katalog-buku">{{ book.kategori.nama_kategori }}</a>
+        <span class="breadcrumb-separator"><i class="ri-arrow-right-s-line"></i></span>
+      {% endif %}
+      <span class="breadcrumb-current">{{ book.judul }}</span>
+    </nav>
+  </div>
+</div>
+<section style="background-color: #ffffff; padding: 2.5rem 0 4rem 0;">
+  <div class="apb-container">
+    <div class="book-detail-grid">
+      <div class="book-gallery-col">
+        <div class="main-cover-wrapper">
+          {% if book.harga_potongan %}
+            <span class="discount-badge">DISKON {{ book.persentase_diskon }}%</span>
+          {% endif %}
+
+          <div class="cover-aspect-box">
+            {% if book.featured_image %}
+              <img id="mainBookImage" src="{{ book.featured_image.url }}" alt="{{ book.judul }}">
+            {% else %}
+              <div class="cover-placeholder">
+                <i class="ri-book-open-line"></i>
+                <span class="ph-title">{{ webname|default:"ThesisStore" }}</span>
+                <span class="ph-sub">Sampul Belum Tersedia</span>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+        {% if book.media_buku.all or book.featured_image %}
+          <div class="thumb-strip-container">
+            <div class="thumb-strip" id="thumbStrip">
+              {% if book.featured_image %}
+                <button type="button" onclick="changePreview('{{ book.featured_image.url }}', this)" class="thumb-item active">
+                  <img src="{{ book.featured_image.url }}" alt="Cover Depan">
+                </button>
+              {% endif %}
+              {% for m in book.media_buku.all %}
+                {% if m.media %}
+                  <button type="button" onclick="changePreview('{{ m.media.url }}', this)" class="thumb-item">
+                    <img src="{{ m.media.url }}" alt="Foto Buku {{ forloop.counter }}">
+                  </button>
+                {% endif %}
+              {% endfor %}
+            </div>
+            <div class="thumb-progress-bar">
+              <div class="thumb-progress-active" id="thumbProgress"></div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+      <div class="book-info-col">
+        <div class="book-title-header">
+          <h1 class="book-title">{{ book.judul }}</h1>
+          <div class="book-header-actions">
+            <button type="button" class="action-btn" id="btnWishlist" onclick="toggleWishlist()">
+              <i class="ri-heart-line" id="wishlistIcon"></i>
+              <span>Favorit</span>
+            </button>
+            <button type="button" class="action-btn" onclick="shareBook()">
+              <i class="ri-share-line"></i>
+              <span>Bagikan</span>
+            </button>
+          </div>
+        </div>
+        <div class="purchase-options-section">
+          <h2 class="sub-heading">Opsi Pembelian</h2>
+          <div class="purchase-box-row">
+            <div class="purchase-card selected">
+              <span class="purchase-card-label">Satuan</span>
+              <div class="purchase-card-price">
+                {% if book.harga_potongan %}
+                  <span class="price-main">Rp{{ book.harga_potongan|floatformat:0 }}</span>
+                  <span class="price-strike">Rp{{ book.harga|floatformat:0 }}</span>
+                {% else %}
+                  <span class="price-main">Rp{{ book.harga|floatformat:0 }}</span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="purchase-cta-wrap">
+              <a href="https://wa.me/6281234567890?text=Halo%20Admin%20ThesisStore,%20saya%20tertarik%20dan%20ingin%20memesan%20buku:%0A%0A*Judul:*%20{{ book.judul|urlencode }}%0A*Harga:*%20Rp%20{% if book.harga_potongan %}{{ book.harga_potongan|floatformat:0 }}{% else %}{{ book.harga|floatformat:0 }}{% endif %}%0A*Link:*%20{{ request.build_absolute_uri|urlencode }}%0A%0AMohon%20informasi%20cara%20pemesanan%20dan%20pengiriman.%20Terima%20kasih!"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 class="btn-buy-wa">
+                <i class="ri-whatsapp-line"></i>
+                <span>Pesan Sekarang via WhatsApp</span>
+              </a>
+
+              {% if book.status == 'Tersedia' %}
+                <span class="stock-info in-stock">
+                  <i class="ri-checkbox-circle-fill"></i> Stok Tersedia ({{ book.stok }})
+                </span>
+              {% else %}
+                <span class="stock-info out-of-stock">
+                  <i class="ri-close-circle-fill"></i> {{ book.status }}
+                </span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="info-callout-banner">
+          <div class="info-callout-content">
+            <div class="info-callout-title">Publikasi Resmi &amp; Penerbitan ThesisStore</div>
+            <div class="info-callout-desc">
+              Buku akademik berkualitas ber-ISBN, dicetak rapi dan siap dikirim ke seluruh Indonesia. Layanan konsultasi &amp; penerbitan tersedia.
+            </div>
+          </div>
+          <div class="info-callout-badges">
+            <span class="badge-item"><i class="ri-shield-check-fill"></i> 100% Original</span>
+            <span class="badge-item"><i class="ri-truck-fill"></i> Kirim Se-Indonesia</span>
+          </div>
+        </div>
+        <div class="book-description-section">
+          <h2 class="sub-heading">Deskripsi</h2>
+          <div class="desc-content-wrapper collapsed" id="descWrapper">
+            <div class="desc-text" id="descText">
+              {{ book.deskripsi|safe }}
+            </div>
+            <div class="desc-fade-overlay" id="descOverlay"></div>
+          </div>
+          <button type="button" class="btn-toggle-desc" id="btnToggleDesc" onclick="toggleDescription()">
+            <span>Baca selengkapnya</span>
+            <i class="ri-arrow-down-s-line"></i>
+          </button>
+        </div>
+        <div class="book-spec-section">
+          <h2 class="sub-heading">Informasi Buku</h2>
+          <div class="spec-table-grid">
+            <div class="spec-col">
+              <div class="spec-row">
+                <span class="spec-label">Bahasa</span>
+                <span class="spec-divider">:</span>
+                <span class="spec-val">Indonesia</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">Penerbit</span>
+                <span class="spec-divider">:</span>
+                <span class="spec-val">{{ webname|default:"ThesisStore" }} Publishing</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">Penulis</span>
+                <span class="spec-divider">:</span>
+                <span class="spec-val">
+                  {% for p in book.penulis.all %}
+                    {{ p.user.first_name|default:p.user.username }}{% if not forloop.last %}, {% endif %}
+                  {% empty %}
+                    Anonim / Tim Penulis
+                  {% endfor %}
+                </span>
+              </div>
+              {% if book.editor.all %}
+              <div class="spec-row">
+                <span class="spec-label">Editor</span>
+                <span class="spec-divider">:</span>
+                <span class="spec-val">
+                  {% for e in book.editor.all %}
+                    {{ e.user.first_name|default:e.user.username }}{% if not forloop.last %}, {% endif %}
+                  {% endfor %}
+                </span>
+              </div>
+              {% endif %}
+              {% if book.kategori %}
+              <div class="spec-row">
+                <span class="spec-label">Kategori</span>
+                <span class="spec-divider">:</span>
+                <span class="spec-val">{{ book.kategori.nama_kategori }}</span>
+              </div>
+              {% endif %}
+            </div>
+            <div class="spec-col">
+              <div class="spec-row">
+                <span class="spec-label">Tanggal Rilis</span>
+                <span class="spec-divider">:</span>
+                <span class="spec-val">{{ book.tahun|default:book.created_at|date:"d M Y" }}</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">Halaman</span>
+                <span class="spec-divider">:</span>
+                <span class="spec-val">{% if book.halaman %}{{ book.halaman }} Halaman{% else %}-{% endif %}</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">Format</span>
+                <span class="spec-divider">:</span>
+                <span class="spec-val">Buku Cetak</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">Ukuran</span>
+                <span class="spec-divider">:</span>
+                <span class="spec-val">{{ book.ukuran|default:"15.5 x 23 cm" }}</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">ISBN</span>
+                <span class="spec-divider">:</span>
+                <span class="spec-val">{{ book.isbn|default:"-" }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% if related_books %}
+<section style="background-color: #fafbfc; border-top: 1px solid #f1f5f9; padding: 3.5rem 0;">
+  <div class="apb-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+      <div>
+        <h2 style="font-size: 1.4rem; font-weight: 700; color: #1e293b; margin: 0 0 0.25rem 0;">Buku Terkait Lainnya</h2>
+        <p style="font-size: 0.9rem; color: #64748b; margin: 0;">Rekomendasi buku lainnya dalam kategori serupa.</p>
+      </div>
+      <a href="{% url 'homepage' %}#katalog-buku" style="color: #0284c7; text-decoration: none; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+        Lihat Semua <i class="ri-arrow-right-line"></i>
+      </a>
+    </div>
+
+    <div class="apb-articles-grid">
+      {% for rb in related_books %}
+        <article class="apb-article-card" style="display: flex; flex-direction: column;">
+          <div class="apb-article-thumb" style="aspect-ratio: 1 / 1.35; background-color: #f8fafc; display: flex; align-items: center; justify-content: center; position: relative; padding: 12px;">
+            <a href="{{ rb.get_absolute_url }}" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+              {% if rb.featured_image %}
+                <img src="{{ rb.featured_image.url }}" alt="{{ rb.judul }}" style="max-width: 100%; max-height: 100%; width: auto; height: 100%; object-fit: contain; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.12);" loading="lazy">
+              {% else %}
+                <div class="apb-article-thumb-placeholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem;">
+                  <i class="ri-book-open-line" style="font-size: 2.5rem;"></i>
+                  <span style="font-size: 0.75rem; font-weight: 600;">{{ webname|default:"ThesisStore" }}</span>
+                </div>
+              {% endif %}
+            </a>
+
+            {% if rb.kategori %}
+              <span class="apb-article-category">
+                {{ rb.kategori.nama_kategori }}
+              </span>
+            {% endif %}
+          </div>
+
+          <div class="apb-article-body" style="flex: 1; display: flex; flex-direction: column;">
+            <div class="apb-article-meta" style="margin-bottom: 0.4rem;">
+              <span class="apb-article-meta-item">
+                <i class="ri-user-line"></i>
+                {% for p in rb.penulis.all %}
+                  {{ p.user.first_name|default:p.user.username }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                  Anonim
+                {% endfor %}
+              </span>
+            </div>
+
+            <h3 class="apb-article-title" style="margin-bottom: 0.5rem; font-size: 1.05rem;">
+              <a href="{{ rb.get_absolute_url }}" style="text-decoration: none; color: inherit;">
+                {{ rb.judul }}
+              </a>
+            </h3>
+
+            <p class="apb-article-excerpt" style="margin-bottom: 1rem; font-size: 0.85rem; color: var(--apb-text-muted);">
+              {{ rb.deskripsi|striptags|truncatewords:14 }}
+            </p>
+
+            <div style="margin-top: auto; padding-top: 0.75rem; border-top: 1px solid var(--apb-border-subtle); display: flex; align-items: center; justify-content: space-between;">
+              <span style="font-size: 1.1rem; font-weight: 800; color: #0284c7;">
+                Rp {% if rb.harga_potongan %}{{ rb.harga_potongan|floatformat:0 }}{% else %}{{ rb.harga|floatformat:0 }}{% endif %}
+              </span>
+              <a href="{{ rb.get_absolute_url }}" class="apb-article-readmore">
+                Detail <i class="ri-arrow-right-s-line"></i>
+              </a>
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+<style>
+.book-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+.book-breadcrumb a {
+  color: #475569;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.book-breadcrumb a:hover {
+  color: #0284c7;
+}
+.breadcrumb-separator {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+}
+.breadcrumb-current {
+  color: #0f172a;
+  font-weight: 600;
+  max-width: 420px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 2-Column Grid Layout */
+.book-detail-grid {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 3.5rem;
+  align-items: start;
+}
+
+/* Left: Cover */
+.book-gallery-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  position: sticky;
+  top: 100px;
+}
+.main-cover-wrapper {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+.discount-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 4px;
+  z-index: 2;
+  letter-spacing: 0.5px;
+}
+.cover-aspect-box {
+  width: 100%;
+  aspect-ratio: 1 / 1.4;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.cover-aspect-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.2s ease;
+}
+.cover-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #94a3b8;
+  padding: 2rem;
+  text-align: center;
+}
+.cover-placeholder i {
+  font-size: 4rem;
+  color: #cbd5e1;
+}
+.ph-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #475569;
+}
+.ph-sub {
+  font-size: 0.85rem;
+}
+
+/* Thumbnails Strip */
+.thumb-strip-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.thumb-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px;
+  scrollbar-width: thin;
+}
+.thumb-strip::-webkit-scrollbar {
+  height: 4px;
+}
+.thumb-strip::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.thumb-item {
+  width: 58px;
+  height: 78px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1.5px solid #e2e8f0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.thumb-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.thumb-item:hover {
+  border-color: #94a3b8;
+}
+.thumb-item.active {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.25);
+}
+.thumb-progress-bar {
+  height: 3px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+  width: 100%;
+}
+.thumb-progress-active {
+  height: 100%;
+  width: 30%;
+  background: #0284c7;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* Right: Info Column */
+.book-info-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Title & Actions Bar */
+.book-title-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+.book-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.35;
+  margin: 0;
+  font-family: inherit;
+  flex: 1;
+}
+.book-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.action-btn {
+  background: transparent;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+.action-btn:hover {
+  background: #f1f5f9;
+  color: #0284c7;
+}
+.action-btn i {
+  font-size: 1.15rem;
+}
+.action-btn.active i {
+  color: #ef4444;
+}
+
+/* Sub-headings */
+.sub-heading {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.85rem 0;
+}
+
+/* Opsi Pembelian */
+.purchase-options-section {
+  display: flex;
+  flex-direction: column;
+}
+.purchase-box-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+.purchase-card {
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 10px 18px;
+  min-width: 150px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.purchase-card.selected {
+  border-color: #0f172a;
+  background: #f8fafc;
+}
+.purchase-card-label {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 2px;
+}
+.purchase-card-price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.price-main {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+.price-strike {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  text-decoration: line-through;
+}
+
+.purchase-cta-wrap {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.btn-buy-wa {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #10b981;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 12px 22px;
+  border-radius: 8px;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+.btn-buy-wa:hover {
+  background: #059669;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+.stock-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+.stock-info.in-stock {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+.stock-info.out-of-stock {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+/* Info Callout Banner */
+.info-callout-banner {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.info-callout-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+.info-callout-desc {
+  font-size: 0.83rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+.info-callout-badges {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.badge-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #0284c7;
+  background: #e0f2fe;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+/* Description Section & Toggle */
+.desc-content-wrapper {
+  position: relative;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+.desc-content-wrapper.collapsed {
+  max-height: 180px;
+}
+.desc-content-wrapper.expanded {
+  max-height: 2500px;
+}
+.desc-text {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: #475569;
+  margin: 0;
+}
+.desc-text ul {
+  list-style-type: disc !important;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  padding-left: 1.5rem !important;
+}
+
+.desc-text ol {
+  list-style-type: decimal !important;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  padding-left: 1.5rem !important;
+}
+
+.desc-text li {
+  display: list-item !important;
+  margin-bottom: 0.35rem;
+  line-height: 1.6;
+}
+.desc-text p {
+  margin-bottom: 1rem;
+}
+.desc-fade-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
+  pointer-events: none;
+  display: block;
+}
+.desc-content-wrapper.expanded .desc-fade-overlay {
+  display: none;
+}
+.btn-toggle-desc {
+  background: none;
+  border: none;
+  color: #0f172a;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 4px 0;
+  transition: color 0.15s ease;
+}
+.btn-toggle-desc:hover {
+  color: #0284c7;
+}
+
+/* Metadata Key-Value Table */
+.spec-table-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  font-size: 0.9rem;
+}
+.spec-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.spec-row {
+  display: grid;
+  grid-template-columns: 110px 14px 1fr;
+  align-items: baseline;
+  line-height: 1.5;
+}
+.spec-label {
+  color: #334155;
+  font-weight: 500;
+}
+.spec-divider {
+  color: #94a3b8;
+  text-align: center;
+}
+.spec-val {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .book-detail-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .book-gallery-col {
+    position: static;
+    max-width: 320px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .spec-table-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  .book-title {
+    font-size: 1.45rem;
+  }
+}
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Change main cover when thumbnail is clicked
+function changePreview(imgUrl, btn) {
+  var mainImg = document.getElementById('mainBookImage');
+  if (mainImg) {
+    mainImg.style.opacity = '0.3';
+    setTimeout(function() {
+      mainImg.src = imgUrl;
+      mainImg.style.opacity = '1';
+    }, 150);
+  }
+  
+  var allThumbs = document.querySelectorAll('.thumb-item');
+  allThumbs.forEach(function(b, idx) {
+    b.classList.remove('active');
+    if (b === btn) {
+      // Update progress line indicator
+      var progress = document.getElementById('thumbProgress');
+      if (progress && allThumbs.length > 0) {
+        var pct = ((idx + 1) / allThumbs.length) * 100;
+        progress.style.width = Math.max(25, pct) + '%';
+      }
+    }
+  });
+  if (btn) {
+    btn.classList.add('active');
+  }
+}
+
+// Toggle Description Expand/Collapse
+function toggleDescription() {
+  var wrapper = document.getElementById('descWrapper');
+  var btn = document.getElementById('btnToggleDesc');
+  if (!wrapper || !btn) return;
+
+  var isCollapsed = wrapper.classList.contains('collapsed');
+  if (isCollapsed) {
+    wrapper.classList.remove('collapsed');
+    wrapper.classList.add('expanded');
+    btn.innerHTML = '<span>Ringkas deskripsi</span> <i class="ri-arrow-up-s-line"></i>';
+  } else {
+    wrapper.classList.remove('expanded');
+    wrapper.classList.add('collapsed');
+    btn.innerHTML = '<span>Baca selengkapnya</span> <i class="ri-arrow-down-s-line"></i>';
+  }
+}
+
+// Check initial description length to hide toggle if short
+document.addEventListener('DOMContentLoaded', function() {
+  var descText = document.getElementById('descText');
+  var btn = document.getElementById('btnToggleDesc');
+  var overlay = document.getElementById('descOverlay');
+  if (descText && btn && overlay) {
+    if (descText.scrollHeight <= 180) {
+      btn.style.display = 'none';
+      overlay.style.display = 'none';
+    }
+  }
+});
+
+// Toggle Wishlist
+function toggleWishlist() {
+  var btn = document.getElementById('btnWishlist');
+  var icon = document.getElementById('wishlistIcon');
+  if (!btn || !icon) return;
+
+  if (icon.classList.contains('ri-heart-line')) {
+    icon.classList.remove('ri-heart-line');
+    icon.classList.add('ri-heart-fill');
+    icon.style.color = '#ef4444';
+  } else {
+    icon.classList.remove('ri-heart-fill');
+    icon.classList.add('ri-heart-line');
+    icon.style.color = '';
+  }
+}
+
+// Share Book
+function shareBook() {
+  if (navigator.share) {
+    navigator.share({
+      title: "{{ book.judul|escapejs }}",
+      text: "Lihat buku '{{ book.judul|escapejs }}' di {{ webname|default:'ThesisStore' }}",
+      url: window.location.href
+    }).catch(function(err) {});
+  } else {
+    navigator.clipboard.writeText(window.location.href).then(function() {
+      alert("Tautan buku berhasil disalin!");
+    }).catch(function() {
+      prompt("Salin tautan buku berikut:", window.location.href);
+    });
+  }
+}
+</script>
+{% endblock %}

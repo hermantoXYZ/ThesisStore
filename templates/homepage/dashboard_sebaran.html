@@ -1,0 +1,436 @@
+{% extends 'homepage/base_public.html' %}
+{% load static %}
+
+{% block title %}Dashboard Sebaran Wilayah | {{ webname }} - {{ web_name }}{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js CDN for interactive charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  .apb-dash-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+  .apb-dash-stat-card {
+    background: #ffffff;
+    border: 0.5px solid #e2e8f0;
+    border-radius: 0px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .apb-dash-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.07);
+  }
+  .apb-dash-icon-box {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    flex-shrink: 0;
+  }
+  .apb-dash-icon-primary {
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+  }
+  .apb-dash-icon-emerald {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+  }
+  .apb-dash-icon-amber {
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
+  }
+  .apb-dash-stat-value {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.1;
+    margin-bottom: 0.2rem;
+  }
+  .apb-dash-stat-label {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+  .apb-dash-nav-pills {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.75rem;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .apb-dash-nav-pill {
+    padding: 0.65rem 1.25rem;
+    border-radius: 9999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+    background: #f1f5f9;
+    color: #475569;
+  }
+  .apb-dash-nav-pill:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+  }
+  .apb-dash-nav-pill.active {
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  }
+  .apb-table-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  }
+  .apb-table-card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    background: #f8fafc;
+  }
+  .apb-table-card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .apb-custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+  .apb-custom-table th {
+    padding: 1rem 1.25rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .apb-custom-table td {
+    padding: 1rem 1.25rem;
+    font-size: 0.9rem;
+    color: #334155;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+  }
+  .apb-custom-table tr:hover td {
+    background: #f8fafc;
+  }
+  .apb-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.65rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .apb-badge-blue {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+  }
+  .apb-badge-green {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+  }
+  .apb-badge-slate {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+  }
+  .apb-chart-container {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header Banner -->
+<section class="apb-page-header">
+  <div class="apb-container">
+    <div class="apb-breadcrumb">
+      <a href="{% url 'homepage' %}"><i class="ri-home-4-line"></i> Beranda</a>
+      <span>/</span>
+      <a href="{% url 'public_dashboard_sebaran' %}">Dashboard</a>
+      <span>/</span>
+      <span>Sebaran Wilayah</span>
+    </div>
+    <h1 class="apb-page-title">Sebaran Keanggotaan Nasional</h1>
+    <p style="color: rgba(255,255,255,0.85); margin-top: 0.5rem; font-size: 1.05rem;">
+      Peta dan rekapitulasi data anggota individu dan institusi APBISDI di seluruh provinsi Indonesia.
+    </p>
+  </div>
+</section>
+
+<!-- Main Section -->
+<section class="apb-section" style="padding: 2.5rem 0 5rem 0; background: #f8fafc;">
+  <div class="apb-container">
+
+    <!-- Sub-navigation Tabs -->
+    <div class="apb-dash-nav-pills">
+      <a href="{% url 'public_dashboard_sebaran' %}" class="apb-dash-nav-pill active">
+        <i class="ri-map-pin-range-line"></i> Sebaran Wilayah
+      </a>
+      <a href="{% url 'public_dashboard_anggota' %}" class="apb-dash-nav-pill">
+        <i class="ri-user-star-line"></i> Anggota Individu ({{ total_anggota }})
+      </a>
+      <a href="{% url 'public_dashboard_institusi' %}" class="apb-dash-nav-pill">
+        <i class="ri-building-4-line"></i> Anggota Institusi ({{ total_institusi }})
+      </a>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="apb-dash-stats-grid">
+      <div class="apb-dash-stat-card">
+        <div class="apb-dash-icon-box apb-dash-icon-primary">
+          <i class="ri-map-2-line"></i>
+        </div>
+        <div>
+          <div class="apb-dash-stat-value">{{ total_provinsi }}</div>
+          <div class="apb-dash-stat-label">Total Provinsi Terjangkau</div>
+        </div>
+      </div>
+      <div class="apb-dash-stat-card">
+        <div class="apb-dash-icon-box apb-dash-icon-emerald">
+          <i class="ri-team-line"></i>
+        </div>
+        <div>
+          <div class="apb-dash-stat-value">{{ total_anggota }}</div>
+          <div class="apb-dash-stat-label">Anggota Individu Terdaftar</div>
+        </div>
+      </div>
+      <div class="apb-dash-stat-card">
+        <div class="apb-dash-icon-box apb-dash-icon-amber">
+          <i class="ri-government-line"></i>
+        </div>
+        <div>
+          <div class="apb-dash-stat-value">{{ total_institusi }}</div>
+          <div class="apb-dash-stat-label">Institusi Perguruan Tinggi</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visual Chart Section (if data exists) -->
+    {% if chart_labels %}
+    <div class="apb-chart-container">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: #1e293b; margin: 0;">
+          Grafik Top 10 Sebaran Anggota per Provinsi
+        </h3>
+        <span style="font-size: 0.8rem; color: #64748b;">Individu vs Institusi</span>
+      </div>
+      <div style="height: 320px; position: relative;">
+        <canvas id="sebaranChart"></canvas>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Filter & Search Bar -->
+    <div class="apb-filter-bar" style="margin-bottom: 1.5rem;">
+      <div class="apb-category-pills">
+        <a href="{% url 'public_dashboard_sebaran' %}" class="apb-cat-pill {% if not selected_wilayah %}active{% endif %}">
+          Semua Wilayah
+        </a>
+        {% for w in wilayah_list %}
+          <a href="{% url 'public_dashboard_sebaran' %}?wilayah={{ w|urlencode }}{% if query %}&q={{ query|urlencode }}{% endif %}" class="apb-cat-pill {% if selected_wilayah == w %}active{% endif %}">
+            {{ w }}
+          </a>
+        {% endfor %}
+      </div>
+
+      <form method="GET" action="{% url 'public_dashboard_sebaran' %}" class="apb-search-input-wrap">
+        <i class="ri-search-line"></i>
+        <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Cari nama provinsi / wilayah..." class="apb-search-input">
+        {% if selected_wilayah %}
+          <input type="hidden" name="wilayah" value="{{ selected_wilayah }}">
+        {% endif %}
+      </form>
+    </div>
+
+    <!-- Data Table Card -->
+    <div class="apb-table-card">
+      <div class="apb-table-card-header">
+        <h2 class="apb-table-card-title">
+          Rekapitulasi Sebaran Per Provinsi
+        </h2>
+        <div style="font-size: 0.875rem; color: #64748b;">
+          Menampilkan <strong>{{ provinsi_list|length }}</strong> provinsi
+        </div>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table class="apb-custom-table">
+          <thead>
+            <tr>
+              <th style="width: 60px; text-align: center;">No</th>
+              <th>Nama Provinsi</th>
+              <th>Wilayah / Korwil</th>
+              <th style="text-align: center;">Anggota Individu</th>
+              <th style="text-align: center;">Anggota Institusi</th>
+              <th style="text-align: center;">Total Anggota</th>
+              <th style="text-align: center; width: 140px;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for prov in provinsi_list %}
+            <tr>
+              <td style="text-align: center; font-weight: 600; color: #64748b;">{{ forloop.counter }}</td>
+              <td style="font-weight: 600; color: #0f172a; white-space: nowrap;">
+                <i class="ri-map-pin-2-fill" style="color: #ef4444; margin-right: 6px; font-size: 0.95rem;"></i>
+                {{ prov.nama_provinsi }}
+              </td>
+              <td>
+                {% if prov.nama_wilayah %}
+                  <span class="apb-badge apb-badge-slate">{{ prov.nama_wilayah }}</span>
+                {% else %}
+                  <span style="color: #94a3b8; font-size: 0.85rem;">-</span>
+                {% endif %}
+              </td>
+              <td style="text-align: center;">
+                <span class="apb-badge apb-badge-blue" style="font-size: 0.85rem; font-weight: 700;">
+                  {{ prov.total_anggota }}
+                </span>
+              </td>
+              <td style="text-align: center;">
+                <span class="apb-badge apb-badge-green" style="font-size: 0.85rem; font-weight: 700;">
+                  {{ prov.total_institusi }}
+                </span>
+              </td>
+              <td style="text-align: center; font-weight: 700; color: #1e293b;">
+                {{ prov.total_anggota|add:prov.total_institusi }}
+              </td>
+              <td style="text-align: center;">
+                <div style="display: flex; gap: 0.35rem; justify-content: center;">
+                  <a href="{% url 'public_dashboard_anggota' %}?provinsi={{ prov.id }}" class="apb-btn apb-btn-outline" style="padding: 0.35rem 0.65rem; font-size: 0.75rem;" title="Lihat Anggota Individu">
+                    <i class="ri-user-line"></i> Individu
+                  </a>
+                  <a href="{% url 'public_dashboard_institusi' %}?provinsi={{ prov.id }}" class="apb-btn apb-btn-outline" style="padding: 0.35rem 0.65rem; font-size: 0.75rem;" title="Lihat Institusi">
+                    <i class="ri-building-line"></i> Institusi
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 3rem 1rem; color: #64748b;">
+                <div style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 0.5rem;">
+                  <i class="ri-map-pin-user-line"></i>
+                </div>
+                <div style="font-weight: 600;">Tidak ada data provinsi yang cocok</div>
+                <div style="font-size: 0.85rem; margin-top: 0.25rem;">Silakan coba kata kunci pencarian atau filter lain.</div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% if chart_labels %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('sebaranChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: {{ chart_labels|safe }},
+        datasets: [
+          {
+            label: 'Anggota Individu',
+            data: {{ chart_anggota_data|safe }},
+            backgroundColor: 'rgba(37, 99, 235, 0.85)',
+            borderColor: '#2563eb',
+            borderWidth: 1,
+            borderRadius: 6,
+          },
+          {
+            label: 'Anggota Institusi',
+            data: {{ chart_institusi_data|safe }},
+            backgroundColor: 'rgba(16, 185, 129, 0.85)',
+            borderColor: '#10b981',
+            borderWidth: 1,
+            borderRadius: 6,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              boxWidth: 14,
+              font: {
+                family: "'Plus Jakarta Sans', 'Inter', sans-serif",
+                weight: '600',
+                size: 12
+              }
+            }
+          },
+          tooltip: {
+            padding: 10,
+            cornerRadius: 8,
+            titleFont: { weight: 'bold' }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: {
+              font: { size: 11 }
+            }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0,
+              font: { size: 11 }
+            },
+            grid: {
+              color: '#f1f5f9'
+            }
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endif %}
+{% endblock %}

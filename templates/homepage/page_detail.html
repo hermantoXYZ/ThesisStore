@@ -1,0 +1,219 @@
+{% extends 'homepage/base_public.html' %}
+{% load static %}
+
+{% block title %}{{ page.title }} | {{ webname }} - {{ web_name }}{% endblock %}
+
+{% block content %}
+<style>
+.apb-article-rich-text ol {
+    list-style-type: decimal !important;
+    padding-left: 2rem !important;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.apb-article-rich-text ul {
+    list-style-type: disc !important;
+    padding-left: 2rem !important;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.apb-article-rich-text li {
+    display: list-item !important;
+    margin-bottom: 0.5rem;
+}
+</style>
+<!-- Page Header / Hero Section -->
+<section class="apb-page-header {% if page.featured_image %}has-hero-bg{% endif %}"
+         {% if page.featured_image %}style="background: linear-gradient(rgba(0, 43, 58, 0.78), rgba(0, 67, 92, 0.85)), url('{{ page.featured_image.url }}'); background-size: cover; background-position: center; background-repeat: no-repeat; padding: 5.5rem 0 4.5rem 0;"{% endif %}>
+  <div class="apb-container">
+    <div class="apb-breadcrumb">
+      <a href="{% url 'homepage' %}"><i class="ri-home-4-line"></i> Beranda</a>
+      <span>/</span>
+      <span>Halaman</span>
+      <span>/</span>
+      <span>{{ page.title }}</span>
+    </div>
+    <h1 class="apb-page-title" style="text-shadow: 0 2px 8px rgba(0,0,0,0.35);">{{ page.title }}</h1>
+    <div style="margin-top: 0.75rem; font-size: 0.9rem; color: rgba(255,255,255,0.9); display: inline-flex; align-items: center; gap: 6px; text-shadow: 0 1px 4px rgba(0,0,0,0.3);">
+      <i class="ri-time-line"></i> Terakhir diperbarui: {{ page.updated_at|date:"d F Y" }}
+    </div>
+  </div>
+</section>
+
+<!-- Page Content Section -->
+<section class="apb-section" style="padding: 3.5rem 0 5rem 0;">
+  <div class="apb-container">
+    <div style="max-width: 960px; margin: 0 auto;">
+      
+      <!-- Main Content Card -->
+      <article style="background: #ffffff; padding: 3rem; border-radius: 20px; border: 1px solid var(--apb-border); box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+        
+        <!-- Rich Text Article Body -->
+        <div class="apb-article-rich-text">
+          {{ page.content|safe }}
+        </div>
+
+        <!-- Dokumentasi Media / Galeri Halaman (Jika ada) -->
+        {% if page.dokumentasi_foto.all %}
+          <div class="apb-gallery-section" style="margin-top: 3.5rem; padding-top: 2rem; border-top: 1px solid #f1f5f9;">
+            <div class="apb-gallery-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px;">
+              <h3 class="apb-gallery-title" style="font-size: 1.35rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                <i class="ri-gallery-line" style="color: var(--apb-primary);"></i> Galeri & Dokumentasi
+              </h3>
+              <span class="apb-gallery-badge" style="background: #f0f9ff; color: var(--apb-primary); padding: 0.35rem 0.85rem; border-radius: 9999px; font-weight: 600; font-size: 0.82rem; border: 1px solid #bae6fd;">
+                <i class="ri-image-line"></i> {{ page.dokumentasi_foto.count }} Lampiran Media
+              </span>
+            </div>
+            
+            <div class="apb-gallery-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
+              {% for doc in page.dokumentasi_foto.all %}
+                <div class="apb-gallery-item" 
+                     onclick="openLightbox('{{ doc.foto.url }}', '{{ doc.caption|default:page.title|escapejs }}', {{ forloop.counter0 }})"
+                     data-index="{{ forloop.counter0 }}"
+                     style="position: relative; border-radius: 12px; overflow: hidden; height: 160px; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; transition: transform 0.25s ease, box-shadow 0.25s ease;">
+                  <img src="{{ doc.foto.url }}" alt="{{ doc.caption|default:page.title }}" class="apb-gallery-img" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" loading="lazy">
+                  <div class="apb-gallery-overlay" style="position: absolute; inset: 0; background: rgba(0, 67, 92, 0.45); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.25s ease;">
+                    <div class="apb-gallery-zoom-icon" style="background: rgba(255,255,255,0.9); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--apb-primary); font-size: 1.25rem;">
+                      <i class="ri-zoom-in-line"></i>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- Share & Navigation Bar -->
+        <div style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 600; color: #475569;">
+            <i class="ri-share-forward-line" style="color: var(--apb-primary);"></i> Bagikan Halaman:
+          </div>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="https://api.whatsapp.com/send?text={{ page.title|urlencode }}%20{{ request.build_absolute_uri|urlencode }}" 
+               target="_blank" rel="noopener noreferrer" class="apb-btn apb-btn-outline" style="padding: 0.45rem 0.9rem; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;" title="Bagikan ke WhatsApp">
+              <i class="ri-whatsapp-line" style="color: #25D366;"></i> WhatsApp
+            </a>
+            <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.build_absolute_uri|urlencode }}" 
+               target="_blank" rel="noopener noreferrer" class="apb-btn apb-btn-outline" style="padding: 0.45rem 0.9rem; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;" title="Bagikan ke LinkedIn">
+              <i class="ri-linkedin-fill" style="color: #0A66C2;"></i> LinkedIn
+            </a>
+            <a href="https://twitter.com/intent/tweet?text={{ page.title|urlencode }}&url={{ request.build_absolute_uri|urlencode }}" 
+               target="_blank" rel="noopener noreferrer" class="apb-btn apb-btn-outline" style="padding: 0.45rem 0.9rem; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;" title="Bagikan ke X">
+              <i class="ri-twitter-x-line"></i> X
+            </a>
+          </div>
+        </div>
+
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- LIGHTBOX MODAL UNTUK GALERI FOTO -->
+<div id="apbLightboxModal" class="apb-lightbox-backdrop" onclick="closeLightbox(event)">
+  <div class="apb-lightbox-content">
+    <button class="apb-lightbox-close" onclick="forceCloseLightbox()" title="Tutup Galeri (Esc)">
+      <i class="ri-close-line"></i>
+    </button>
+    <button class="apb-lightbox-nav apb-lightbox-prev" onclick="prevLightboxImg(event)" title="Foto Sebelumnya (Panah Kiri)">
+      <i class="ri-arrow-left-s-line"></i>
+    </button>
+    <button class="apb-lightbox-nav apb-lightbox-next" onclick="nextLightboxImg(event)" title="Foto Berikutnya (Panah Kanan)">
+      <i class="ri-arrow-right-s-line"></i>
+    </button>
+    <div class="apb-lightbox-img-wrap">
+      <img src="" alt="Dokumentasi Halaman" id="lightboxActiveImg" class="apb-lightbox-img">
+    </div>
+    <div class="apb-lightbox-caption-box">
+      <div class="apb-lightbox-caption" id="lightboxCaptionText"></div>
+      <div class="apb-lightbox-counter" id="lightboxCounterText"></div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Data Galeri Foto Halaman untuk Lightbox Slider
+  const pageGalleryData = [
+    {% if page.dokumentasi_foto.all %}
+      {% for doc in page.dokumentasi_foto.all %}
+        {
+          url: "{{ doc.foto.url }}",
+          caption: "{{ doc.caption|default:page.title|escapejs }}"
+        }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    {% endif %}
+  ];
+
+  let currentImgIndex = 0;
+
+  function openLightbox(url, caption, index) {
+    currentImgIndex = parseInt(index) || 0;
+    updateLightboxContent();
+    const modal = document.getElementById('apbLightboxModal');
+    if (modal) {
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  function updateLightboxContent() {
+    if (pageGalleryData.length === 0) return;
+    const current = pageGalleryData[currentImgIndex];
+    const imgEl = document.getElementById('lightboxActiveImg');
+    const capEl = document.getElementById('lightboxCaptionText');
+    const countEl = document.getElementById('lightboxCounterText');
+
+    if (imgEl) imgEl.src = current.url;
+    if (capEl) capEl.textContent = current.caption;
+    if (countEl) countEl.textContent = `Foto ${currentImgIndex + 1} dari ${pageGalleryData.length}`;
+  }
+
+  function prevLightboxImg(e) {
+    if (e) e.stopPropagation();
+    if (pageGalleryData.length === 0) return;
+    currentImgIndex = (currentImgIndex - 1 + pageGalleryData.length) % pageGalleryData.length;
+    updateLightboxContent();
+  }
+
+  function nextLightboxImg(e) {
+    if (e) e.stopPropagation();
+    if (pageGalleryData.length === 0) return;
+    currentImgIndex = (currentImgIndex + 1) % pageGalleryData.length;
+    updateLightboxContent();
+  }
+
+  function closeLightbox(e) {
+    if (e.target.id === 'apbLightboxModal' || e.target.classList.contains('apb-lightbox-content')) {
+      forceCloseLightbox();
+    }
+  }
+
+  function forceCloseLightbox() {
+    const modal = document.getElementById('apbLightboxModal');
+    if (modal) {
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  }
+
+  // Keyboard navigation untuk lightbox
+  document.addEventListener('keydown', function(e) {
+    const modal = document.getElementById('apbLightboxModal');
+    if (modal && modal.classList.contains('active')) {
+      if (e.key === 'Escape') {
+        forceCloseLightbox();
+      } else if (e.key === 'ArrowLeft') {
+        prevLightboxImg();
+      } else if (e.key === 'ArrowRight') {
+        nextLightboxImg();
+      }
+    }
+  });
+</script>
+{% endblock %}

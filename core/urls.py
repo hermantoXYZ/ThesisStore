@@ -25,6 +25,21 @@ urlpatterns = [
 ]
 
 urlpatterns += [
+    path('', views.homepage, name='homepage'),
+    path('home/', views.homepage, name='home'),
+    path('index/', views.homepage, name='index'),
+    path('produk/<slug:kategori_slug>/<slug:slug>/', views.buku_detail, name='buku_detail'),
+    path('produk/<slug:slug>/', views.buku_detail, name='buku_detail_simple'),
+    path('artikel/', views.article_list, name='article_list'),
+    path('artikel/<slug:slug>/', views.article_detail, name='article_detail'),
+    path('aktivitas/', views.aktivitas_list, name='aktivitas_list'),
+    path('aktivitas/<slug:slug>/', views.aktivitas_detail, name='aktivitas_detail'),
+    path('kontak/', views.contact_page, name='contact_page'),
+    path('struktur-organisasi/', views.struktur_organisasi, name='struktur_organisasi'),
+    path('page/<slug:slug>/', views.page_detail, name='page_detail'),
+    path('dashboard/sebaran/', views.public_dashboard_sebaran, name='public_dashboard_sebaran'),
+    path('dashboard/anggota/', views.public_dashboard_anggota, name='public_dashboard_anggota'),
+    path('dashboard/institusi/', views.public_dashboard_institusi, name='public_dashboard_institusi'),
     path('app/', include(('app.urls', 'app'), namespace='app')),
     path('login/', views.loginView, name='login'),
     path('register/', views.registerView, name='register'),

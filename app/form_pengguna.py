@@ -41,7 +41,7 @@ class formProfile(forms.ModelForm):
             'gender',
             'nuptk',
             'jafung',
-            'bidang_keahlian',
+            'bidang_penelitian',
             'alamat',
             'provinsi_anggota',
             'photo',
@@ -54,7 +54,7 @@ class formProfile(forms.ModelForm):
         widgets = {
             'telp': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Contoh: Isi dengan nomor berikut 081234567890', 'required': True}),
             'nuptk': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nomor NUPTK (opsional)'}),
-            'bidang_keahlian': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Contoh: Bisnis Digital, E-Commerce, Sistem Informasi', 'required': True}),
+            'bidang_penelitian': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Contoh: Bisnis Digital, E-Commerce, Sistem Informasi', 'required': True}),
             'alamat': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Alamat instansi / tempat tinggal', 'required': True}),
             'photo': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
             'link_sinta': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Contoh: https://sinta.kemdikbud.go.id/authors/detail?id=123456', 'required': True}),

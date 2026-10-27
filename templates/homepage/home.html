@@ -1,0 +1,1238 @@
+{% extends 'homepage/base_public.html' %}
+{% load static %}
+
+{% block title %}Beranda | {{ webname }} - {{ web_name }}{% endblock %}
+
+{% block content %}
+<!-- =========================================================================
+     1. HERO SLIDER SECTION
+     ========================================================================= -->
+<section class="apb-hero-slider-section">
+  <div class="apb-container">
+    <div class="apb-slider-wrapper" id="heroSliderWrapper">
+      <div class="apb-slider-track" id="heroSliderTrack">
+
+        {% if hero_slides %}
+          {% for slide in hero_slides %}
+          <div class="apb-slide" data-slide-index="{{ forloop.counter0 }}">
+            {% with banner_url=slide.get_banner_url %}
+            <img src="{% if banner_url %}{{ banner_url }}{% else %}{% static 'img/default-banner.jpg' %}{% endif %}"
+                 alt="{{ slide.judul }}"
+                 class="apb-slide-banner"
+                 loading="{% if forloop.first %}eager{% else %}lazy{% endif %}">
+            {% endwith %}
+            <div class="apb-slide-overlay">
+              <div class="apb-slide-caption">
+                {% if slide.badge_icon or slide.badge_text %}
+                <div class="apb-slide-caption-badge">
+                  {% if slide.badge_icon %}<i class="{{ slide.badge_icon }}"></i>{% endif %}
+                  {% if slide.badge_text %}{{ slide.badge_text }}{% endif %}
+                </div>
+                {% endif %}
+                <h2 class="apb-slide-caption-title">
+                  {{ slide.judul }}{% if slide.judul_highlight %} <span>{{ slide.judul_highlight }}</span>{% endif %}
+                </h2>
+                <p class="apb-slide-caption-desc">
+                  {{ slide.deskripsi }}
+                </p>
+                <a href="{{ slide.tombol_url }}" class="apb-btn apb-btn-primary">
+                  {{ slide.tombol_teks }} <i class="ri-arrow-right-line"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          {# Fallback Banner ThesisEdu #}
+          <div class="apb-slide" data-slide-index="0">
+            <img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=1600&auto=format&fit=crop" alt="ThesisEdu Banner" class="apb-slide-banner" loading="eager">
+            <div class="apb-slide-overlay">
+              <div class="apb-slide-caption">
+                <div class="apb-slide-caption-badge">
+                  <i class="ri-book-open-line"></i> Platform Penerbitan &amp; Publikasi Akademik
+                </div>
+                <h2 class="apb-slide-caption-title">
+                  Pusat Penerbitan Buku, <span>Jurnal &amp; Book Chapter</span> Akademik
+                </h2>
+                <p class="apb-slide-caption-desc">
+                  ThesisEdu memfasilitasi akademisi, dosen, dan peneliti dalam penerbitan buku ber-ISBN, monograf, buku ajar, publikasi artikel jurnal terakreditasi, serta kolaborasi book chapter terpercaya.
+                </p>
+                <a href="#katalog-buku" class="apb-btn apb-btn-primary">
+                  Koleksi Buku <i class="ri-arrow-right-line"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+      </div>
+
+      <!-- Circular Arrow Navigation Buttons -->
+      <button type="button" class="apb-slider-arrow apb-slider-prev" id="heroSliderPrev" aria-label="Slide Sebelumnya">
+        <i class="ri-arrow-left-s-line"></i>
+      </button>
+      <button type="button" class="apb-slider-arrow apb-slider-next" id="heroSliderNext" aria-label="Slide Selanjutnya">
+        <i class="ri-arrow-right-s-line"></i>
+      </button>
+
+      <!-- Bottom Pagination Dots -->
+      <div class="apb-slider-dots" id="heroSliderDots">
+        {% if hero_slides %}
+          {% for slide in hero_slides %}
+          <span class="apb-dot {% if forloop.first %}active{% endif %}" data-dot-index="{{ forloop.counter0 }}" aria-label="Slide {{ forloop.counter }}"></span>
+          {% endfor %}
+        {% else %}
+          <span class="apb-dot active" data-dot-index="0" aria-label="Slide 1"></span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     2. STATS BAR SECTION
+     ========================================================================= -->
+<section class="apb-stats-bar">
+  <div class="apb-container">
+    <div class="apb-stats-grid">
+      <div class="apb-stat-item">
+        <div class="apb-stat-number">{{ total_buku|default:0 }}</div>
+        <div class="apb-stat-label">Buku Diterbitkan</div>
+      </div>
+      <div class="apb-stat-item">
+        <div class="apb-stat-number">{{ total_kategori|default:0 }}</div>
+        <div class="apb-stat-label">Kategori Bidang Ilmu</div>
+      </div>
+      <div class="apb-stat-item">
+        <div class="apb-stat-number">{{ total_penulis|default:0 }}</div>
+        <div class="apb-stat-label">Penulis &amp; Peneliti</div>
+      </div>
+      <div class="apb-stat-item">
+        <div class="apb-stat-number">38+</div>
+        <div class="apb-stat-label">Sebaran Kampus Mitra</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     3. EMPAT PILAR LAYANAN THESISEDU
+     ========================================================================= -->
+<section class="apb-section apb-pilar-section" id="empat-pilar">
+  <div class="apb-container">
+    <div class="apb-pilar-header">
+      <div class="apb-pilar-label">Layanan Unggulan</div>
+      <h2 class="apb-pilar-title">Empat Layanan Utama ThesisEdu</h2>
+    </div>
+
+    <div class="apb-pilar-grid">
+
+      <!-- Pilar 1: Penerbitan Buku -->
+      <div class="apb-pilar-card">
+        <div class="apb-pilar-icon">
+          <i class="ri-book-mark-line"></i>
+        </div>
+        <h3 class="apb-pilar-name">Penerbitan Buku</h3>
+        <p class="apb-pilar-desc">
+          Penerbitan monograf, buku ajar, dan buku referensi ber-ISBN resmi Perpustakaan Nasional dengan layout dan sampul profesional.
+        </p>
+        <a href="{% url 'register' %}" class="apb-pilar-link">
+          Daftar Penulis <i class="ri-arrow-right-line"></i>
+        </a>
+      </div>
+
+      <!-- Pilar 2: Book Chapter Kolaboratif -->
+      <div class="apb-pilar-card">
+        <div class="apb-pilar-icon">
+          <i class="ri-book-2-line"></i>
+        </div>
+        <h3 class="apb-pilar-name">Book Chapter</h3>
+        <p class="apb-pilar-desc">
+          Program penulisan buku tematik bersama akademisi lintas kampus se-Indonesia untuk percepatan angka kredit &amp; BKD dosen.
+        </p>
+        <a href="{% url 'aktivitas_list' %}" class="apb-pilar-link">
+          Lihat Program <i class="ri-arrow-right-line"></i>
+        </a>
+      </div>
+
+      <!-- Pilar 3: Artikel & Jurnal Ilmiah -->
+      <div class="apb-pilar-card apb-pilar-card--active">
+        <div class="apb-pilar-icon">
+          <i class="ri-article-line"></i>
+        </div>
+        <h3 class="apb-pilar-name">Artikel &amp; Jurnal</h3>
+        <p class="apb-pilar-desc">
+          Publikasi kajian riset, telaah ilmiah, dan artikel konseptual terkurasi pada repositori publikasi bereputasi.
+        </p>
+        <a href="{% url 'article_list' %}" class="apb-pilar-link">
+          Koleksi Artikel <i class="ri-arrow-right-line"></i>
+        </a>
+      </div>
+
+      <!-- Pilar 4: Kolaborasi Akademik & Riset -->
+      <div class="apb-pilar-card">
+        <div class="apb-pilar-icon">
+          <i class="ri-team-line"></i>
+        </div>
+        <h3 class="apb-pilar-name">Kolaborasi Akademik</h3>
+        <p class="apb-pilar-desc">
+          Kemitraan strategis dengan program studi, lembaga penelitian, dan asosiasi profesi untuk hilirisasi karya ilmiah.
+        </p>
+        <a href="{% url 'contact_page' %}" class="apb-pilar-link">
+          Hubungi Mitra <i class="ri-arrow-right-line"></i>
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     4. KATALOG & KOLEKSI BUKU (Books)
+     ========================================================================= -->
+<section class="apb-section" id="katalog-buku" style="background: #ffffff;">
+  <div class="apb-container">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1.5rem;">
+      <div>
+        <div class="apb-badge-pill">
+          <i class="ri-book-2-line"></i> Koleksi Buku &amp; Publikasi
+        </div>
+        <h2 class="apb-section-title" style="margin-bottom: 0.5rem;">Katalog Buku Terbitan</h2>
+        <p class="apb-section-subtitle">
+          Jelajahi koleksi buku akademik, karya ilmiah, dan referensi terpercaya dari para penulis dan akademisi.
+        </p>
+      </div>
+      <div>
+        {% if categories %}
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;" id="bookCategoryFilters">
+          <button type="button" onclick="filterBookCategory('all', this)" class="book-cat-btn active">
+            Semua Kategori
+          </button>
+          {% for cat in categories %}
+            <button type="button" onclick="filterBookCategory('{{ cat.id }}', this)" class="book-cat-btn">
+              {{ cat.nama_kategori }}
+            </button>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Book Cards Grid -->
+    <div class="books-showcase-grid" id="booksGrid">
+      {% for book in books %}
+        <article class="book-showcase-card" data-category="{{ book.kategori.id|default:'' }}" style="display: flex; flex-direction: column;">
+          <!-- Thumbnail Buku (FULL PORTRAIT COVER) -->
+          <div class="book-showcase-thumb">
+            <a href="{{ book.get_absolute_url }}" class="book-thumb-link">
+              {% if book.featured_image %}
+                <img src="{{ book.featured_image.url }}" alt="{{ book.judul }}" class="book-thumb-img" loading="lazy">
+              {% else %}
+                <div class="book-thumb-ph">
+                  <i class="ri-book-open-line"></i>
+                  <span>ThesisEdu</span>
+                </div>
+              {% endif %}
+            </a>
+
+            <!-- Badge Kategori -->
+            {% if book.kategori %}
+              <span class="book-badge-cat">
+                {{ book.kategori.nama_kategori }}
+              </span>
+            {% else %}
+              <span class="book-badge-cat">
+                Buku
+              </span>
+            {% endif %}
+
+            <!-- Badge Diskon -->
+            {% if book.harga_potongan %}
+              <span class="book-badge-discount">
+                DISKON {{ book.persentase_diskon }}%
+              </span>
+            {% endif %}
+          </div>
+
+          <!-- Body Kartu Buku -->
+          <div class="book-showcase-body">
+            <!-- Penulis & Tahun -->
+            <div class="book-showcase-meta">
+              <span class="meta-author" title="Penulis">
+                <i class="ri-user-line"></i>
+                {% for p in book.penulis.all %}
+                  {{ p.user.first_name|default:p.user.username }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                  Anonim
+                {% endfor %}
+              </span>
+              {% if book.tahun %}
+                <span class="meta-year">
+                  <i class="ri-calendar-line"></i> {{ book.tahun }}
+                </span>
+              {% endif %}
+            </div>
+
+            <!-- Judul Buku -->
+            <h3 class="book-showcase-title">
+              <a href="{{ book.get_absolute_url }}" title="{{ book.judul }}">
+                {{ book.judul }}
+              </a>
+            </h3>
+            <!-- Price & Stock Info -->
+            <div class="book-showcase-footer">
+              <div class="book-price-wrap">
+                {% if book.harga_potongan %}
+                  <div style="display: flex; align-items: baseline; gap: 6px;">
+                    <span class="price-val">Rp {{ book.harga_potongan|floatformat:0 }}</span>
+                    <span class="price-slash">Rp {{ book.harga|floatformat:0 }}</span>
+                  </div>
+                {% else %}
+                  <span class="price-val">Rp {{ book.harga|floatformat:0 }}</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </article>
+      {% empty %}
+        <div class="apb-empty-state" style="grid-column: 1 / -1; padding: 4rem 1rem; text-align: center;">
+          <i class="ri-book-open-line" style="font-size: 3.5rem; color: #cbd5e1; margin-bottom: 1rem; display: block;"></i>
+          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: #1e293b;">Belum Ada Koleksi Buku</h3>
+          <p style="color: var(--apb-text-muted); font-size: 0.95rem; max-width: 500px; margin: 0 auto;">
+            Katalog buku akademik dan karya tulis ilmiah sedang disiapkan.
+          </p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     CSS & SCRIPT UNTUK KATALOG BUKU FULL IMAGE
+     ========================================================================= -->
+<style>
+/* Category Filter Buttons */
+.book-cat-btn {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.book-cat-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+.book-cat-btn.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+}
+
+/* Books Grid */
+.books-showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.75rem;
+}
+@media (max-width: 1200px) {
+  .books-showcase-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 768px) {
+  .books-showcase-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+@media (max-width: 480px) {
+  .books-showcase-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Card Container */
+.book-showcase-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+.book-showcase-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+/* Thumbnail Container (FULL PORTRAIT BOOK) */
+.book-showcase-thumb {
+  aspect-ratio: 1 / 1.35;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.book-thumb-link {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.book-thumb-img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  transition: transform 0.3s ease;
+  display: block;
+}
+.book-showcase-card:hover .book-thumb-img {
+  transform: scale(1.04);
+}
+
+.book-thumb-ph {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #94a3b8;
+  height: 100%;
+}
+.book-thumb-ph i {
+  font-size: 3rem;
+  color: #cbd5e1;
+}
+.book-thumb-ph span {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Badges */
+.book-badge-cat {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  z-index: 2;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+.book-badge-discount {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
+  z-index: 2;
+  letter-spacing: 0.5px;
+}
+
+/* Card Body */
+.book-showcase-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1.15rem 1.25rem;
+}
+.book-showcase-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 0.45rem;
+}
+.meta-author {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+.meta-year {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.book-showcase-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.05rem;
+  line-height: 1.4;
+  font-weight: 700;
+  color: #0f172a;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.8em;
+}
+.book-showcase-title a {
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.2s ease;
+}
+.book-showcase-title a:hover {
+  color: #0284c7;
+}
+
+.book-showcase-desc {
+  margin: 0 0 1rem 0;
+  font-size: 0.83rem;
+  color: #64748b;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.6em;
+}
+
+/* Footer / Price & Stock */
+.book-showcase-footer {
+  margin-top: auto;
+  padding-top: 0.85rem;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.book-price-wrap {
+  display: flex;
+  align-items: baseline;
+}
+.price-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0284c7;
+}
+.price-slash {
+  font-size: 0.78rem;
+  text-decoration: line-through;
+  color: #94a3b8;
+  margin-left: 4px;
+}
+.stock-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.stock-badge.in-stock {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+.stock-badge.out-stock {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+</style>
+
+<script>
+function filterBookCategory(catId, btn) {
+  // Update button active state
+  var allBtns = document.querySelectorAll('#bookCategoryFilters .book-cat-btn');
+  allBtns.forEach(function(b) {
+    b.classList.remove('active');
+  });
+  if (btn) btn.classList.add('active');
+
+  // Filter book cards
+  var cards = document.querySelectorAll('#booksGrid .book-showcase-card');
+  cards.forEach(function(card) {
+    var cardCat = card.getAttribute('data-category');
+    if (catId === 'all' || cardCat === catId) {
+      card.style.display = 'flex';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+</script>
+
+<!-- =========================================================================
+     5. ARTIKEL & RISET TERKINI
+     ========================================================================= -->
+<section class="apb-section apb-section-alt" id="artikel">
+  <div class="apb-container">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <div class="apb-badge-pill">
+          Publikasi &amp; Wawasan
+        </div>
+        <h2 class="apb-section-title" style="margin-bottom: 0.5rem;">Artikel &amp; Kajian Ilmiah</h2>
+        <p class="apb-section-subtitle">
+          Wawasan terbaru seputar kepenulisan buku, metodologi riset, kurikulum akademik, serta telaah kebijakan publikasi.
+        </p>
+      </div>
+      <div>
+        <a href="{% url 'article_list' %}" class="apb-btn apb-btn-outline">
+          Lihat Semua Artikel <i class="ri-arrow-right-line"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Article Cards Grid -->
+    <div class="apb-articles-grid">
+      {% for article in articles %}
+        <article class="apb-article-card">
+          <!-- Thumbnail -->
+          <div class="apb-article-thumb">
+            {% if article.featured_image %}
+              <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" loading="lazy">
+            {% else %}
+              <div class="apb-article-thumb-placeholder">
+                <i class="ri-file-text-line"></i>
+              </div>
+            {% endif %}
+            
+            {% if article.category %}
+              <span class="apb-article-category">{{ article.category.name }}</span>
+            {% else %}
+              <span class="apb-article-category">Artikel</span>
+            {% endif %}
+          </div>
+
+          <!-- Body -->
+          <div class="apb-article-body">
+            <div class="apb-article-meta">
+              <span class="apb-article-meta-item">
+                <i class="ri-calendar-line"></i> {{ article.created_at|date:"d M Y" }}
+              </span>
+              {% if article.views_count %}
+                <span class="apb-article-meta-item">
+                  <i class="ri-eye-line"></i> {{ article.views_count }} dibaca
+                </span>
+              {% endif %}
+            </div>
+
+            <h3 class="apb-article-title">
+              <a href="{% url 'article_detail' article.slug %}">
+                {{ article.title }}
+              </a>
+            </h3>
+
+            <p class="apb-article-excerpt">
+              {{ article.content|striptags|truncatewords:20 }}
+            </p>
+
+            <div class="apb-article-footer">
+              <span style="font-size: 0.8rem; color: var(--apb-text-muted);">
+                <i class="ri-user-3-line"></i> {{ article.author.first_name|default:article.author.username }}
+              </span>
+              <a href="{% url 'article_detail' article.slug %}" class="apb-article-readmore">
+                Baca <i class="ri-arrow-right-s-line"></i>
+              </a>
+            </div>
+          </div>
+        </article>
+      {% empty %}
+        <!-- Fallback if no published articles exist yet -->
+        <div class="apb-empty-state">
+          <i class="ri-newspaper-line apb-empty-icon"></i>
+          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Belum Ada Artikel Dipublikasikan</h3>
+          <p style="color: var(--apb-text-muted); font-size: 0.95rem; max-width: 500px; margin: 0 auto 1.5rem auto;">
+            Artikel dan kajian penelitian terbaru dari kontributor ThesisEdu akan segera hadir di sini.
+          </p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     6. AGENDA, WORKSHOP & CALL FOR BOOK CHAPTERS
+     ========================================================================= -->
+<section class="apb-section" id="aktivitas">
+  <div class="apb-container">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <div class="apb-badge-pill">
+          <i class="ri-calendar-event-line"></i> Agenda &amp; Program
+        </div>
+        <h2 class="apb-section-title" style="margin-bottom: 0.5rem;">Agenda, Workshop &amp; Call for Chapters</h2>
+        <p class="apb-section-subtitle">
+          Ikuti rangkaian program Call for Book Chapters, pelatihan penulisan monograf, webinar publikasi jurnal, dan workshop metodologi.
+        </p>
+      </div>
+      <div>
+        <a href="{% url 'aktivitas_list' %}" class="apb-btn apb-btn-outline">
+          Lihat Semua Aktivitas <i class="ri-arrow-right-line"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Aktivitas Cards Grid -->
+    <div class="apb-akt-grid">
+      {% for item in aktivitas_list %}
+        <article class="apb-akt-card">
+          <!-- Thumbnail Poster -->
+          <div class="apb-akt-thumb-wrap">
+            <a href="{% url 'aktivitas_detail' item.slug %}">
+              {% if item.featured_image %}
+                <img src="{{ item.featured_image.url }}" alt="{{ item.title }}" class="apb-akt-thumb" loading="lazy">
+              {% else %}
+                <div class="apb-akt-thumb-placeholder">
+                  <i class="ri-calendar-event-line"></i>
+                  <span>{{ webname|default:"ThesisEdu" }} Event</span>
+                </div>
+              {% endif %}
+            </a>
+          </div>
+
+          <!-- Card Body -->
+          <div class="apb-akt-body">
+            <div class="apb-akt-meta-row">
+              {% if item.category %}
+                <span class="apb-akt-category-badge">{{ item.category.name }}</span>
+              {% else %}
+                <span class="apb-akt-category-badge">Agenda</span>
+              {% endif %}
+              <span class="apb-akt-date"><i class="ri-calendar-line"></i> {{ item.created_at|date:"d M Y" }}</span>
+            </div>
+
+            <h3 class="apb-akt-title">
+              <a href="{% url 'aktivitas_detail' item.slug %}">
+                {{ item.title }}
+              </a>
+            </h3>
+
+            <p class="apb-akt-excerpt">
+              {{ item.content|striptags|truncatewords:18 }}
+            </p>
+
+            <div class="apb-akt-footer">
+              <span style="font-size: 0.78rem; color: var(--apb-text-muted); display: inline-flex; align-items: center; gap: 4px;">
+                <i class="ri-user-3-line"></i> {{ item.author.first_name|default:item.author.username|default:"Redaksi" }}
+              </span>
+              <a href="{% url 'aktivitas_detail' item.slug %}" class="apb-akt-readmore">
+                Lihat Detail <i class="ri-arrow-right-line"></i>
+              </a>
+            </div>
+          </div>
+        </article>
+      {% empty %}
+        <div class="apb-empty-state" style="grid-column: 1 / -1;">
+          <i class="ri-calendar-close-line apb-empty-icon"></i>
+          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Belum Ada Agenda Dipublikasikan</h3>
+          <p style="color: var(--apb-text-muted); font-size: 0.95rem; max-width: 500px; margin: 0 auto 1.5rem auto;">
+            Agenda workshop penulisan, Call for Book Chapter, dan seminar publikasi akan segera diumumkan di sini.
+          </p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     7. MITRA & EKOSISTEM PENDUKUNG
+     ========================================================================= -->
+<section class="apb-partners-section" id="mitra">
+  <div class="apb-container">
+    <div class="apb-section-header">
+      <div class="apb-badge-pill">
+        <i class="ri-shake-hands-line"></i> Kolaborasi Strategis
+      </div>
+      <h2 class="apb-section-title">Mitra Perguruan Tinggi &amp; Riset</h2>
+      <p class="apb-section-subtitle">
+        Bekerja sama erat bersama perguruan tinggi, lembaga riset, perpustakaan, dan asosiasi akademik dalam memajukan literasi dan publikasi ilmiah Indonesia.
+      </p>
+    </div>
+
+    <!-- Partner Grid -->
+    <div class="apb-partners-grid">
+      {% for partner in kerjasama_list %}
+        {% if partner.link_website %}
+          <a href="{{ partner.link_website }}" target="_blank" rel="noopener noreferrer" class="apb-partner-item" title="{{ partner.nama_kerjasama }}">
+            {% if partner.logo %}
+              <img src="{{ partner.logo.url }}" alt="{{ partner.nama_kerjasama }}" class="apb-partner-logo" loading="lazy">
+            {% else %}
+              <div class="apb-partner-badge">{{ partner.nama_kerjasama }}</div>
+            {% endif %}
+          </a>
+        {% else %}
+          <div class="apb-partner-item" title="{{ partner.nama_kerjasama }}">
+            {% if partner.logo %}
+              <img src="{{ partner.logo.url }}" alt="{{ partner.nama_kerjasama }}" class="apb-partner-logo" loading="lazy">
+            {% else %}
+              <div class="apb-partner-badge">{{ partner.nama_kerjasama }}</div>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% empty %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     8. KEUNTUNGAN MENJADI PENULIS & ANGGOTA
+     ========================================================================= -->
+<section class="apb-benefit-section" id="keuntungan-anggota">
+  <div class="apb-container">
+
+    <!-- Section Header -->
+    <div class="apb-benefit-header">
+      <div class="apb-benefit-badge">
+        <i class="ri-award-line"></i> Mengapa ThesisEdu
+      </div>
+      <h2 class="apb-benefit-title">
+        Keuntungan Publikasi &amp; Menerbitkan di <span>ThesisEdu</span>
+      </h2>
+      <p class="apb-benefit-subtitle">
+        Solusi terpadu publikasi ilmiah, buku ber-ISBN resmi, dan peningkatan reputasi akademik bagi para dosen dan peneliti.
+      </p>
+    </div>
+
+    <!-- Benefit Cards -->
+    <div class="apb-benefit-grid">
+
+      <!-- Benefit 1 -->
+      <div class="apb-benefit-card" data-benefit="1">
+        <div class="apb-benefit-card-glow"></div>
+        <div class="apb-benefit-icon-wrap">
+          <div class="apb-benefit-icon">
+            <i class="ri-shield-check-line"></i>
+          </div>
+          <div class="apb-benefit-number">01</div>
+        </div>
+        <div class="apb-benefit-content">
+          <h3 class="apb-benefit-card-title">ISBN &amp; Legalitas Resmi</h3>
+          <p class="apb-benefit-card-desc">
+            Penerbitan buku ber-ISBN resmi dari Perpustakaan Nasional RI, barcode, serta fasilitasi pengurusan Surat Pencatatan Hak Cipta (HKI).
+          </p>
+        </div>
+        <div class="apb-benefit-card-footer">
+          <span class="apb-benefit-tag"><i class="ri-checkbox-circle-line"></i> Legalitas Terjamin</span>
+        </div>
+      </div>
+
+      <!-- Benefit 2 -->
+      <div class="apb-benefit-card" data-benefit="2">
+        <div class="apb-benefit-card-glow"></div>
+        <div class="apb-benefit-icon-wrap">
+          <div class="apb-benefit-icon">
+            <i class="ri-book-2-line"></i>
+          </div>
+          <div class="apb-benefit-number">02</div>
+        </div>
+        <div class="apb-benefit-content">
+          <h3 class="apb-benefit-card-title">Program Book Chapter</h3>
+          <p class="apb-benefit-card-desc">
+            Kesempatan menulis bersama pakar dan akademisi dari berbagai perguruan tinggi dalam tema-tema riset mutakhir.
+          </p>
+        </div>
+        <div class="apb-benefit-card-footer">
+          <span class="apb-benefit-tag"><i class="ri-team-line"></i> Kolaborasi Nasional</span>
+        </div>
+      </div>
+
+      <!-- Benefit 3 -->
+      <div class="apb-benefit-card" data-benefit="3">
+        <div class="apb-benefit-card-glow"></div>
+        <div class="apb-benefit-icon-wrap">
+          <div class="apb-benefit-icon">
+            <i class="ri-graduation-cap-line"></i>
+          </div>
+          <div class="apb-benefit-number">03</div>
+        </div>
+        <div class="apb-benefit-content">
+          <h3 class="apb-benefit-card-title">Nilai Kum BKD &amp; Jabfung</h3>
+          <p class="apb-benefit-card-desc">
+            Setiap karya buku dan artikel dirancang memenuhi standar evaluasi kinerja dosen (BKD) dan kenaikan jabatan akademik.
+          </p>
+        </div>
+        <div class="apb-benefit-card-footer">
+          <span class="apb-benefit-tag"><i class="ri-award-line"></i> Nilai Angka Kredit</span>
+        </div>
+      </div>
+
+      <!-- Benefit 4 -->
+      <div class="apb-benefit-card" data-benefit="4">
+        <div class="apb-benefit-card-glow"></div>
+        <div class="apb-benefit-icon-wrap">
+          <div class="apb-benefit-icon">
+            <i class="ri-sparkling-line"></i>
+          </div>
+          <div class="apb-benefit-number">04</div>
+        </div>
+        <div class="apb-benefit-content">
+          <h3 class="apb-benefit-card-title">Layanan Prima &amp; Cepat</h3>
+          <p class="apb-benefit-card-desc">
+            Tim proofreader, editor, dan layout desainer profesional siap mendampingi naskah Anda hingga terbit dan beredar.
+          </p>
+        </div>
+        <div class="apb-benefit-card-footer">
+          <span class="apb-benefit-tag"><i class="ri-time-line"></i> Proses Cepat</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CTA -->
+    <div class="apb-benefit-cta">
+      <a href="{% url 'register' %}" class="apb-btn apb-btn-primary apb-benefit-cta-btn">
+        <i class="ri-user-add-line"></i> Daftar Menjadi Penulis
+      </a>
+      <a href="{% url 'contact_page' %}" class="apb-btn apb-benefit-cta-outline">
+        <i class="ri-information-line"></i> Konsultasi Naskah
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<!-- =========================================================================
+     9. FAQ & PUSAT BANTUAN
+     ========================================================================= -->
+<section class="apb-faq-section" id="faq">
+  <div class="apb-container">
+    <!-- Section Header -->
+    <div class="apb-faq-header">
+      <div class="apb-faq-badge">
+        <i class="ri-question-answer-line"></i> FAQ &amp; Pusat Bantuan
+      </div>
+      <h2 class="apb-faq-title">Pertanyaan yang Sering Diajukan</h2>
+      <p class="apb-faq-subtitle">
+        Temukan jawaban atas pertanyaan umum seputar ThesisEdu, penerbitan buku ber-ISBN, program book chapter, dan publikasi jurnal.
+      </p>
+    </div>
+
+    <!-- FAQ Grid: 2 columns -->
+    <div class="apb-faq-grid">
+
+      <!-- Left Column -->
+      <div class="apb-faq-col">
+
+        <div class="apb-faq-item">
+          <button class="apb-faq-question" aria-expanded="false" onclick="apbToggleFaq(this)">
+            <span>Apa itu ThesisEdu?</span>
+            <span class="apb-faq-icon"><i class="ri-add-line"></i></span>
+          </button>
+          <div class="apb-faq-answer">
+            <p>ThesisEdu adalah platform penerbitan buku dan publikasi ilmiah terpadu. Kami memfasilitasi penerbitan buku monograf, buku ajar, buku referensi ber-ISBN resmi, publikasi artikel jurnal, serta program kolaborasi book chapter bagi para dosen, peneliti, dan mahasiswa di seluruh Indonesia.</p>
+          </div>
+        </div>
+
+        <div class="apb-faq-item">
+          <button class="apb-faq-question" aria-expanded="false" onclick="apbToggleFaq(this)">
+            <span>Siapa saja yang bisa menerbitkan buku di ThesisEdu?</span>
+            <span class="apb-faq-icon"><i class="ri-add-line"></i></span>
+          </button>
+          <div class="apb-faq-answer">
+            <p>Layanan ThesisEdu terbuka untuk seluruh sivitas akademika: <strong>Dosen &amp; Pendidik</strong> (untuk buku ajar atau monograf riset), <strong>Peneliti</strong> (hasil telaah laboratorium/lapangan), <strong>Mahasiswa Pascasarjana</strong> (skripsi, tesis, atau disertasi yang dikonversi menjadi buku), serta <strong>Praktisi Profesional</strong>.</p>
+          </div>
+        </div>
+
+        <div class="apb-faq-item">
+          <button class="apb-faq-question" aria-expanded="false" onclick="apbToggleFaq(this)">
+            <span>Bagaimana alur pengajuan penerbitan buku?</span>
+            <span class="apb-faq-icon"><i class="ri-add-line"></i></span>
+          </button>
+          <div class="apb-faq-answer">
+            <p>Alurnya sangat terstruktur: Daftarkan akun penulis di portal ThesisEdu, unggah draf naskah Anda, tim redaksi akan melakukan telaah awal &amp; penyuntingan (editing/layout), proses permohonan ISBN ke Perpustakaan Nasional RI, lalu cetak dan distribusi digital.</p>
+          </div>
+        </div>
+
+        <div class="apb-faq-item">
+          <button class="apb-faq-question" aria-expanded="false" onclick="apbToggleFaq(this)">
+            <span>Apakah buku yang diterbitkan memiliki ISBN resmi?</span>
+            <span class="apb-faq-icon"><i class="ri-add-line"></i></span>
+          </button>
+          <div class="apb-faq-answer">
+            <p>Ya, seluruh buku yang diterbitkan oleh ThesisEdu mendapatkan nomor ISBN resmi beserta barcode yang terdaftar secara sah di Perpustakaan Nasional Republik Indonesia (Perpusnas).</p>
+          </div>
+        </div>
+
+      </div><!-- /Left Column -->
+
+      <!-- Right Column -->
+      <div class="apb-faq-col">
+
+        <div class="apb-faq-item">
+          <button class="apb-faq-question" aria-expanded="false" onclick="apbToggleFaq(this)">
+            <span>Apa itu program Call for Book Chapter?</span>
+            <span class="apb-faq-icon"><i class="ri-add-line"></i></span>
+          </button>
+          <div class="apb-faq-answer">
+            <p>Call for Book Chapter adalah proyek penulisan antologi bertema khusus di mana Anda cukup menyusun 1 bab (chapter) ilmiah sesuai bidang kepakaran Anda. Bab Anda kemudian digabungkan bersama karya penulis lain menjadi sebuah buku utuh ber-ISBN yang diakui untuk nilai BKD.</p>
+          </div>
+        </div>
+
+        <div class="apb-faq-item">
+          <button class="apb-faq-question" aria-expanded="false" onclick="apbToggleFaq(this)">
+            <span>Berapa lama proses penerbitan buku hingga terbit?</span>
+            <span class="apb-faq-icon"><i class="ri-add-line"></i></span>
+          </button>
+          <div class="apb-faq-answer">
+            <p>Waktu penerbitan biasanya memakan waktu antara <strong>2 hingga 4 minggu</strong> tergantung pada kelengkapan naskah, antrean permohonan ISBN di Perpusnas, dan tahapan revisi layout.</p>
+          </div>
+        </div>
+
+        <div class="apb-faq-item">
+          <button class="apb-faq-question" aria-expanded="false" onclick="apbToggleFaq(this)">
+            <span>Apakah ThesisEdu melayani kerja sama institusi kampus?</span>
+            <span class="apb-faq-icon"><i class="ri-add-line"></i></span>
+          </button>
+          <div class="apb-faq-answer">
+            <p>Tentu. Kami bermitra dengan fakultas, program studi, dan LPPM untuk penerbitan prosiding seminar, bunga rampai hasil riset dosen, serta program pendampingan konversi tesis/disertasi menjadi buku referensi.</p>
+          </div>
+        </div>
+
+        <div class="apb-faq-item">
+          <button class="apb-faq-question" aria-expanded="false" onclick="apbToggleFaq(this)">
+            <span>Bagaimana cara menghubungi redaksi ThesisEdu?</span>
+            <span class="apb-faq-icon"><i class="ri-add-line"></i></span>
+          </button>
+          <div class="apb-faq-answer">
+            <p>Anda dapat menghubungi tim redaksi kami melalui halaman <a href="{% url 'contact_page' %}">Hubungi Kami</a> di website ini, atau langsung melalui pesan WhatsApp resmi untuk konsultasi naskah yang siap terbit.</p>
+          </div>
+        </div>
+
+      </div><!-- /Right Column -->
+
+    </div><!-- /FAQ Grid -->
+
+    <!-- Bottom CTA -->
+    <div class="apb-faq-cta">
+      <p>Punya naskah yang siap diterbitkan atau ingin konsultasi?</p>
+      <a href="{% url 'contact_page' %}" class="apb-btn apb-btn-outline">
+        <i class="ri-mail-send-line"></i> Hubungi Redaksi Kami
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<!-- =========================================================================
+     10. CTA BANNER
+     ========================================================================= -->
+<section class="apb-section">
+  <div class="apb-container">
+    <div class="apb-cta-banner">
+      <div class="apb-cta-content">
+        <h2 class="apb-cta-title">Siap Menerbitkan Buku &amp; Karya Ilmiah Anda?</h2>
+        <p class="apb-cta-desc">
+          Bergabung bersama jaringan akademisi, penulis, dan peneliti di ThesisEdu. Wujudkan naskah terbaik Anda menjadi publikasi bermutu dan berdaya dampak.
+        </p>
+      </div>
+      <div class="apb-cta-buttons">
+        <a href="{% url 'register' %}" class="apb-btn apb-btn-primary" style="background-color: #ffffff; color: var(--apb-secondary); font-weight: 700;">
+          Daftar Penulis <i class="ri-arrow-right-line"></i>
+        </a>
+        <a href="{% url 'contact_page' %}" class="apb-btn apb-btn-outline-white">
+          Konsultasi Naskah
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function apbToggleFaq(btn) {
+  var item = btn.closest('.apb-faq-item');
+  var answer = item.querySelector('.apb-faq-answer');
+  var icon = btn.querySelector('.apb-faq-icon i');
+  var isOpen = btn.getAttribute('aria-expanded') === 'true';
+
+  // Close all others in same column
+  var col = btn.closest('.apb-faq-col');
+  col.querySelectorAll('.apb-faq-item').forEach(function(otherItem) {
+    if (otherItem !== item) {
+      otherItem.querySelector('.apb-faq-question').setAttribute('aria-expanded', 'false');
+      otherItem.querySelector('.apb-faq-answer').style.maxHeight = null;
+      otherItem.querySelector('.apb-faq-answer').style.paddingTop = null;
+      otherItem.querySelector('.apb-faq-answer').style.paddingBottom = null;
+      var otherIcon = otherItem.querySelector('.apb-faq-icon i');
+      otherIcon.className = 'ri-add-line';
+    }
+  });
+
+  if (isOpen) {
+    btn.setAttribute('aria-expanded', 'false');
+    answer.style.maxHeight = null;
+    answer.style.paddingTop = null;
+    answer.style.paddingBottom = null;
+    icon.className = 'ri-add-line';
+  } else {
+    btn.setAttribute('aria-expanded', 'true');
+    answer.style.maxHeight = answer.scrollHeight + 48 + 'px';
+    answer.style.paddingTop = '1rem';
+    answer.style.paddingBottom = '1.25rem';
+    icon.className = 'ri-subtract-line';
+  }
+}
+
+(function() {
+  const track = document.getElementById('heroSliderTrack');
+  const wrapper = document.getElementById('heroSliderWrapper');
+  const prevBtn = document.getElementById('heroSliderPrev');
+  const nextBtn = document.getElementById('heroSliderNext');
+  const dots = document.querySelectorAll('#heroSliderDots .apb-dot');
+  const slides = document.querySelectorAll('.apb-slide');
+
+  if (!track || slides.length <= 1) return;
+
+  let currentIndex = 0;
+  const totalSlides = slides.length;
+  let autoSlideInterval = null;
+  const AUTO_DELAY = 5000; // 5 seconds
+
+  function updateSlider(index) {
+    if (index < 0) {
+      currentIndex = totalSlides - 1;
+    } else if (index >= totalSlides) {
+      currentIndex = 0;
+    } else {
+      currentIndex = index;
+    }
+
+    // Smooth translation (100% of wrapper width per slide)
+    track.style.transform = `translateX(-${currentIndex * 100}%)`;
+
+    // Update dots
+    dots.forEach((dot, idx) => {
+      if (idx === currentIndex) {
+        dot.classList.add('active');
+      } else {
+        dot.classList.remove('active');
+      }
+    });
+  }
+
+  function startAutoSlide() {
+    stopAutoSlide();
+    autoSlideInterval = setInterval(() => {
+      updateSlider(currentIndex + 1);
+    }, AUTO_DELAY);
+  }
+
+  function stopAutoSlide() {
+    if (autoSlideInterval) {
+      clearInterval(autoSlideInterval);
+      autoSlideInterval = null;
+    }
+  }
+
+  // Button event listeners
+  if (nextBtn) {
+    nextBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      updateSlider(currentIndex + 1);
+      startAutoSlide();
+    });
+  }
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      updateSlider(currentIndex - 1);
+      startAutoSlide();
+    });
+  }
+
+  // Dot click listeners
+  dots.forEach((dot) => {
+    dot.addEventListener('click', () => {
+      const dotIndex = parseInt(dot.getAttribute('data-dot-index'), 10);
+      updateSlider(dotIndex);
+      startAutoSlide();
+    });
+  });
+
+  // Pause on hover
+  if (wrapper) {
+    wrapper.addEventListener('mouseenter', stopAutoSlide);
+    wrapper.addEventListener('mouseleave', startAutoSlide);
+
+    // Touch / swipe support
+    let startX = 0;
+    let isSwiping = false;
+
+    wrapper.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      isSwiping = true;
+      stopAutoSlide();
+    }, { passive: true });
+
+    wrapper.addEventListener('touchend', (e) => {
+      if (!isSwiping) return;
+      const endX = e.changedTouches[0].clientX;
+      const diffX = startX - endX;
+
+      // Minimum swipe distance
+      if (Math.abs(diffX) > 50) {
+        if (diffX > 0) {
+          updateSlider(currentIndex + 1); // Swipe left -> next
+        } else {
+          updateSlider(currentIndex - 1); // Swipe right -> prev
+        }
+      }
+      isSwiping = false;
+      startAutoSlide();
+    }, { passive: true });
+  }
+
+  // Keyboard navigation when page active
+  document.addEventListener('keydown', (e) => {
+    const rect = wrapper ? wrapper.getBoundingClientRect() : null;
+    if (rect && rect.top < window.innerHeight && rect.bottom > 0) {
+      if (e.key === 'ArrowRight') {
+        updateSlider(currentIndex + 1);
+        startAutoSlide();
+      } else if (e.key === 'ArrowLeft') {
+        updateSlider(currentIndex - 1);
+        startAutoSlide();
+      }
+    }
+  });
+
+  // Initialize auto play
+  startAutoSlide();
+})();
+</script>
+{% endblock %}

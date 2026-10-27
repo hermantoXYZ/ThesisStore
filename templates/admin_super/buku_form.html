@@ -1,0 +1,334 @@
+{% extends "admin_super/base.html" %}
+
+{% block extra_head %}
+<!-- Summernote WYSIWYG CSS -->
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+{% endblock extra_head %}
+
+{% block content1 %}
+<div class="dashboard-content">
+    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+        <div style="margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    {% if book %}Edit Buku: {{ book.judul|truncatewords:5 }}{% else %}Tambah Buku Baru{% endif %}
+                </h3>
+                <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                    Silakan lengkapi informasi buku, penulis, harga, stok, dan sampul media.
+                </p>
+            </div>
+            <a href="{% url 'app:buku_list' %}" class="btn secondary">
+                <i class="ri-arrow-left-line"></i> Kembali ke Daftar
+            </a>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- SECTION 1: INFORMASI UTAMA -->
+            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+                1. Informasi Utama
+            </h4>
+
+            <div class="form-row">
+                <div class="form-group" style="flex: 2; min-width: 280px; margin-bottom: 16px;">
+                    <label for="id_judul" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Judul Buku <span style="color: red;">*</span>
+                    </label>
+                    {{ form.judul }}
+                    {% if form.judul.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.judul.errors.0 }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 16px;">
+                    <label for="id_slug" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Slug URL
+                    </label>
+                    {{ form.slug }}
+                    <small style="color: #7f8c8d; display: block; margin-top: 4px;">Otomatis dibuat jika kosong.</small>
+                    {% if form.slug.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.slug.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group" style="flex: 1; min-width: 220px; margin-bottom: 16px;">
+                    <label for="id_penulis" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Penulis Buku
+                    </label>
+                    {{ form.penulis }}
+                    {% if form.penulis.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.penulis.errors.0 }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 220px; margin-bottom: 16px;">
+                    <label for="id_editor" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Editor Buku
+                    </label>
+                    {{ form.editor }}
+                    {% if form.editor.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.editor.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+
+            <div class="form-row">
+             <div class="form-group" style="flex: 1; min-width: 220px; margin-bottom: 16px;">
+                    <label for="id_kategori" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Kategori Buku
+                    </label>
+                    {{ form.kategori }}
+                    {% if form.kategori.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.kategori.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <!-- SECTION 2: HARGA, STOK & STATUS -->
+            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-top: 20px; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+                2. Harga, Stok & Status
+            </h4>
+
+            <div class="form-row">
+                <div class="form-group" style="flex: 1; min-width: 170px; margin-bottom: 16px;">
+                    <label for="id_harga" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Harga Normal (Rp) <span style="color: red;">*</span>
+                    </label>
+                    {{ form.harga }}
+                    {% if form.harga.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.harga.errors.0 }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 170px; margin-bottom: 16px;">
+                    <label for="id_harga_potongan" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Harga Potongan / Diskon (Rp)
+                    </label>
+                    {{ form.harga_potongan }}
+                    {% if form.harga_potongan.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.harga_potongan.errors.0 }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 130px; margin-bottom: 16px;">
+                    <label for="id_stok" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Stok <span style="color: red;">*</span>
+                    </label>
+                    {{ form.stok }}
+                    {% if form.stok.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.stok.errors.0 }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 170px; margin-bottom: 16px;">
+                    <label for="id_status" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Status Ketersediaan <span style="color: red;">*</span>
+                    </label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.status.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- SECTION 3: SPESIFIKASI BUKU -->
+            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-top: 20px; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+                3. Spesifikasi Buku (Opsional)
+            </h4>
+
+            <div class="form-row">
+                <div class="form-group" style="flex: 1; min-width: 180px; margin-bottom: 16px;">
+                    <label for="id_isbn" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">ISBN</label>
+                    {{ form.isbn }}
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 180px; margin-bottom: 16px;">
+                    <label for="id_bidang_ilmu" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">Bidang Ilmu</label>
+                    {{ form.bidang_ilmu }}
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 140px; margin-bottom: 16px;">
+                    <label for="id_tahun" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">Tahun Terbit</label>
+                    {{ form.tahun }}
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 140px; margin-bottom: 16px;">
+                    <label for="id_ukuran" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">Ukuran Buku</label>
+                    {{ form.ukuran }}
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 140px; margin-bottom: 16px;">
+                    <label for="id_halaman" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">Jumlah Halaman</label>
+                    {{ form.halaman }}
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="id_deskripsi" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                    Sinopsis / Deskripsi Buku <span style="color: red;">*</span>
+                </label>
+                {{ form.deskripsi }}
+                {% if form.deskripsi.errors %}
+                    <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.deskripsi.errors.0 }}</small>
+                {% endif %}
+            </div>
+
+            <!-- SECTION 4: MEDIA & SAMPUL -->
+            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-top: 20px; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+                4. Foto / Sampul Buku
+            </h4>
+
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label for="id_featured_image" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+                    <span>Gambar Sampul Depan (Featured Image)</span>
+                    {% if book and book.featured_image %}
+                        <a href="{{ book.featured_image.url }}" target="_blank" style="color: #1d84c6; font-size: 13px; text-decoration: underline; font-weight: normal;">
+                            <i class="ri-external-link-line"></i> Lihat Gambar Saat Ini
+                        </a>
+                    {% endif %}
+                </label>
+                <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                    <div style="flex-shrink: 0;">
+                        <img src="{% if book and book.featured_image %}{{ book.featured_image.url }}{% else %}https://placehold.co/100x130?text=No+Cover{% endif %}"
+                             alt="Featured Image Preview"
+                             id="preview-featured-image"
+                             style="width: 80px; height: 110px; object-fit: cover; border-radius: 6px; border: 1px solid #ccc; background: #fff;">
+                    </div>
+                    <div style="flex-grow: 1;">
+                        {{ form.featured_image }}
+                        <small style="color: #7f8c8d; display: block; margin-top: 4px;">
+                            Gambar sampul depan utama buku yang tampil pada katalog produk.
+                        </small>
+                        {% if form.featured_image.errors %}
+                            <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.featured_image.errors.0 }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border: none; border-top: 1px dashed #e0e0e0;">
+
+            {% if book and book.media_buku.all %}
+            <div style="margin-bottom: 20px;">
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    {% for m in book.media_buku.all %}
+                    <div style="position: relative; width: 100px; height: 130px; border-radius: 6px; overflow: hidden; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        {% if m.media %}
+                        <img src="{{ m.media.url }}" alt="Media Buku" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% endif %}
+                        <a href="{% url 'app:buku_media_hapus' book.uuid m.id %}"
+                           onclick="return confirm('Hapus foto ini?');"
+                           style="position: absolute; top: 4px; right: 4px; background: rgba(231, 76, 60, 0.9); color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 12px;"
+                           title="Hapus foto ini">
+                            <i class="ri-close-line"></i>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label for="id_media_files" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                    Unggah Sampul / Foto Buku (Bisa pilih lebih dari satu)
+                </label>
+                <input type="file" name="media_files" id="id_media_files" multiple accept="image/*" class="form-control">
+                <small style="color: #7f8c8d; display: block; margin-top: 4px;">
+                    Format file gambar didukung: JPG, PNG, WEBP. Anda dapat memilih lebih dari satu foto sekaligus.
+                </small>
+            </div>
+
+            <div class="form-actions" style="display: flex; gap: 10px; margin-top: 30px; padding-top: 15px; border-top: 1px solid #eee;">
+                <button type="submit" class="btn primary">
+                    <i class="ri-save-line"></i> Simpan Buku
+                </button>
+                <a href="{% url 'app:buku_list' %}" class="btn secondary">
+                    <i class="ri-arrow-left-line"></i> Batal
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content1 %}
+
+{% block script_costum %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Inisialisasi Rich Text Editor Summernote
+    $('#id_deskripsi, .summernote-editor').summernote({
+        placeholder: 'Tulis sinopsis / deskripsi buku di sini...',
+        tabsize: 2,
+        height: 320,
+        toolbar: [
+            ['style', ['style']],
+            ['font', ['bold', 'italic', 'underline', 'clear', 'strikethrough']],
+            ['fontname', ['fontname']],
+            ['fontsize', ['fontsize']],
+            ['color', ['color']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['table', ['table']],
+            ['insert', ['link', 'picture', 'video', 'hr']],
+            ['view', ['fullscreen', 'codeview', 'help']]
+        ]
+    });
+
+    // Live preview featured image
+    $('#id_featured_image').on('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                $('#preview-featured-image').attr('src', e.target.result);
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const multiSelectConfigs = [
+        { id: 'id_penulis', placeholder: 'Pilih atau cari penulis...' },
+        { id: 'id_editor', placeholder: 'Pilih atau cari editor...' }
+    ];
+
+    multiSelectConfigs.forEach(function(item) {
+        const el = document.getElementById(item.id);
+        if (el) {
+            new Choices(el, {
+                removeItemButton: true,
+                searchEnabled: true,
+                searchPlaceholderValue: item.placeholder,
+                placeholderValue: item.placeholder,
+                noResultsText: 'Tidak ditemukan',
+                noChoicesText: 'Tidak ada pilihan lagi',
+                itemSelectText: '',
+                shouldSort: false,
+            });
+        }
+    });
+
+    const kategoriEl = document.getElementById('id_kategori');
+    if (kategoriEl) {
+        new Choices(kategoriEl, {
+            searchEnabled: true,
+            searchPlaceholderValue: 'Cari kategori...',
+            placeholderValue: 'Pilih Kategori Buku',
+            noResultsText: 'Kategori tidak ditemukan',
+            itemSelectText: '',
+            shouldSort: false,
+            removeItemButton: false,
+        });
+    }
+
+    const statusEl = document.getElementById('id_status');
+    if (statusEl) {
+        new Choices(statusEl, {
+            searchEnabled: false,
+            itemSelectText: '',
+            shouldSort: false,
+            removeItemButton: false,
+        });
+    }
+});
+</script>
+{% endblock script_costum %}

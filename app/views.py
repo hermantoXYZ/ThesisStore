@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
 from django.utils import timezone
-from .models import UserAdmin, UserPengguna, Provinsi
+from .models import UserAdmin, UserPengguna, Provinsi, Books, CategoryBooks
 
 
 @login_required
@@ -15,6 +15,8 @@ def index(request):
         userC = UserAdmin.objects.filter(username=request.user).first()
         total_pengguna = UserPengguna.objects.count()
         total_provinsi = Provinsi.objects.count()
+        total_buku = Books.objects.count()
+        total_kategori = CategoryBooks.objects.count()
 
         context = {
             'title': 'Dashboard',
@@ -23,6 +25,8 @@ def index(request):
             'userdetail': userC if userC else None,
             'total_pengguna': total_pengguna,
             'total_provinsi': total_provinsi,
+            'total_buku': total_buku,
+            'total_kategori': total_kategori,
         }
         return render(request, 'admin_super/index.html', context)
 

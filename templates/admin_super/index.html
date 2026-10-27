@@ -60,6 +60,20 @@
                 <h1>{{ total_provinsi|default:0 }}</h1>
             </div>
         </div>
+        <div class="stat-card orange" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: #fff;">   
+            <i class="ri-book-2-line" style="color: #fff;"></i>
+            <div class="stat-info">
+                <p style="color: rgba(255,255,255,0.85);">Total Buku</p>
+                <h1 style="color: #fff;">{{ total_buku|default:0 }}</h1>
+            </div>
+        </div>
+        <div class="stat-card purple" style="background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%); color: #fff;">   
+            <i class="ri-price-tag-3-line" style="color: #fff;"></i>
+            <div class="stat-info">
+                <p style="color: rgba(255,255,255,0.85);">Total Kategori</p>
+                <h1 style="color: #fff;">{{ total_kategori|default:0 }}</h1>
+            </div>
+        </div>
     </div>
 
 </div>

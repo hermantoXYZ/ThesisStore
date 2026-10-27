@@ -1,0 +1,139 @@
+{% extends 'homepage/base_public.html' %}
+{% load static %}
+
+{% block title %}Artikel & Riset | {{ webname }} - {{ web_name }}{% endblock %}
+
+{% block content %}
+<!-- Page Header Banner -->
+<section class="apb-page-header">
+  <div class="apb-container">
+    <div class="apb-breadcrumb">
+      <a href="{% url 'homepage' %}"><i class="ri-home-4-line"></i> Beranda</a>
+      <span>/</span>
+      <span>Artikel & Riset</span>
+    </div>
+    <h1 class="apb-page-title">Artikel, Berita & Wawasan Riset</h1>
+    <p style="color: rgba(255,255,255,0.85); margin-top: 0.5rem; font-size: 1.05rem;">
+      Publikasi teranyar dari para akademisi, pakar, dan praktisi di bidang Bisnis Digital
+    </p>
+  </div>
+</section>
+
+<!-- Main Article List Content -->
+<section class="apb-section">
+  <div class="apb-container">
+    <!-- Filter and Search Bar -->
+    <div class="apb-filter-bar">
+      <!-- Category Pills -->
+      <div class="apb-category-pills">
+        <a href="{% url 'article_list' %}" class="apb-cat-pill {% if not current_category %}active{% endif %}">
+          Semua Kategori
+        </a>
+        {% for cat in categories %}
+          <a href="{% url 'article_list' %}?category={{ cat.slug }}" class="apb-cat-pill {% if current_category == cat.slug %}active{% endif %}">
+            {{ cat.name }}
+          </a>
+        {% endfor %}
+      </div>
+
+      <!-- Search Input -->
+      <form method="GET" action="{% url 'article_list' %}" class="apb-search-input-wrap">
+        <i class="ri-search-line"></i>
+        <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Cari artikel..." class="apb-search-input">
+        {% if current_category %}
+          <input type="hidden" name="category" value="{{ current_category }}">
+        {% endif %}
+      </form>
+    </div>
+
+    <!-- Article Grid -->
+    <div class="apb-articles-grid">
+      {% for article in articles %}
+        <article class="apb-article-card">
+          <!-- Thumbnail -->
+          <div class="apb-article-thumb">
+            {% if article.featured_image %}
+              <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" loading="lazy">
+            {% else %}
+              <div class="apb-article-thumb-placeholder">
+                <i class="ri-article-line"></i>
+              </div>
+            {% endif %}
+            
+            {% if article.category %}
+              <span class="apb-article-category">{{ article.category.name }}</span>
+            {% else %}
+              <span class="apb-article-category">Umum</span>
+            {% endif %}
+          </div>
+
+          <!-- Body -->
+          <div class="apb-article-body">
+            <div class="apb-article-meta">
+              <span class="apb-article-meta-item">
+                <i class="ri-calendar-line"></i> {{ article.created_at|date:"d M Y" }}
+              </span>
+              {% if article.views_count %}
+                <span class="apb-article-meta-item">
+                  <i class="ri-eye-line"></i> {{ article.views_count }} views
+                </span>
+              {% endif %}
+            </div>
+
+            <h3 class="apb-article-title">
+              <a href="{% url 'article_detail' article.slug %}">
+                {{ article.title }}
+              </a>
+            </h3>
+
+            <p class="apb-article-excerpt">
+              {{ article.content|striptags|truncatewords:22 }}
+            </p>
+
+            <div class="apb-article-footer">
+              <span style="font-size: 0.8rem; color: var(--apb-text-muted);">
+                <i class="ri-user-3-line"></i> {{ article.author.get_full_name|default:article.author.username|default:"Admin" }}
+              </span>
+              <a href="{% url 'article_detail' article.slug %}" class="apb-article-readmore">
+                Baca Selengkapnya <i class="ri-arrow-right-s-line"></i>
+              </a>
+            </div>
+          </div>
+        </article>
+      {% empty %}
+        <div class="apb-empty-state">
+          <i class="ri-search-line apb-empty-icon"></i>
+          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Tidak Ada Artikel Ditemukan</h3>
+          <p style="color: var(--apb-text-muted); font-size: 0.95rem; margin-bottom: 1.5rem;">
+            Tidak ditemukan artikel yang sesuai dengan kriteria pencarian Anda.
+          </p>
+          <a href="{% url 'article_list' %}" class="apb-btn apb-btn-primary">
+            Lihat Semua Artikel
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if articles.has_other_pages %}
+      <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 3.5rem;">
+        {% if articles.has_previous %}
+          <a href="?page={{ articles.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}" class="apb-btn apb-btn-outline" style="padding: 0.5rem 1rem;">
+            <i class="ri-arrow-left-s-line"></i> Sebelumnya
+          </a>
+        {% endif %}
+
+        <span style="display: flex; align-items: center; padding: 0 1rem; font-weight: 600; color: var(--apb-text-muted); font-size: 0.9rem;">
+          Halaman {{ articles.number }} dari {{ articles.paginator.num_pages }}
+        </span>
+
+        {% if articles.has_next %}
+          <a href="?page={{ articles.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}" class="apb-btn apb-btn-outline" style="padding: 0.5rem 1rem;">
+            Selanjutnya <i class="ri-arrow-right-s-line"></i>
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

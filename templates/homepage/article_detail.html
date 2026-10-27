@@ -1,0 +1,270 @@
+{% extends 'homepage/base_public.html' %}
+{% load static %}
+
+{% block title %}{{ article.title }} | {{ webname }}{% endblock %}
+
+{% block meta_description %}{{ article.content|striptags|truncatewords:25 }}{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="apb-page-header">
+  <div class="apb-container">
+    <div class="apb-breadcrumb">
+      <a href="{% url 'homepage' %}"><i class="ri-home-4-line"></i> Beranda</a>
+      <span>/</span>
+      <a href="{% url 'article_list' %}">Artikel & Riset</a>
+      <span>/</span>
+      <span style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block;">
+        {{ article.title|truncatechars:10 }}
+      </span>
+    </div>
+    <h1 class="apb-page-title" style="font-size: 2.2rem; max-width: 900px; margin: 0 auto;">
+      {{ article.title }}
+    </h1>
+    <div style="display: flex; justify-content: center; align-items: center; gap: 1.5rem; margin-top: 1.25rem; font-size: 0.9rem; color: rgba(255,255,255,0.85); flex-wrap: wrap;">
+      <span><i class="ri-user-line"></i> {{ article.author.get_full_name|default:article.author.username|default:"Admin APBISDI" }}</span>
+      <span><i class="ri-calendar-line"></i> {{ article.created_at|date:"d F Y" }}</span>
+      {% if article.category %}
+        <span><i class="ri-folder-line"></i> {{ article.category.name }}</span>
+      {% endif %}
+      <span><i class="ri-eye-line"></i> {{ article.views_count }} kali dibaca</span>
+    </div>
+  </div>
+</section>
+
+<!-- Detail Section -->
+<section class="apb-section" style="background-color: var(--apb-surface-alt);">
+  <div class="apb-container">
+    <div class="apb-detail-grid">
+      <!-- Article Main Content -->
+      <article class="apb-detail-content">
+        {% if article.featured_image %}
+          <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" class="apb-detail-cover">
+        {% endif %}
+
+        <div class="apb-article-rich-text">
+          {{ article.content|safe }}
+        </div>
+
+        <!-- Dokumentasi Media / Galeri Artikel -->
+        {% if article.dokumentasi_foto.all %}
+          <div class="apb-gallery-section">
+            <div class="apb-gallery-header">
+              <h3 class="apb-gallery-title">
+                <i class="ri-gallery-line"></i> Galeri & Media Dokumentasi
+              </h3>
+              <span class="apb-gallery-badge">
+                <i class="ri-image-line"></i> {{ article.dokumentasi_foto.count }} Media Foto
+              </span>
+            </div>
+            
+            <div class="apb-gallery-grid">
+              {% for doc in article.dokumentasi_foto.all %}
+                <div class="apb-gallery-item" 
+                     onclick="openLightbox('{{ doc.foto.url }}', '{{ doc.caption|default:article.title|escapejs }}', {{ forloop.counter0 }})"
+                     data-index="{{ forloop.counter0 }}">
+                  <img src="{{ doc.foto.url }}" alt="{{ doc.caption|default:article.title }}" class="apb-gallery-img" loading="lazy">
+                  <div class="apb-gallery-overlay">
+                    <div class="apb-gallery-zoom-icon">
+                      <i class="ri-zoom-in-line"></i>
+                    </div>
+                    {% if doc.caption %}
+                      <div class="apb-gallery-item-caption">
+                        {{ doc.caption }}
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- Share & Tags Bar -->
+        <div style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--apb-border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+          <div style="font-weight: 700; font-size: 0.9rem; color: var(--apb-text);">
+            Bagikan Artikel Ini:
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <a href="https://api.whatsapp.com/send?text={{ article.title }}%20{{ request.build_absolute_uri }}" target="_blank" rel="noopener" class="apb-btn apb-btn-outline" style="padding: 0.4rem 0.85rem; font-size: 0.85rem;">
+              <i class="ri-whatsapp-line"></i> WhatsApp
+            </a>
+            <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.build_absolute_uri }}" target="_blank" rel="noopener" class="apb-btn apb-btn-outline" style="padding: 0.4rem 0.85rem; font-size: 0.85rem;">
+              <i class="ri-linkedin-fill"></i> LinkedIn
+            </a>
+            <a href="https://twitter.com/intent/tweet?text={{ article.title }}&url={{ request.build_absolute_uri }}" target="_blank" rel="noopener" class="apb-btn apb-btn-outline" style="padding: 0.4rem 0.85rem; font-size: 0.85rem;">
+              <i class="ri-twitter-x-line"></i> X
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <!-- Sidebar -->
+      <aside class="apb-sidebar">
+        <!-- Recent Articles Card -->
+        <div class="apb-sidebar-card">
+          <h4 class="apb-sidebar-title">Artikel Terbaru</h4>
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for recent in recent_articles %}
+              <div style="display: flex; gap: 0.85rem; align-items: flex-start;">
+                {% if recent.featured_image %}
+                  <img src="{{ recent.featured_image.url }}" alt="{{ recent.title }}" style="width: 72px; height: 54px; object-fit: cover; border-radius: var(--apb-radius-sm); flex-shrink: 0;">
+                {% else %}
+                  <div style="width: 72px; height: 54px; background: #e2e8f0; border-radius: var(--apb-radius-sm); flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #94a3b8;">
+                    <i class="ri-file-text-line"></i>
+                  </div>
+                {% endif %}
+                <div>
+                  <a href="{% url 'article_detail' recent.slug %}" style="font-size: 0.9rem; font-weight: 600; line-height: 1.35; color: var(--apb-text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                    {{ recent.title }}
+                  </a>
+                  <span style="font-size: 0.75rem; color: var(--apb-text-muted); display: block; margin-top: 0.25rem;">
+                    {{ recent.created_at|date:"d M Y" }}
+                  </span>
+                </div>
+              </div>
+            {% empty %}
+              <p style="font-size: 0.85rem; color: var(--apb-text-muted);">Belum ada artikel lainnya.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Categories Card -->
+        <div class="apb-sidebar-card">
+          <h4 class="apb-sidebar-title">Kategori</h4>
+          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            {% for cat in categories %}
+              <a href="{% url 'article_list' %}?category={{ cat.slug }}" style="display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--apb-text); padding: 0.35rem 0; border-bottom: 1px solid var(--apb-border-subtle);">
+                <span>{{ cat.name }}</span>
+                <i class="ri-arrow-right-s-line" style="color: var(--apb-text-light);"></i>
+              </a>
+            {% empty %}
+              <p style="font-size: 0.85rem; color: var(--apb-text-muted);">Belum ada kategori.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Join APBISDI Card -->
+        <div class="apb-sidebar-card" style="background: linear-gradient(135deg, #005a7a 0%, #0088cc 100%); color: #ffffff;">
+          <h4 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem;">Gabung Anggota</h4>
+          <p style="font-size: 0.875rem; color: rgba(255,255,255,0.9); line-height: 1.5; margin-bottom: 1.25rem;">
+            Dapatkan jejaring kurikulum, riset bersama, dan sertifikasi profesi di bidang Bisnis Digital.
+          </p>
+          <a href="{% url 'register' %}" class="apb-btn apb-btn-primary" style="background-color: #ffffff; color: var(--apb-secondary); width: 100%;">
+            Daftar Sekarang
+          </a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================
+     LIGHTBOX MODAL VIEWER
+     ========================================== -->
+<div id="apbLightbox" class="apb-lightbox" onclick="handleLightboxBackdrop(event)">
+  <button type="button" class="apb-lightbox-close" onclick="closeLightbox()" title="Tutup (Esc)">
+    <i class="ri-close-line"></i>
+  </button>
+
+  <button type="button" class="apb-lightbox-nav apb-lightbox-prev" onclick="prevLightboxImage()" title="Foto Sebelumnya (Panah Kiri)">
+    <i class="ri-arrow-left-s-line"></i>
+  </button>
+
+  <button type="button" class="apb-lightbox-nav apb-lightbox-next" onclick="nextLightboxImage()" title="Foto Selanjutnya (Panah Kanan)">
+    <i class="ri-arrow-right-s-line"></i>
+  </button>
+
+  <div class="apb-lightbox-content">
+    <div class="apb-lightbox-img-wrap">
+      <img id="lightboxImg" src="" alt="Dokumentasi Full" class="apb-lightbox-img">
+    </div>
+    <div class="apb-lightbox-caption-box">
+      <div id="lightboxCaption" class="apb-lightbox-caption"></div>
+      <div id="lightboxCounter" class="apb-lightbox-counter"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let galleryData = [];
+  let currentImageIndex = 0;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    {% if article.dokumentasi_foto.all %}
+      galleryData = [
+        {% for doc in article.dokumentasi_foto.all %}
+          {
+            url: "{{ doc.foto.url|escapejs }}",
+            caption: "{{ doc.caption|default:article.title|escapejs }}"
+          }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ];
+    {% endif %}
+
+    // Keyboard support
+    document.addEventListener('keydown', function(e) {
+      const modal = document.getElementById('apbLightbox');
+      if (modal && modal.classList.contains('active')) {
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') prevLightboxImage();
+        if (e.key === 'ArrowRight') nextLightboxImage();
+      }
+    });
+  });
+
+  function openLightbox(url, caption, index) {
+    const modal = document.getElementById('apbLightbox');
+    const img = document.getElementById('lightboxImg');
+    const cap = document.getElementById('lightboxCaption');
+    const counter = document.getElementById('lightboxCounter');
+
+    currentImageIndex = index || 0;
+    img.src = url;
+    cap.textContent = caption || '';
+    if (galleryData.length > 0) {
+      counter.textContent = (currentImageIndex + 1) + ' / ' + galleryData.length;
+    } else {
+      counter.textContent = '';
+    }
+
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    const modal = document.getElementById('apbLightbox');
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  function handleLightboxBackdrop(e) {
+    if (e.target.id === 'apbLightbox' || e.target.classList.contains('apb-lightbox-img-wrap')) {
+      closeLightbox();
+    }
+  }
+
+  function nextLightboxImage() {
+    if (!galleryData || galleryData.length <= 1) return;
+    currentImageIndex = (currentImageIndex + 1) % galleryData.length;
+    updateLightbox();
+  }
+
+  function prevLightboxImage() {
+    if (!galleryData || galleryData.length <= 1) return;
+    currentImageIndex = (currentImageIndex - 1 + galleryData.length) % galleryData.length;
+    updateLightbox();
+  }
+
+  function updateLightbox() {
+    const img = document.getElementById('lightboxImg');
+    const cap = document.getElementById('lightboxCaption');
+    const counter = document.getElementById('lightboxCounter');
+
+    const item = galleryData[currentImageIndex];
+    img.src = item.url;
+    cap.textContent = item.caption;
+    counter.textContent = (currentImageIndex + 1) + ' / ' + galleryData.length;
+  }
+</script>
+{% endblock %}

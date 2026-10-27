@@ -1,0 +1,402 @@
+{% extends 'homepage/base_public.html' %}
+{% load static %}
+{% block title %}Direktori Anggota Institusi | {{ webname }} - {{ web_name }}{% endblock %}
+{% block extra_head %}
+<style>
+  .apb-dash-nav-pills {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.75rem;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .apb-dash-nav-pill {
+    padding: 0.65rem 1.25rem;
+    border-radius: 9999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+    background: #f1f5f9;
+    color: #475569;
+  }
+  .apb-dash-nav-pill:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+  }
+  .apb-dash-nav-pill.active {
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  }
+  .apb-filter-box {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  }
+  .apb-filter-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr auto;
+    gap: 1.25rem;
+    align-items: end;
+  }
+  @media (max-width: 992px) {
+    .apb-filter-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (max-width: 600px) {
+    .apb-filter-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .apb-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .apb-filter-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #475569;
+  }
+  .apb-filter-select, .apb-filter-input {
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    color: #1e293b;
+    background-color: #ffffff;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .apb-filter-select:focus, .apb-filter-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  }
+  .apb-inst-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+  .apb-inst-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .apb-inst-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.08);
+  }
+  .apb-inst-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .apb-inst-logo {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+    object-fit: contain;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 4px;
+    flex-shrink: 0;
+  }
+  .apb-inst-logo-placeholder {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #d97706, #b45309);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    flex-shrink: 0;
+  }
+  .apb-inst-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 0.35rem 0;
+    line-height: 1.35;
+  }
+  .apb-inst-prov {
+    font-size: 0.825rem;
+    color: #64748b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .apb-inst-details {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    font-size: 0.8rem;
+    color: #475569;
+  }
+  .apb-inst-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .apb-inst-label {
+    color: #64748b;
+  }
+  .apb-inst-val {
+    font-weight: 600;
+    color: #1e293b;
+    text-align: right;
+  }
+  .apb-badge-akred {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.65rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .apb-akred-unggul {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+  }
+  .apb-akred-a {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+  }
+  .apb-akred-b {
+    background: #fefce8;
+    color: #854d0e;
+    border: 1px solid #fef08a;
+  }
+  .apb-akred-default {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+  }
+  .apb-inst-footer {
+    margin-top: auto;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: #64748b;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<section class="apb-page-header">
+  <div class="apb-container">
+    <div class="apb-breadcrumb">
+      <a href="{% url 'homepage' %}"><i class="ri-home-4-line"></i> Beranda</a>
+      <span>/</span>
+      <a href="{% url 'public_dashboard_sebaran' %}">Dashboard</a>
+      <span>/</span>
+      <span>Anggota Institusi</span>
+    </div>
+    <h1 class="apb-page-title">Direktori Anggota Institusi</h1>
+    <p style="color: rgba(255,255,255,0.85); margin-top: 0.5rem; font-size: 1.05rem;">
+      Pangkalan data Perguruan Tinggi dan Program Studi Bisnis Digital anggota APBISDI di Indonesia.
+    </p>
+  </div>
+</section><section class="apb-section" style="padding: 2.5rem 0 5rem 0; background: #f8fafc;">
+  <div class="apb-container">
+    <div class="apb-dash-nav-pills">
+      <a href="{% url 'public_dashboard_sebaran' %}" class="apb-dash-nav-pill">
+        <i class="ri-map-pin-range-line"></i> Sebaran Wilayah
+      </a>
+      <a href="{% url 'public_dashboard_anggota' %}" class="apb-dash-nav-pill">
+        <i class="ri-user-star-line"></i> Anggota Individu
+      </a>
+      <a href="{% url 'public_dashboard_institusi' %}" class="apb-dash-nav-pill active">
+        <i class="ri-building-4-line"></i> Anggota Institusi ({{ total_institusi }})
+      </a>
+    </div>
+    <div class="apb-filter-box">
+      <form method="GET" action="{% url 'public_dashboard_institusi' %}">
+        <div class="apb-filter-grid">
+          <div class="apb-filter-group">
+            <label class="apb-filter-label"><i class="ri-search-line"></i> Pencarian Perguruan Tinggi</label>
+            <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Cari nama Perguruan Tinggi, No. Anggota Institusi, atau Pengelola..." class="apb-filter-input">
+          </div>
+          <div class="apb-filter-group">
+            <label class="apb-filter-label"><i class="ri-map-pin-line"></i> Provinsi</label>
+            <select name="provinsi" class="apb-filter-select">
+              <option value="">Semua Provinsi</option>
+              {% for prov in provinsi_list %}
+                <option value="{{ prov.id }}" {% if selected_provinsi == prov.id|stringformat:"s" %}selected{% endif %}>
+                  {{ prov.nama_provinsi }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="apb-filter-group">
+            <label class="apb-filter-label"><i class="ri-shield-star-line"></i> Akreditasi</label>
+            <select name="akreditasi" class="apb-filter-select">
+              <option value="">Semua Akreditasi</option>
+              {% for ak in akreditasi_list %}
+                <option value="{{ ak }}" {% if selected_akreditasi == ak %}selected{% endif %}>{{ ak }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Buttons -->
+          <div class="apb-filter-group" style="display: flex; flex-direction: row; gap: 0.5rem;">
+            <button type="submit" class="apb-btn apb-btn-primary" style="padding: 0.65rem 1.25rem; white-space: nowrap;">
+              <i class="ri-filter-3-line"></i> Filter
+            </button>
+            <a href="{% url 'public_dashboard_institusi' %}" class="apb-btn apb-btn-outline" style="padding: 0.65rem 0.9rem; display: inline-flex; align-items: center; justify-content: center;" title="Reset Filter">
+              <i class="ri-refresh-line"></i>
+            </a>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Results Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+      <div style="font-size: 0.95rem; color: #475569;">
+        Menampilkan <strong>{{ institusi_list.object_list|length }}</strong> dari <strong>{{ filtered_count }}</strong> perguruan tinggi ditemukan
+      </div>
+    </div>
+
+    <!-- Institutions Grid -->
+    <div class="apb-inst-grid">
+      {% for inst in institusi_list %}
+      <div class="apb-inst-card">
+        <div class="apb-inst-header">
+          {% if inst.photo %}
+            <img src="{{ inst.photo.url }}" alt="{{ inst.nama_institusi.nama_pt }}" class="apb-inst-logo" loading="lazy">
+          {% else %}
+            <div class="apb-inst-logo-placeholder">
+              <i class="ri-bank-line"></i>
+            </div>
+          {% endif %}
+          <div>
+            <h3 class="apb-inst-title">
+              {{ inst.nama_institusi.nama_pt|default:inst.user.first_name }}
+            </h3>
+            <p class="apb-inst-prov">
+              <i class="ri-map-pin-2-fill" style="color: #ef4444;"></i>
+              {{ inst.provinsi.nama_provinsi|default:'Indonesia' }}
+            </p>
+          </div>
+        </div>
+
+        <div class="apb-inst-details">
+          <div class="apb-inst-row">
+            <span class="apb-inst-label">No. Anggota:</span>
+            <span class="apb-inst-val">{{ inst.nomor_anggota_institusi|default:'Belum Terbit' }}</span>
+          </div>
+          {% if inst.akreditasi %}
+          <div class="apb-inst-row">
+            <span class="apb-inst-label">Akreditasi:</span>
+            <span>
+              {% if 'Unggul' in inst.akreditasi %}
+                <span class="apb-badge-akred apb-akred-unggul">{{ inst.akreditasi }}</span>
+              {% elif 'A' in inst.akreditasi %}
+                <span class="apb-badge-akred apb-akred-a">{{ inst.akreditasi }}</span>
+              {% elif 'B' in inst.akreditasi %}
+                <span class="apb-badge-akred apb-akred-b">{{ inst.akreditasi }}</span>
+              {% else %}
+                <span class="apb-badge-akred apb-akred-default">{{ inst.akreditasi }}</span>
+              {% endif %}
+            </span>
+          </div>
+          {% endif %}
+          {% if inst.jabatan_pengelola %}
+          <div class="apb-inst-row">
+            <span class="apb-inst-label">Pengelola / Jabatan:</span>
+            <span class="apb-inst-val">{{ inst.jabatan_pengelola }}</span>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="apb-inst-footer">
+          <div>
+            {% if inst.status == 'Approved' or inst.nomor_anggota_institusi %}
+              <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #15803d; font-weight: 600;">
+                <i class="ri-checkbox-circle-fill"></i> Terdaftar Resmi
+              </span>
+            {% else %}
+              <span style="color: #64748b; font-weight: 500;">
+                <i class="ri-time-line"></i> {{ inst.status|default:'Anggota' }}
+              </span>
+            {% endif %}
+          </div>
+          {% if inst.alamat %}
+          <div title="{{ inst.alamat }}" style="max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.75rem;">
+            <i class="ri-map-pin-line"></i> {{ inst.alamat }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <div style="grid-column: 1 / -1; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 4rem 1.5rem; text-align: center;">
+        <div style="font-size: 3rem; color: #cbd5e1; margin-bottom: 0.75rem;">
+          <i class="ri-building-line"></i>
+        </div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: #1e293b; margin: 0 0 0.5rem 0;">
+          Tidak ada institusi yang ditemukan
+        </h3>
+        <p style="color: #64748b; font-size: 0.9rem; max-width: 450px; margin: 0 auto 1.5rem auto;">
+          Silakan coba sesuaikan kata kunci pencarian atau reset filter provinsi dan akreditasi.
+        </p>
+        <a href="{% url 'public_dashboard_institusi' %}" class="apb-btn apb-btn-primary" style="padding: 0.65rem 1.25rem;">
+          <i class="ri-refresh-line"></i> Reset Filter
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if institusi_list.has_other_pages %}
+    <div class="apb-pagination" style="display: flex; justify-content: center; gap: 0.5rem; align-items: center; margin-top: 2rem;">
+      {% if institusi_list.has_previous %}
+        <a href="?page={{ institusi_list.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_provinsi %}&provinsi={{ selected_provinsi }}{% endif %}{% if selected_akreditasi %}&akreditasi={{ selected_akreditasi }}{% endif %}" class="apb-page-link" style="padding: 0.5rem 0.9rem; border-radius: 8px; border: 1px solid #cbd5e1; color: #1e293b; text-decoration: none; font-size: 0.85rem;">
+          <i class="ri-arrow-left-s-line"></i> Sebelumnya
+        </a>
+      {% endif %}
+
+      <span style="font-size: 0.9rem; color: #64748b; font-weight: 600; padding: 0 0.5rem;">
+        Halaman {{ institusi_list.number }} dari {{ institusi_list.paginator.num_pages }}
+      </span>
+
+      {% if institusi_list.has_next %}
+        <a href="?page={{ institusi_list.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_provinsi %}&provinsi={{ selected_provinsi }}{% endif %}{% if selected_akreditasi %}&akreditasi={{ selected_akreditasi }}{% endif %}" class="apb-page-link" style="padding: 0.5rem 0.9rem; border-radius: 8px; border: 1px solid #cbd5e1; color: #1e293b; text-decoration: none; font-size: 0.85rem;">
+          Selanjutnya <i class="ri-arrow-right-s-line"></i>
+        </a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}

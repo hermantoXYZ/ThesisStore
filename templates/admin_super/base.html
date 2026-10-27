@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }} | {{webname}}</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v={{ STATIC_VERSION }}"> 
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=sd{{ STATIC_VERSION }}"> 
     <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -28,7 +28,14 @@
                 <ul>
                     <li class="{% if title == 'Dashboard' %}active{% endif %}">
                         <a href="{% url "app:dashboard" %}"><i class="ri-dashboard-line"></i> Dashboard</a>
-                    </li>  
+                    </li>
+                    <li class="nav-section-label"><span>Buku</span></li>
+                    <li class="{% if 'buku' in request.path and 'kategori' not in request.path %}active{% endif %}">
+                        <a href="{% url "app:buku_list" %}"><i class="ri-book-2-line"></i> Kelola Buku</a>
+                    </li>
+                    <li class="{% if 'kategori' in request.path %}active{% endif %}">
+                        <a href="{% url "app:kategori_buku_list" %}"><i class="ri-price-tag-3-line"></i> Kategori Buku</a>
+                    </li>
                     <li class="{% if title == 'Profile Admin' or title == 'Edit Profile' %}active{% endif %}">
                         <a href="{% url "app:profile_admin" %}"><i class="ri-user-settings-line"></i> Profile</a>
                     </li>                 

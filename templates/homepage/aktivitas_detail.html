@@ -1,0 +1,270 @@
+{% extends 'homepage/base_public.html' %}
+{% load static %}
+
+{% block title %}{{ item.title }} | {{ webname }}{% endblock %}
+
+{% block meta_description %}{{ item.content|striptags|truncatewords:25 }}{% endblock %}
+
+{% block content %}
+<div class="apb-akt-detail-page">
+  <div class="apb-container">
+    <div class="apb-akt-detail-top-bar">
+      <div class="apb-akt-detail-top-line"></div>
+      <div class="apb-akt-detail-top-line right-line"></div>
+    </div>
+    <div class="apb-akt-detail-layout">
+      <article class="apb-akt-detail-main">
+        <div class="apb-akt-detail-category-header">
+          Aktivitas {{ webname }} &ndash; {% if item.category %}{{ item.category.name }}{% else %}Kegiatan & Agenda{% endif %}
+        </div>
+        <h1 class="apb-akt-detail-headline">
+          {{ item.title }}
+        </h1>
+        <div class="apb-akt-detail-meta">
+          <span><i class="ri-calendar-line"></i> {{ item.created_at|date:"d F Y" }}</span>
+          <span><i class="ri-user-3-line"></i> {{ item.author.first_name|default:item.author.username|default:"Admin APBISDI" }}</span>
+          <span><i class="ri-eye-line"></i> {{ item.views_count }} dilihat</span>
+        </div>
+        {% if item.featured_image %}
+          <div class="apb-akt-detail-banner-wrap">
+            <img src="{{ item.featured_image.url }}" alt="{{ item.title }}" class="apb-akt-detail-banner-img">
+          </div>
+        {% endif %}
+        <div class="apb-akt-detail-body apb-article-rich-text">
+          {{ item.content|safe }}
+        </div>
+        {% if item.dokumentasi_foto.all %}
+          <div class="apb-gallery-section">
+            <div class="apb-gallery-header">
+              <h3 class="apb-gallery-title">
+                <i class="ri-gallery-line"></i> Galeri & Dokumentasi
+              </h3>
+              <span class="apb-gallery-badge">
+                <i class="ri-image-line"></i> {{ item.dokumentasi_foto.count }} Foto Kegiatan
+              </span>
+            </div>
+            
+            <div class="apb-gallery-grid">
+              {% for doc in item.dokumentasi_foto.all %}
+                <div class="apb-gallery-item" 
+                     onclick="openLightbox('{{ doc.foto.url }}', '{{ doc.caption|default:item.title|escapejs }}', {{ forloop.counter0 }})"
+                     data-index="{{ forloop.counter0 }}">
+                  <img src="{{ doc.foto.url }}" alt="{{ doc.caption|default:item.title }}" class="apb-gallery-img" loading="lazy">
+                  <div class="apb-gallery-overlay">
+                    <div class="apb-gallery-zoom-icon">
+                      <i class="ri-zoom-in-line"></i>
+                    </div>
+                    {% if doc.caption %}
+                      <div class="apb-gallery-item-caption">
+                        {{ doc.caption }}
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- Share Bar -->
+        <div class="apb-akt-detail-share-bar">
+          <div class="apb-akt-share-title">
+            <i class="ri-share-forward-line"></i> Bagikan Aktivitas:
+          </div>
+          <div class="apb-akt-share-buttons">
+            <a href="https://api.whatsapp.com/send?text={{ item.title|urlencode }}%20{{ request.build_absolute_uri|urlencode }}" 
+               target="_blank" rel="noopener noreferrer" class="apb-share-btn wa" title="Bagikan ke WhatsApp">
+              <i class="ri-whatsapp-line"></i> WhatsApp
+            </a>
+            <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.build_absolute_uri|urlencode }}" 
+               target="_blank" rel="noopener noreferrer" class="apb-share-btn li" title="Bagikan ke LinkedIn">
+              <i class="ri-linkedin-fill"></i> LinkedIn
+            </a>
+            <a href="https://twitter.com/intent/tweet?text={{ item.title|urlencode }}&url={{ request.build_absolute_uri|urlencode }}" 
+               target="_blank" rel="noopener noreferrer" class="apb-share-btn tw" title="Bagikan ke X">
+              <i class="ri-twitter-x-line"></i> X
+            </a>
+            <a href="{% url 'aktivitas_list' %}" class="apb-share-btn back">
+              <i class="ri-arrow-left-line"></i> Semua Aktivitas
+            </a>
+          </div>
+        </div>
+
+      </article>
+
+      <!-- ==========================================
+           RIGHT COLUMN: SIDEBAR (Aktivitas Lainnya)
+           ========================================== -->
+      <aside class="apb-akt-detail-sidebar">
+        <h3 class="apb-akt-detail-sidebar-title">
+          Aktivitas Lainnya
+        </h3>
+
+        <div class="apb-akt-detail-sidebar-list">
+          {% for recent in recent_aktivitas %}
+            <div class="apb-akt-side-card">
+              <!-- Side Poster Thumbnail (Wide 16:9 like ISEI screenshot) -->
+              <a href="{% url 'aktivitas_detail' recent.slug %}" class="apb-akt-side-thumb-link">
+                {% if recent.featured_image %}
+                  <img src="{{ recent.featured_image.url }}" alt="{{ recent.title }}" class="apb-akt-side-thumb" loading="lazy">
+                {% else %}
+                  <div class="apb-akt-side-thumb-placeholder">
+                    <i class="ri-calendar-event-line"></i>
+                  </div>
+                {% endif %}
+              </a>
+
+              <!-- Date -->
+              <div class="apb-akt-side-date">
+                {{ recent.created_at|date:"d F Y" }}
+              </div>
+
+              <!-- Title -->
+              <h4 class="apb-akt-side-title">
+                <a href="{% url 'aktivitas_detail' recent.slug %}">
+                  {{ recent.title }}
+                </a>
+              </h4>
+            </div>
+
+            {% if not forloop.last %}
+              <div class="apb-akt-side-divider"></div>
+            {% endif %}
+          {% empty %}
+            <p style="font-size: 0.875rem; color: var(--apb-text-muted);">
+              Belum ada aktivitas lainnya.
+            </p>
+          {% endfor %}
+        </div>
+
+        <!-- Tipe Aktivitas Widget -->
+        {% if categories %}
+          <div class="apb-akt-side-categories-box">
+            <h4 class="apb-akt-side-categories-title">
+              Tipe Aktivitas
+            </h4>
+            <div class="apb-akt-side-categories-list">
+              {% for cat in categories %}
+                <a href="{% url 'aktivitas_list' %}?category={{ cat.slug }}" class="apb-akt-side-cat-item">
+                  <span>{{ cat.name }}</span>
+                  <i class="ri-arrow-right-s-line"></i>
+                </a>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      </aside>
+
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================
+     LIGHTBOX MODAL VIEWER
+     ========================================== -->
+<div id="apbLightbox" class="apb-lightbox" onclick="handleLightboxBackdrop(event)">
+  <button type="button" class="apb-lightbox-close" onclick="closeLightbox()" title="Tutup (Esc)">
+    <i class="ri-close-line"></i>
+  </button>
+
+  <button type="button" class="apb-lightbox-nav apb-lightbox-prev" onclick="prevLightboxImage()" title="Foto Sebelumnya (Panah Kiri)">
+    <i class="ri-arrow-left-s-line"></i>
+  </button>
+
+  <button type="button" class="apb-lightbox-nav apb-lightbox-next" onclick="nextLightboxImage()" title="Foto Selanjutnya (Panah Kanan)">
+    <i class="ri-arrow-right-s-line"></i>
+  </button>
+
+  <div class="apb-lightbox-content">
+    <div class="apb-lightbox-img-wrap">
+      <img id="lightboxImg" src="" alt="Dokumentasi Full" class="apb-lightbox-img">
+    </div>
+    <div class="apb-lightbox-caption-box">
+      <div id="lightboxCaption" class="apb-lightbox-caption"></div>
+      <div id="lightboxCounter" class="apb-lightbox-counter"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let galleryData = [];
+  let currentImageIndex = 0;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    {% if item.dokumentasi_foto.all %}
+      galleryData = [
+        {% for doc in item.dokumentasi_foto.all %}
+          {
+            url: "{{ doc.foto.url|escapejs }}",
+            caption: "{{ doc.caption|default:item.title|escapejs }}"
+          }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ];
+    {% endif %}
+
+    // Keyboard support
+    document.addEventListener('keydown', function(e) {
+      const modal = document.getElementById('apbLightbox');
+      if (modal && modal.classList.contains('active')) {
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') prevLightboxImage();
+        if (e.key === 'ArrowRight') nextLightboxImage();
+      }
+    });
+  });
+
+  function openLightbox(url, caption, index) {
+    const modal = document.getElementById('apbLightbox');
+    const img = document.getElementById('lightboxImg');
+    const cap = document.getElementById('lightboxCaption');
+    const counter = document.getElementById('lightboxCounter');
+
+    currentImageIndex = index || 0;
+    img.src = url;
+    cap.textContent = caption || '';
+    if (galleryData.length > 0) {
+      counter.textContent = (currentImageIndex + 1) + ' / ' + galleryData.length;
+    } else {
+      counter.textContent = '';
+    }
+
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    const modal = document.getElementById('apbLightbox');
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  function handleLightboxBackdrop(e) {
+    if (e.target.id === 'apbLightbox' || e.target.classList.contains('apb-lightbox-img-wrap')) {
+      closeLightbox();
+    }
+  }
+
+  function nextLightboxImage() {
+    if (!galleryData || galleryData.length <= 1) return;
+    currentImageIndex = (currentImageIndex + 1) % galleryData.length;
+    updateLightbox();
+  }
+
+  function prevLightboxImage() {
+    if (!galleryData || galleryData.length <= 1) return;
+    currentImageIndex = (currentImageIndex - 1 + galleryData.length) % galleryData.length;
+    updateLightbox();
+  }
+
+  function updateLightbox() {
+    const img = document.getElementById('lightboxImg');
+    const cap = document.getElementById('lightboxCaption');
+    const counter = document.getElementById('lightboxCounter');
+
+    const item = galleryData[currentImageIndex];
+    img.src = item.url;
+    cap.textContent = item.caption;
+    counter.textContent = (currentImageIndex + 1) + ' / ' + galleryData.length;
+  }
+</script>
+{% endblock %}

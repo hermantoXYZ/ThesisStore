@@ -1,0 +1,211 @@
+{% extends 'homepage/base_public.html' %}
+{% load static %}
+
+{% block title %}Aktivitas & Kegiatan | {{ webname }} - {{ web_name }}{% endblock %}
+
+{% block content %}
+<!-- Page Header Banner -->
+<section class="apb-page-header">
+  <div class="apb-container">
+    <div class="apb-breadcrumb">
+      <a href="{% url 'homepage' %}"><i class="ri-home-4-line"></i> Beranda</a>
+      <span>/</span>
+      <span>Aktivitas</span>
+    </div>
+    <h1 class="apb-page-title">Aktivitas & Agenda Kegiatan</h1>
+    <p style="color: rgba(255,255,255,0.85); margin-top: 0.5rem; font-size: 1.05rem;">
+      Informasi program, seminar, workshop, call for papers, dan agenda kolaborasi APBISDI
+    </p>
+  </div>
+</section>
+
+<!-- Main Aktivitas List Layout -->
+<section class="apb-section apb-section-alt">
+  <div class="apb-container">
+
+    <div class="apb-akt-layout">
+      <!-- ==========================================
+           LEFT SIDEBAR: FILTER MELALUI TIPE
+           ========================================== -->
+      <aside class="apb-akt-sidebar">
+        <div class="apb-akt-sidebar-card">
+          <div class="apb-akt-sidebar-header">
+            <h3 class="apb-akt-sidebar-title">
+              <i class="ri-filter-3-line" style="color: var(--apb-primary);"></i> Filter Melalui Tipe
+            </h3>
+            {% if current_category != 'all' or query %}
+              <a href="{% url 'aktivitas_list' %}" class="apb-akt-reset-btn" title="Reset Filter">
+                Reset
+              </a>
+            {% endif %}
+          </div>
+
+          <!-- Category Checkbox List (Matching ISEI reference in Screenshot) -->
+          <div class="apb-akt-filter-list">
+            <!-- ALL CATEGORIES -->
+            <a href="{% url 'aktivitas_list' %}{% if query %}?q={{ query }}{% endif %}"
+               class="apb-akt-filter-item {% if current_category == 'all' %}active{% endif %}">
+              <span class="apb-akt-checkbox {% if current_category == 'all' %}checked{% endif %}">
+                {% if current_category == 'all' %}
+                  <i class="ri-checkbox-fill"></i>
+                {% else %}
+                  <i class="ri-checkbox-blank-line"></i>
+                {% endif %}
+              </span>
+              <span class="apb-akt-filter-name">Semua Aktivitas (All)</span>
+              <span class="apb-akt-filter-count">{{ total_all }}</span>
+            </a>
+
+            <!-- INDIVIDUAL CATEGORIES -->
+            {% for cat in categories %}
+              <a href="{% url 'aktivitas_list' %}?category={{ cat.slug }}{% if query %}&q={{ query }}{% endif %}"
+                 class="apb-akt-filter-item {% if current_category == cat.slug %}active{% endif %}">
+                <span class="apb-akt-checkbox {% if current_category == cat.slug %}checked{% endif %}">
+                  {% if current_category == cat.slug %}
+                    <i class="ri-checkbox-fill"></i>
+                  {% else %}
+                    <i class="ri-checkbox-blank-line"></i>
+                  {% endif %}
+                </span>
+                <span class="apb-akt-filter-name">{{ cat.name }}</span>
+                {% if cat.count_items %}
+                  <span class="apb-akt-filter-count">{{ cat.count_items }}</span>
+                {% endif %}
+              </a>
+            {% endfor %}
+          </div>
+
+          <!-- Search Form inside Sidebar -->
+          <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--apb-border);">
+            <form method="GET" action="{% url 'aktivitas_list' %}" class="apb-akt-search-box">
+              <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Cari aktivitas..." class="apb-akt-search-input">
+              {% if current_category and current_category != 'all' %}
+                <input type="hidden" name="category" value="{{ current_category }}">
+              {% endif %}
+              <button type="submit" class="apb-akt-search-btn" aria-label="Cari">
+                <i class="ri-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ==========================================
+           RIGHT MAIN: AKTIVITAS CARDS GRID
+           ========================================== -->
+      <main class="apb-akt-main">
+        <div class="apb-akt-header-bar">
+          <div>
+            <h2 class="apb-akt-main-title">
+              {% if current_category == 'all' %}
+                Semua Aktivitas & Agenda
+              {% else %}
+                {% for cat in categories %}
+                  {% if cat.slug == current_category %}{{ cat.name }}{% endif %}
+                {% endfor %}
+              {% endif %}
+            </h2>
+            {% if query %}
+              <p style="font-size: 0.875rem; color: var(--apb-text-muted); margin-top: 0.25rem;">
+                Hasil pencarian untuk: <strong>"{{ query }}"</strong>
+              </p>
+            {% endif %}
+          </div>
+          <span style="font-size: 0.875rem; color: var(--apb-text-muted); font-weight: 600;">
+            Menampilkan {{ aktivitas_list|length }} dari {{ total_all }} agenda
+          </span>
+        </div>
+
+        <!-- Cards Grid -->
+        <div class="apb-akt-grid">
+          {% for item in aktivitas_list %}
+            <article class="apb-akt-card">
+              <!-- Banner Poster Image -->
+              <div class="apb-akt-thumb-wrap">
+                <a href="{% url 'aktivitas_detail' item.slug %}">
+                  {% if item.featured_image %}
+                    <img src="{{ item.featured_image.url }}" alt="{{ item.title }}" class="apb-akt-thumb" loading="lazy">
+                  {% else %}
+                    <div class="apb-akt-thumb-placeholder">
+                      <i class="ri-calendar-event-line"></i>
+                      <span>{{ webname }} Event</span>
+                    </div>
+                  {% endif %}
+                </a>
+              </div>
+
+              <!-- Card Body -->
+              <div class="apb-akt-body">
+                <!-- Meta Row (Category Left, Date Right) -->
+                <div class="apb-akt-meta-row">
+                  {% if item.category %}
+                    <span class="apb-akt-category-badge">{{ item.category.name }}</span>
+                  {% else %}
+                    <span class="apb-akt-category-badge">Agenda</span>
+                  {% endif %}
+                  <span class="apb-akt-date">{{ item.created_at|date:"d F Y" }}</span>
+                </div>
+
+                <!-- Title -->
+                <h3 class="apb-akt-title">
+                  <a href="{% url 'aktivitas_detail' item.slug %}">
+                    {{ item.title }}
+                  </a>
+                </h3>
+
+                <!-- Excerpt -->
+                <p class="apb-akt-excerpt">
+                  {{ item.content|striptags|truncatewords:18 }}
+                </p>
+
+                <!-- Footer Link -->
+                <div class="apb-akt-footer">
+                  <span style="font-size: 0.78rem; color: var(--apb-text-muted); display: inline-flex; align-items: center; gap: 4px;">
+                    <i class="ri-user-3-line"></i> {{ item.author.first_name|default:item.author.username|default:"Admin" }}
+                  </span>
+                  <a href="{% url 'aktivitas_detail' item.slug %}" class="apb-akt-readmore">
+                    Lihat Detail <i class="ri-arrow-right-line"></i>
+                  </a>
+                </div>
+              </div>
+            </article>
+          {% empty %}
+            <div class="apb-empty-state" style="grid-column: 1 / -1;">
+              <i class="ri-calendar-close-line apb-empty-icon"></i>
+              <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Tidak Ada Aktivitas Ditemukan</h3>
+              <p style="color: var(--apb-text-muted); font-size: 0.95rem; margin-bottom: 1.5rem;">
+                Belum ada agenda atau aktivitas pada kategori yang dipilih.
+              </p>
+              <a href="{% url 'aktivitas_list' %}" class="apb-btn apb-btn-primary">
+                Tampilkan Semua Aktivitas
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if aktivitas_list.has_other_pages %}
+          <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 3.5rem;">
+            {% if aktivitas_list.has_previous %}
+              <a href="?page={{ aktivitas_list.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}" class="apb-btn apb-btn-outline" style="padding: 0.5rem 1rem;">
+                <i class="ri-arrow-left-s-line"></i> Sebelumnya
+              </a>
+            {% endif %}
+
+            <span style="display: flex; align-items: center; padding: 0 1rem; font-weight: 600; color: var(--apb-text-muted); font-size: 0.9rem;">
+              Halaman {{ aktivitas_list.number }} dari {{ aktivitas_list.paginator.num_pages }}
+            </span>
+
+            {% if aktivitas_list.has_next %}
+              <a href="?page={{ aktivitas_list.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}" class="apb-btn apb-btn-outline" style="padding: 0.5rem 1rem;">
+                Selanjutnya <i class="ri-arrow-right-s-line"></i>
+              </a>
+            {% endif %}
+          </div>
+        {% endif %}
+      </main>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

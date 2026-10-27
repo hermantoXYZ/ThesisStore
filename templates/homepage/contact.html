@@ -1,0 +1,230 @@
+{% extends 'homepage/base_public.html' %}
+{% load static %}
+
+{% block title %}Hubungi Kami | {{ webname }} - {{ web_name }}{% endblock %}
+
+{% block content %}
+<!-- Contact Hero / Page Header with Decorative Rings -->
+<section class="apb-contact-hero">
+  <div class="apb-contact-hero-circles">
+    <div class="apb-hero-circle circle-left"></div>
+    <div class="apb-hero-circle circle-right"></div>
+  </div>
+
+  <div class="apb-container apb-contact-hero-content">
+    <div class="apb-breadcrumb" style="justify-content: center; margin-bottom: 0.75rem;">
+      <a href="{% url 'homepage' %}"><i class="ri-home-4-line"></i> Beranda</a>
+      <span>/</span>
+      <span>Hubungi Kami</span>
+    </div>
+    <h1 class="apb-contact-hero-title">Contact Us</h1>
+    <p class="apb-contact-hero-subtitle">
+      Kami siap membantu dan berkolaborasi. Silakan hubungi sekretariat {{ webname }} melalui saluran resmi di bawah ini.
+    </p>
+  </div>
+</section>
+
+<!-- Main Contact Section (Fintech.id inspired clean aesthetic) -->
+<section class="apb-contact-main-section">
+  <div class="apb-container">
+    <div class="apb-contact-grid">
+      
+      <!-- LEFT COLUMN: MAP & ADDRESS -->
+      <div class="apb-contact-left-col">
+        <!-- Interactive Map Frame -->
+        <div class="apb-contact-map-card">
+          <div class="apb-contact-map-frame">
+            {% if web_setting and web_setting.link_maps %}
+              <!-- Dynamic Map Embed -->
+              <iframe 
+                src="https://maps.google.com/maps?q={{ address|urlencode }}&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                title="Peta Lokasi {{ webname }}" 
+                allowfullscreen="" 
+                loading="lazy" 
+                referrerpolicy="no-referrer-when-downgrade">
+              </iframe>
+            {% else %}
+              <!-- Fallback Map Embed based on Address -->
+              <iframe 
+                src="https://maps.google.com/maps?q={{ address|urlencode }}&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                title="Peta Lokasi {{ webname }}" 
+                allowfullscreen="" 
+                loading="lazy" 
+                referrerpolicy="no-referrer-when-downgrade">
+              </iframe>
+            {% endif %}
+
+            <!-- Interactive Map Overlay Badge / Direct Directions Button -->
+            {% if web_setting and web_setting.link_maps %}
+              <a href="{{ web_setting.link_maps }}" target="_blank" rel="noopener noreferrer" class="apb-map-direction-badge" title="Buka di Google Maps">
+                <i class="ri-direction-line"></i> Petunjuk Arah
+              </a>
+            {% else %}
+              <a href="https://www.google.com/maps/search/?api=1&query={{ address|urlencode }}" target="_blank" rel="noopener noreferrer" class="apb-map-direction-badge" title="Buka di Google Maps">
+                <i class="ri-direction-line"></i> Petunjuk Arah
+              </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Address Information Block -->
+        <div class="apb-contact-address-block">
+          <h3 class="apb-contact-address-heading">Address</h3>
+          <p class="apb-contact-address-desc">
+            {{ address }}
+          </p>
+          {% if web_setting and web_setting.nama_organisasi %}
+            <div class="apb-contact-org-subtext">
+              <i class="ri-building-4-line"></i> {{ web_setting.nama_organisasi }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: CONTACT CHANNELS & SOCIAL MEDIA -->
+      <div class="apb-contact-right-col">
+        <div class="apb-contact-items-list">
+          
+          <!-- 1. Website -->
+          <div class="apb-contact-item">
+            <div class="apb-contact-item-icon">
+              <i class="ri-window-line"></i>
+            </div>
+            <div class="apb-contact-item-content">
+              <span class="apb-contact-item-label">Website</span>
+              <a href="https://{{ website }}" target="_blank" rel="noopener noreferrer" class="apb-contact-item-link">
+                https://<strong>{{ website }}</strong>
+              </a>
+            </div>
+          </div>
+
+          <!-- 2. Email -->
+          <div class="apb-contact-item">
+            <div class="apb-contact-item-icon">
+              <i class="ri-at-line"></i>
+            </div>
+            <div class="apb-contact-item-content">
+              <span class="apb-contact-item-label">Email</span>
+              <a href="mailto:{{ email }}" class="apb-contact-item-link">
+                <strong>{{ email }}</strong>
+              </a>
+            </div>
+          </div>
+
+          <!-- 3. WhatsApp / Phone -->
+          {% if telp %}
+          <div class="apb-contact-item">
+            <div class="apb-contact-item-icon">
+              <i class="ri-whatsapp-line"></i>
+            </div>
+            <div class="apb-contact-item-content">
+              <span class="apb-contact-item-label">WhatsApp / Telepon</span>
+              <a href="https://wa.me/{{ telp|cut:' '|cut:'+'|cut:'-' }}" target="_blank" rel="noopener noreferrer" class="apb-contact-item-link">
+                <strong>{{ telp }}</strong>
+              </a>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- 4. Instagram -->
+          {% if web_setting and web_setting.link_instagram %}
+          <div class="apb-contact-item">
+            <div class="apb-contact-item-icon">
+              <i class="ri-instagram-line"></i>
+            </div>
+            <div class="apb-contact-item-content">
+              <span class="apb-contact-item-label">Instagram</span>
+              <a href="{{ web_setting.link_instagram }}" target="_blank" rel="noopener noreferrer" class="apb-contact-item-link">
+                {{ web_setting.link_instagram }}
+              </a>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- 5. Facebook -->
+          {% if web_setting and web_setting.link_facebook %}
+          <div class="apb-contact-item">
+            <div class="apb-contact-item-icon">
+              <i class="ri-facebook-box-line"></i>
+            </div>
+            <div class="apb-contact-item-content">
+              <span class="apb-contact-item-label">Facebook</span>
+              <a href="{{ web_setting.link_facebook }}" target="_blank" rel="noopener noreferrer" class="apb-contact-item-link">
+                {{ web_setting.link_facebook }}
+              </a>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- 6. LinkedIn -->
+          {% if web_setting and web_setting.link_linkedin %}
+          <div class="apb-contact-item">
+            <div class="apb-contact-item-icon">
+              <i class="ri-linkedin-box-line"></i>
+            </div>
+            <div class="apb-contact-item-content">
+              <span class="apb-contact-item-label">LinkedIn</span>
+              <a href="{{ web_setting.link_linkedin }}" target="_blank" rel="noopener noreferrer" class="apb-contact-item-link">
+                {{ web_setting.link_linkedin }}
+              </a>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- 7. TikTok -->
+          {% if web_setting and web_setting.link_tiktok %}
+          <div class="apb-contact-item">
+            <div class="apb-contact-item-icon">
+              <i class="ri-tiktok-line"></i>
+            </div>
+            <div class="apb-contact-item-content">
+              <span class="apb-contact-item-label">TikTok</span>
+              <a href="{{ web_setting.link_tiktok }}" target="_blank" rel="noopener noreferrer" class="apb-contact-item-link">
+                {{ web_setting.link_tiktok }}
+              </a>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- 8. YouTube -->
+          {% if web_setting and web_setting.link_youtube %}
+          <div class="apb-contact-item">
+            <div class="apb-contact-item-icon">
+              <i class="ri-youtube-line"></i>
+            </div>
+            <div class="apb-contact-item-content">
+              <span class="apb-contact-item-label">YouTube</span>
+              <a href="{{ web_setting.link_youtube }}" target="_blank" rel="noopener noreferrer" class="apb-contact-item-link">
+                {{ web_setting.link_youtube }}
+              </a>
+            </div>
+          </div>
+          {% endif %}
+
+        </div>
+
+        <!-- Quick Action Box / WhatsApp Direct Chat -->
+        <div class="apb-contact-cta-card">
+          <div class="apb-contact-cta-icon">
+            <i class="ri-customer-service-2-line"></i>
+          </div>
+          <div class="apb-contact-cta-info">
+            <h4>Butuh Bantuan Cepat?</h4>
+            <p>Tim Sekretariat APBISDI siap menjawab</p>
+          </div>
+          {% if telp %}
+            <a href="https://wa.me/{{ telp|cut:' '|cut:'+'|cut:'-' }}?text=Halo%20Sekretariat%20APBISDI,%20saya%20ingin%20bertanya%20mengenai%20layanan%20organisasi." target="_blank" rel="noopener noreferrer" class="apb-btn apb-btn-primary apb-contact-cta-btn">
+              <i class="ri-whatsapp-line"></i> Chat WhatsApp
+            </a>
+          {% else %}
+            <a href="mailto:{{ email }}" class="apb-btn apb-btn-primary apb-contact-cta-btn">
+              <i class="ri-mail-send-line"></i> Kirim Email
+            </a>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}

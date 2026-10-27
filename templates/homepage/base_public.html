@@ -1,0 +1,319 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ title }} | {{ webname }} - {{ web_name }}{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Platform resmi ThesisEdu - Pusat Penerbitan Buku ber-ISBN, Jurnal Ilmiah, Artikel Riset, dan Program Book Chapter Kolaboratif Nasional.{% endblock %}">
+  <link rel="icon" type="image/png" href="{% if web_setting and web_setting.favicon %}{{ web_setting.favicon.url }}{% else %}{% static 'img/logo.png' %}{% endif %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/home/styles.css' %}?v={{ STATIC_VERSION }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <header class="apb-navbar-wrapper" id="apbNavbar">
+    <div class="apb-container">
+      <nav class="apb-navbar" aria-label="Main Navigation">
+        <a href="{% url 'homepage' %}" class="apb-brand" aria-label="Kembali ke Beranda">
+          {% if web_setting and web_setting.logo %}
+            <img src="{{ web_setting.logo.url }}" alt="{{ webname }}" class="apb-brand-logo">
+          {% else %}
+            <img src="{% static 'img/logo.png' %}" alt="{{ webname }}" class="apb-brand-logo">
+          {% endif %}
+        </a>
+        <ul class="apb-nav-menu">
+          <li class="apb-nav-item">
+            <a href="{% url 'homepage' %}" class="apb-nav-link">Home</a>
+          </li>
+
+          <!-- Profil Dropdown -->
+          <li class="apb-nav-item">
+            <a href="#tentang" class="apb-nav-link">
+              Profil <i class="ri-arrow-down-s-line dropdown-icon"></i>
+            </a>
+            <div class="apb-dropdown">
+              <a href="{% url 'page_detail' 'sejarah' %}" class="apb-dropdown-item">Sejarah</a>
+              <a href="{% url 'page_detail' 'visi-misi' %}" class="apb-dropdown-item">Visi & Misi</a>
+              <a href="{% url 'page_detail' 'tujuan-fungsi-tugas' %}" class="apb-dropdown-item">Tujuan,Fungsi,Tugas</a>
+              <a href="{% url 'struktur_organisasi' %}" class="apb-dropdown-item">Struktur Organisasi</a>
+            </div>
+          </li>
+           <li class="apb-nav-item">
+            <a href="{% url 'login' %}" class="apb-nav-link">Keanggotaan</a>
+          </li>
+          <!-- Edukasi & Artikel -->
+          <li class="apb-nav-item">
+            <a href="{% url 'article_list' %}" class="apb-nav-link">Berita</a>
+          </li>
+
+           <li class="apb-nav-item">
+            <a href="{% url 'aktivitas_list' %}" class="apb-nav-link">Aktivitas</a>
+          </li>
+
+          <li class="apb-nav-item">
+            <a href="{% url 'contact_page' %}" class="apb-nav-link">Hubungi Kami</a>
+          </li>
+          <!-- Dashboard Dropdown -->
+          <li class="apb-nav-item">
+            <a href="{% url 'public_dashboard_sebaran' %}" class="apb-nav-link">
+              Statistik <i class="ri-arrow-down-s-line dropdown-icon"></i>
+            </a>
+            <div class="apb-dropdown">
+              <a href="{% url 'public_dashboard_sebaran' %}" class="apb-dropdown-item">Sebaran Wilayah</a>
+              <a href="{% url 'public_dashboard_anggota' %}" class="apb-dropdown-item">Anggota Individu</a>
+              <a href="{% url 'public_dashboard_institusi' %}" class="apb-dropdown-item">Anggota Institusi</a>
+            </div>
+          </li>
+          
+        </ul>
+
+        <!-- Action / CTA Buttons -->
+        <div class="apb-nav-actions">
+          <a href="{% url 'article_list' %}" class="apb-search-btn" title="Cari Informasi" aria-label="Cari">
+            <i class="ri-search-line"></i>
+          </a>
+
+          {% if user.is_authenticated %}
+            <a href="{% url 'app:dashboard' %}" class="apb-btn apb-btn-primary">
+              <i class="ri-dashboard-line"></i> Dashboard
+            </a>
+          {% else %}
+            <a href="{% url 'login' %}" class="apb-btn apb-btn-outline" style="padding: 0.65rem 1.25rem;">
+              Masuk
+            </a>
+            <a href="{% url 'register' %}" class="apb-btn apb-btn-primary">
+              Daftar Anggota
+            </a>
+          {% endif %}
+
+        <!-- Mobile Toggle Button -->
+        <button type="button" class="apb-burger-btn" id="burgerToggle" aria-label="Buka Menu">
+          <i class="ri-menu-4-line"></i>
+        </button>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<!-- Mobile Drawer (Placed outside header to avoid backdrop-filter stacking context trap) -->
+<div class="apb-mobile-menu" id="mobileMenu">
+  <a href="{% url 'homepage' %}" class="apb-mobile-link">Beranda</a>
+  <a href="{% url 'homepage' %}#tentang" class="apb-mobile-link">Profil Organisasi</a>
+  <a href="{% url 'homepage' %}#visi-misi" class="apb-mobile-link">Visi & Misi</a>
+  <a href="{% url 'homepage' %}#tujuan" class="apb-mobile-link">Tujuan,Fungsi,Tugas</a>
+  <a href="{% url 'struktur_organisasi' %}" class="apb-mobile-link">Struktur Organisasi</a>
+  <a href="{% url 'public_dashboard_sebaran' %}" class="apb-mobile-link">Dashboard Sebaran</a>
+  <a href="{% url 'public_dashboard_anggota' %}" class="apb-mobile-link">Anggota Individu</a>
+  <a href="{% url 'public_dashboard_institusi' %}" class="apb-mobile-link">Anggota Institusi</a>
+  <a href="{% url 'login' %}" class="apb-mobile-link">Keanggotaan</a>
+  <a href="{% url 'aktivitas_list' %}" class="apb-mobile-link">Aktivitas</a>
+  <a href="{% url 'article_list' %}" class="apb-mobile-link">Berita</a>
+  <a href="{% url 'contact_page' %}" class="apb-mobile-link">Kontak</a>
+  <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+    {% if user.is_authenticated %}
+      <a href="{% url 'app:dashboard' %}" class="apb-btn apb-btn-primary" style="width: 100%;">
+        Buka Dashboard
+      </a>
+    {% else %}
+      <a href="{% url 'login' %}" class="apb-btn apb-btn-outline" style="width: 100%;">
+        Masuk Portal
+      </a>
+      <a href="{% url 'register' %}" class="apb-btn apb-btn-primary" style="width: 100%;">
+        Daftar Anggota Baru
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="apb-footer" id="kontak">
+    <div class="apb-footer-top">
+      <div class="apb-container">
+        <div class="apb-footer-top-grid">
+          <div class="apb-footer-col">
+            <div class="apb-footer-col-header">
+              <i class="ri-home-4-line"></i> Tentang Kami
+            </div>
+            <ul class="apb-footer-nav-list">
+              <li><a href="{% url 'homepage' %}" class="apb-footer-nav-link">Home</a></li>
+              <li><a href="{% url 'page_detail' 'sejarah' %}" class="apb-footer-nav-link">Sejarah</a></li>
+              <li><a href="{% url 'page_detail' 'visi-misi' %}" class="apb-footer-nav-link">Visi & Misi</a></li>
+              <li><a href="{% url 'page_detail' 'tujuan-fungsi-tugas' %}" class="apb-footer-nav-link">Tujuan, Fungsi, & Tugas</a></li>
+              <li><a href="{% url 'struktur_organisasi' %}" class="apb-footer-nav-link">Struktur Organisasi</a></li>
+            </ul>
+          </div>
+          <div class="apb-footer-col">
+            <div class="apb-footer-col-header">
+              <i class="ri-team-line"></i> Statistik & Data
+            </div>
+            <ul class="apb-footer-nav-list">
+              <li><a href="{% url 'public_dashboard_sebaran' %}" class="apb-footer-nav-link">Sebaran Wilayah</a></li>
+              <li><a href="{% url 'public_dashboard_anggota' %}" class="apb-footer-nav-link">Direktori Anggota Individu</a></li>
+              <li><a href="{% url 'public_dashboard_institusi' %}" class="apb-footer-nav-link">Direktori Institusi</a></li>
+              <li><a href="{% url 'register' %}" class="apb-footer-nav-link">Pendaftaran Anggota</a></li>
+            </ul>
+          </div>
+          <div class="apb-footer-col">
+            <div class="apb-footer-col-header">
+              <i class="ri-book-open-line"></i> Edukasi & Riset
+            </div>
+            <ul class="apb-footer-nav-list">
+              <li><a href="{% url 'article_list' %}" class="apb-footer-nav-link">Berita & Artikel</a></li>
+              <li><a href="{% url 'aktivitas_list' %}" class="apb-footer-nav-link">Agenda & Aktivitas</a></li>
+              <li><a href="{% url 'login' %}" class="apb-footer-nav-link">Panduan Kurikulum Digital</a></li>
+              <li><a href="{% url 'aktivitas_list' %}?category=sidang-pleno" class="apb-footer-nav-link">Sidang Pleno</a></li>
+            </ul>
+          </div>
+          <div class="apb-footer-col">
+            <div class="apb-footer-col-header">
+              <i class="ri-customer-service-2-line"></i> Layanan Bantuan
+            </div>
+            <ul class="apb-footer-nav-list">
+              <li><a href="{% url 'contact_page' %}" class="apb-footer-nav-link">Kontak Kami</a></li>
+              <li><a href="{% url 'homepage' %}#faq" class="apb-footer-nav-link">FAQ & Pusat Bantuan</a></li>
+              <li><a href="#kontak" class="apb-footer-nav-link">Pengaduan Layanan</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lower White Section -->
+    <div class="apb-footer-bottom">
+      <div class="apb-container">
+        <div class="apb-footer-bottom-grid">
+          <!-- Logo & Info -->
+          <div class="apb-footer-brand-box">
+            {% if web_setting and web_setting.logo %}
+              <img src="{{ web_setting.logo.url }}" alt="{{ webname }}" class="apb-footer-brand-logo">
+            {% else %}
+              <img src="{% static 'img/logo.png' %}" alt="{{ webname }}" class="apb-footer-brand-logo">
+            {% endif %}
+          </div>
+
+          <!-- Newsletter Form -->
+          <div class="apb-footer-newsletter-box">
+            <div class="apb-footer-newsletter-title">
+              <i class="ri-mail-send-line"></i> Newsletter Berkala
+            </div>
+            <form class="apb-footer-newsletter-form" onsubmit="event.preventDefault(); alert('Terima kasih telah berlangganan newsletter ThesisEdu!');">
+              <span class="apb-footer-newsletter-label">Email</span>
+              <input type="email" required placeholder="Ketik alamat email Anda" class="apb-footer-newsletter-input">
+              <button type="submit" class="apb-footer-newsletter-btn">
+                Berlangganan <i class="ri-arrow-right-line"></i>
+              </button>
+            </form>
+          </div>
+
+          <!-- Address & Contact -->
+          <div class="apb-footer-address-box">
+            <div>
+              <strong style="color: var(--apb-text);">Sekretariat {{ webname }}:</strong><br>
+              {{ address }}
+            </div>
+            <div class="apb-footer-contact-item">
+              <i class="ri-mail-line"></i>
+              <span>{{ email }}</span>
+            </div>
+            <div class="apb-footer-contact-item">
+              <i class="ri-whatsapp-line"></i>
+              <span>{{ telp }} (WhatsApp Resmi)</span>
+            </div>
+          </div>
+
+          <!-- Social Media & Copyright -->
+          <div class="apb-footer-social-box">
+            <div class="apb-footer-social-list">
+              {% if web_setting and web_setting.link_linkedin %}
+                <a href="{{ web_setting.link_linkedin }}" target="_blank" rel="noopener noreferrer" class="apb-footer-social-link" title="LinkedIn" aria-label="LinkedIn">
+                  <i class="ri-linkedin-fill"></i>
+                </a>
+              {% endif %}
+              {% if web_setting and web_setting.link_instagram %}
+                <a href="{{ web_setting.link_instagram }}" target="_blank" rel="noopener noreferrer" class="apb-footer-social-link" title="Instagram" aria-label="Instagram">
+                  <i class="ri-instagram-line"></i>
+                </a>
+              {% endif %}
+              {% if web_setting and web_setting.link_facebook %}
+                <a href="{{ web_setting.link_facebook }}" target="_blank" rel="noopener noreferrer" class="apb-footer-social-link" title="Facebook" aria-label="Facebook">
+                  <i class="ri-facebook-fill"></i>
+                </a>
+              {% endif %}
+              {% if web_setting and web_setting.link_youtube %}
+                <a href="{{ web_setting.link_youtube }}" target="_blank" rel="noopener noreferrer" class="apb-footer-social-link" title="YouTube" aria-label="YouTube">
+                  <i class="ri-youtube-fill"></i>
+                </a>
+              {% endif %}
+              {% if web_setting and web_setting.link_tiktok %}
+                <a href="{{ web_setting.link_tiktok }}" target="_blank" rel="noopener noreferrer" class="apb-footer-social-link" title="TikTok" aria-label="TikTok">
+                  <i class="ri-tiktok-fill"></i>
+                </a>
+              {% endif %}
+              {% if not web_setting or not web_setting.link_linkedin and not web_setting.link_instagram and not web_setting.link_facebook and not web_setting.link_youtube and not web_setting.link_tiktok %}
+                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="apb-footer-social-link" title="LinkedIn" aria-label="LinkedIn"><i class="ri-linkedin-fill"></i></a>
+                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="apb-footer-social-link" title="Instagram" aria-label="Instagram"><i class="ri-instagram-line"></i></a>
+                <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" class="apb-footer-social-link" title="YouTube" aria-label="YouTube"><i class="ri-youtube-fill"></i></a>
+                <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" class="apb-footer-social-link" title="TikTok" aria-label="TikTok"><i class="ri-tiktok-fill"></i></a>
+              {% endif %}
+            </div>
+            <div class="apb-footer-copyright">
+              &copy; 2026 {{ webname }} Indonesia.<br>
+              {{ create_by|default:'All rights reserved.' }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Script for Navbar and Interactions -->
+  <script>
+    // Sticky navbar effect
+    window.addEventListener('scroll', () => {
+      const navbar = document.getElementById('apbNavbar');
+      if (window.scrollY > 20) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    });
+
+    // Mobile menu toggle
+    const burgerToggle = document.getElementById('burgerToggle');
+    const mobileMenu = document.getElementById('mobileMenu');
+    if (burgerToggle && mobileMenu) {
+      burgerToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const isOpen = mobileMenu.classList.toggle('active');
+        const icon = burgerToggle.querySelector('i');
+        if (isOpen) {
+          icon.className = 'ri-close-line';
+          document.body.style.overflow = 'hidden';
+        } else {
+          icon.className = 'ri-menu-4-line';
+          document.body.style.overflow = '';
+        }
+      });
+
+      // Close mobile menu on link click
+      mobileMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          mobileMenu.classList.remove('active');
+          const icon = burgerToggle.querySelector('i');
+          if (icon) icon.className = 'ri-menu-4-line';
+          document.body.style.overflow = '';
+        });
+      });
+    }
+  </script>
+
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

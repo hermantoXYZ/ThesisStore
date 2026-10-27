@@ -1,0 +1,513 @@
+{% extends 'homepage/base_public.html' %}
+{% load static %}
+
+{% block title %}Struktur Organisasi | {{ webname }} - {{ web_name }}{% endblock %}
+
+{% block content %}
+<!-- Page Breadcrumb & Header -->
+<section class="apb-page-header">
+  <div class="apb-container">
+    <div class="apb-breadcrumb">
+      <a href="{% url 'homepage' %}"><i class="ri-home-4-line"></i> Beranda</a>
+      <span>/</span>
+      <span>Profil</span>
+      <span>/</span>
+      <span>Struktur Organisasi</span>
+    </div>
+    <h1 class="apb-page-title">Struktur Organisasi</h1>
+    <p style="color: rgba(255,255,255,0.85); margin-top: 0.5rem; font-size: 1.05rem;">
+      Asosiasi Profesi dan Pendidikan Bisnis Digital Indonesia
+    </p>
+  </div>
+</section>
+
+<!-- Main Organization Structure Section -->
+<section class="apb-section apb-org-page">
+  <div class="apb-container">
+    <!-- Centered Header Badge -->
+    <div style="text-align: center; margin-bottom: 2.5rem;">
+      <div>
+        <span class="apb-org-period-tag">
+          <i class="ri-calendar-check-line"></i> PERIODE 2026–2029
+        </span>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         SECTION 1: DEWAN PENGAWAS (5 CARDS)
+         ========================================================================= -->
+    <div class="apb-org-section-card active" id="sec-pengawas">
+      <div class="apb-org-accordion-header" onclick="toggleAccordion('sec-pengawas')">
+        <h3 class="apb-org-accordion-title">
+          <i class="ri-eye-line" style="color: #0088cc;"></i> Dewan Pengawas
+        </h3>
+        <i class="ri-arrow-down-s-line apb-org-accordion-icon"></i>
+      </div>
+
+      <div class="apb-org-accordion-body">
+        <!-- Ketua Dewan Pengawas (Top Highlight) -->
+        <div style="max-width: 290px; margin: 0 auto 2rem auto;">
+          <article class="apb-org-card" style="border: 1.5px solid #00c2ff; box-shadow: 0 8px 24px rgba(0, 194, 255, 0.12);">
+            <div class="apb-org-photo-frame">
+              {% comment %}
+                <img src="{% static 'img/pengurus/pengawas_ketua.jpg' %}" alt="Dr. Mery Citra Sondari S.E., M.Si" class="apb-org-photo-img" loading="lazy">
+              {% endcomment %}
+              <div class="apb-org-photo-placeholder">
+                <div class="placeholder-avatar">
+                  <i class="ri-user-star-line"></i>
+                </div>
+                <span class="placeholder-hint">Foto Ketua Dewan Pengawas</span>
+              </div>
+            </div>
+
+            <div class="apb-org-info">
+              <h4 class="apb-org-name" title="Dr. Mery Citra Sondari S.E., M.Si">
+                Dr. Mery Citra Sondari S.E., M.Si
+              </h4>
+              <p class="apb-org-role" style="color: #0088cc; font-weight: 700;">
+ Ketua Dewan Pengawas
+              </p>
+              
+              <div class="apb-org-card-footer">
+                <button type="button" class="apb-org-btn-info" onclick="openProfileModal('Dr. Mery Citra Sondari S.E., M.Si', 'Ketua Dewan Pengawas', 'Dewan Pengawas APBISDI (Periode 2026–2029)')">
+                  See Info
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- 4 Anggota Dewan Pengawas -->
+        <div class="apb-org-grid">
+          
+          <!-- Anggota 1 -->
+          <article class="apb-org-card">
+            <div class="apb-org-photo-frame">
+              {% comment %}
+                <img src="{% static 'img/pengurus/pengawas_anggota1.jpg' %}" alt="Dr. Dini Turipanam Alamanda, S.Tp., M.S.M" class="apb-org-photo-img" loading="lazy">
+              {% endcomment %}
+              <div class="apb-org-photo-placeholder">
+                <div class="placeholder-avatar">
+                  <i class="ri-user-3-line"></i>
+                </div>
+                <span class="placeholder-hint">Foto Anggota 1</span>
+              </div>
+            </div>
+
+            <div class="apb-org-info">
+              <h4 class="apb-org-name" title="Dr. Dini Turipanam Alamanda, S.Tp., M.S.M">
+                Dr. Dini Turipanam Alamanda, S.Tp., M.S.M
+              </h4>
+              <p class="apb-org-role">Anggota Dewan Pengawas</p>
+              
+              <div class="apb-org-card-footer">
+                <button type="button" class="apb-org-btn-info" onclick="openProfileModal('Dr. Dini Turipanam Alamanda, S.Tp., M.S.M', 'Anggota Dewan Pengawas', 'Dewan Pengawas APBISDI (Periode 2026–2029)')">
+                  See Info
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- Anggota 2 -->
+          <article class="apb-org-card">
+            <div class="apb-org-photo-frame">
+              {% comment %}
+                <img src="{% static 'img/pengurus/pengawas_anggota2.jpg' %}" alt="Dr. M. Ramaddan Juilanti, M.T" class="apb-org-photo-img" loading="lazy">
+              {% endcomment %}
+              <div class="apb-org-photo-placeholder">
+                <div class="placeholder-avatar">
+                  <i class="ri-user-3-line"></i>
+                </div>
+                <span class="placeholder-hint">Foto Anggota 2</span>
+              </div>
+            </div>
+
+            <div class="apb-org-info">
+              <h4 class="apb-org-name" title="Dr. M. Ramaddan Juilanti, M.T">
+                Dr. M. Ramaddan Juilanti, M.T
+              </h4>
+              <p class="apb-org-role">Anggota Dewan Pengawas</p>
+              
+              <div class="apb-org-card-footer">
+                <button type="button" class="apb-org-btn-info" onclick="openProfileModal('Dr. M. Ramaddan Juilanti, M.T', 'Anggota Dewan Pengawas', 'Dewan Pengawas APBISDI (Periode 2026–2029)')">
+                  See Info
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- Anggota 3 -->
+          <article class="apb-org-card">
+            <div class="apb-org-photo-frame">
+              {% comment %}
+                <img src="{% static 'img/pengurus/pengawas_anggota3.jpg' %}" alt="Dion Achmad Armadi, SE., M.Si" class="apb-org-photo-img" loading="lazy">
+              {% endcomment %}
+              <div class="apb-org-photo-placeholder">
+                <div class="placeholder-avatar">
+                  <i class="ri-user-3-line"></i>
+                </div>
+                <span class="placeholder-hint">Foto Anggota 3</span>
+              </div>
+            </div>
+
+            <div class="apb-org-info">
+              <h4 class="apb-org-name" title="Dion Achmad Armadi, SE., M.Si">
+                Dion Achmad Armadi, SE., M.Si
+              </h4>
+              <p class="apb-org-role">Anggota Dewan Pengawas</p>
+              
+              <div class="apb-org-card-footer">
+                <button type="button" class="apb-org-btn-info" onclick="openProfileModal('Dion Achmad Armadi, SE., M.Si', 'Anggota Dewan Pengawas', 'Dewan Pengawas APBISDI (Periode 2026–2029)')">
+                  See Info
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- Anggota 4 -->
+          <article class="apb-org-card">
+            <div class="apb-org-photo-frame">
+              {% comment %}
+                <img src="{% static 'img/pengurus/pengawas_anggota4.jpg' %}" alt="Soegiarto, S.Kom.,M.Kom" class="apb-org-photo-img" loading="lazy">
+              {% endcomment %}
+              <div class="apb-org-photo-placeholder">
+                <div class="placeholder-avatar">
+                  <i class="ri-user-3-line"></i>
+                </div>
+                <span class="placeholder-hint">Foto Anggota 4</span>
+              </div>
+            </div>
+
+            <div class="apb-org-info">
+              <h4 class="apb-org-name" title="Soegiarto, S.Kom.,M.Kom">
+                Soegiarto, S.Kom.,M.Kom
+              </h4>
+              <p class="apb-org-role">Anggota Dewan Pengawas</p>
+              
+              <div class="apb-org-card-footer">
+                <button type="button" class="apb-org-btn-info" onclick="openProfileModal('Soegiarto, S.Kom.,M.Kom', 'Anggota Dewan Pengawas', 'Dewan Pengawas APBISDI (Periode 2026–2029)')">
+                  See Info
+                </button>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         SECTION 2: DEWAN PIMPINAN PUSAT / DPP APBISDI (4 CARDS)
+         ========================================================================= -->
+    <div class="apb-org-section-card active" id="sec-dpp">
+      <div class="apb-org-accordion-header" onclick="toggleAccordion('sec-dpp')">
+        <h3 class="apb-org-accordion-title">
+          <i class="ri-shield-star-line" style="color: #0088cc;"></i> Dewan Pimpinan Pusat (DPP APBISDI)
+        </h3>
+        <i class="ri-arrow-down-s-line apb-org-accordion-icon"></i>
+      </div>
+
+      <div class="apb-org-accordion-body">
+        <div class="apb-org-grid">
+          
+          <!-- 1. Ketua Umum -->
+          <article class="apb-org-card">
+            <div class="apb-org-photo-frame">
+              {% comment %}
+                <img src="{% static 'img/pengurus/ketua_umum.jpg' %}" alt="Dr. Osly Usman, S.E., M.Bus MM., M.Bus Sys., CRP., CDMP." class="apb-org-photo-img" loading="lazy">
+              {% endcomment %}
+              <div class="apb-org-photo-placeholder">
+                <div class="placeholder-avatar">
+                  <i class="ri-user-star-line"></i>
+                </div>
+                <span class="placeholder-hint">Foto Ketua Umum</span>
+              </div>
+            </div>
+
+            <div class="apb-org-info">
+              <h4 class="apb-org-name" title="Dr. Osly Usman, S.E., M.Bus MM., M.Bus Sys., CRP., CDMP.">
+                Dr. Osly Usman, S.E., M.Bus MM., M.Bus Sys., CRP., CDMP.
+              </h4>
+              <p class="apb-org-role">Ketua Umum</p>
+              
+              <div class="apb-org-card-footer">
+                <button type="button" class="apb-org-btn-info" onclick="openProfileModal('Dr. Osly Usman, S.E., M.Bus MM., M.Bus Sys., CRP., CDMP.', 'Ketua Umum', 'Dewan Pimpinan Pusat APBISDI (Periode 2026–2029)')">
+                  See Info
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- 2. Wakil Ketua I -->
+          <article class="apb-org-card">
+            <div class="apb-org-photo-frame">
+              {% comment %}
+                <img src="{% static 'img/pengurus/wakil_ketua.jpg' %}" alt="Dr. Andang Fazri, S.T., M.M." class="apb-org-photo-img" loading="lazy">
+              {% endcomment %}
+              <div class="apb-org-photo-placeholder">
+                <div class="placeholder-avatar">
+                  <i class="ri-user-3-line"></i>
+                </div>
+                <span class="placeholder-hint">Foto Wakil Ketua I</span>
+              </div>
+            </div>
+
+            <div class="apb-org-info">
+              <h4 class="apb-org-name" title="Dr. Andang Fazri, S.T., M.M.">
+                Dr. Andang Fazri, S.T., M.M.
+              </h4>
+              <p class="apb-org-role">Wakil Ketua I</p>
+              
+              <div class="apb-org-card-footer">
+                <button type="button" class="apb-org-btn-info" onclick="openProfileModal('Dr. Andang Fazri, S.T., M.M.', 'Wakil Ketua I', 'Dewan Pimpinan Pusat APBISDI (Periode 2026–2029)')">
+                  See Info
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- 3. Sekretaris Jenderal -->
+          <article class="apb-org-card">
+            <div class="apb-org-photo-frame">
+              {% comment %}
+                <img src="{% static 'img/pengurus/sekjen.jpg' %}" alt="Meydy Fauziridwan, S.M.B., M.M., CDM." class="apb-org-photo-img" loading="lazy">
+              {% endcomment %}
+              <div class="apb-org-photo-placeholder">
+                <div class="placeholder-avatar">
+                  <i class="ri-user-settings-line"></i>
+                </div>
+                <span class="placeholder-hint">Foto Sekretaris Jenderal</span>
+              </div>
+            </div>
+
+            <div class="apb-org-info">
+              <h4 class="apb-org-name" title="Meydy Fauziridwan, S.M.B., M.M., CDM.">
+                Meydy Fauziridwan, S.M.B., M.M., CDM.
+              </h4>
+              <p class="apb-org-role">Sekretaris Jenderal</p>
+              
+              <div class="apb-org-card-footer">
+                <button type="button" class="apb-org-btn-info" onclick="openProfileModal('Meydy Fauziridwan, S.M.B., M.M., CDM.', 'Sekretaris Jenderal', 'Dewan Pimpinan Pusat APBISDI (Periode 2026–2029)')">
+                  See Info
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- 4. Bendahara Umum -->
+          <article class="apb-org-card">
+            <div class="apb-org-photo-frame">
+              {% comment %}
+                <img src="{% static 'img/pengurus/bendahara.jpg' %}" alt="Kannisa Adjani, S.Kom., M.Kom." class="apb-org-photo-img" loading="lazy">
+              {% endcomment %}
+              <div class="apb-org-photo-placeholder">
+                <div class="placeholder-avatar">
+                  <i class="ri-wallet-3-line"></i>
+                </div>
+                <span class="placeholder-hint">Foto Bendahara Umum</span>
+              </div>
+            </div>
+
+            <div class="apb-org-info">
+              <h4 class="apb-org-name" title="Kannisa Adjani, S.Kom., M.Kom.">
+                Kannisa Adjani, S.Kom., M.Kom.
+              </h4>
+              <p class="apb-org-role">Bendahara Umum</p>
+              
+              <div class="apb-org-card-footer">
+                <button type="button" class="apb-org-btn-info" onclick="openProfileModal('Kannisa Adjani, S.Kom., M.Kom.', 'Bendahara Umum', 'Dewan Pimpinan Pusat APBISDI (Periode 2026–2029)')">
+                  See Info
+                </button>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         SECTION 3: BIDANG-BIDANG STRATEGIS (3 CARDS)
+         ========================================================================= -->
+    <div class="apb-org-section-card active" id="sec-bidang">
+      <div class="apb-org-accordion-header" onclick="toggleAccordion('sec-bidang')">
+        <h3 class="apb-org-accordion-title">
+          <i class="ri-apps-2-line" style="color: #0088cc;"></i> Bidang-Bidang Strategis
+        </h3>
+        <i class="ri-arrow-down-s-line apb-org-accordion-icon"></i>
+      </div>
+
+      <div class="apb-org-accordion-body">
+        <div class="apb-org-grid grid-3">
+          
+          <!-- 1. Bidang Inovasi Akademik -->
+          <article class="apb-org-card">
+            <div class="apb-org-photo-frame">
+              {% comment %}
+                <img src="{% static 'img/pengurus/bidang_inovasi.jpg' %}" alt="Dr. Hujjatullah Fazlurrahman, S.E., M.B.A." class="apb-org-photo-img" loading="lazy">
+              {% endcomment %}
+              <div class="apb-org-photo-placeholder">
+                <div class="placeholder-avatar">
+                  <i class="ri-book-open-line"></i>
+                </div>
+                <span class="placeholder-hint">Foto Ketua Bidang</span>
+              </div>
+            </div>
+
+            <div class="apb-org-info">
+              <h4 class="apb-org-name" title="Dr. Hujjatullah Fazlurrahman, S.E., M.B.A.">
+                Dr. Hujjatullah Fazlurrahman, S.E., M.B.A.
+              </h4>
+              <p class="apb-org-role">Ketua Bidang Inovasi Akademik</p>
+              
+              <div class="apb-org-card-footer">
+                <button type="button" class="apb-org-btn-info" onclick="openProfileModal('Dr. Hujjatullah Fazlurrahman, S.E., M.B.A.', 'Ketua Bidang Inovasi Akademik', 'Pengembangan Kurikulum, Standar Pembelajaran & Riset Digital APBISDI (Periode 2026–2029)')">
+                  See Info
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- 2. Bidang Hubungan Internasional -->
+          <article class="apb-org-card">
+            <div class="apb-org-photo-frame">
+              {% comment %}
+                <img src="{% static 'img/pengurus/bidang_internasional.jpg' %}" alt="Gede Pradiva Adiningrat, S. AB., M.AB., M.M." class="apb-org-photo-img" loading="lazy">
+              {% endcomment %}
+              <div class="apb-org-photo-placeholder">
+                <div class="placeholder-avatar">
+                  <i class="ri-global-line"></i>
+                </div>
+                <span class="placeholder-hint">Foto Ketua Bidang</span>
+              </div>
+            </div>
+
+            <div class="apb-org-info">
+              <h4 class="apb-org-name" title="Gede Pradiva Adiningrat, S. AB., M.AB., M.M.">
+                Gede Pradiva Adiningrat, S. AB., M.AB., M.M.
+              </h4>
+              <p class="apb-org-role">Ketua Bidang Hubungan Internasional</p>
+              
+              <div class="apb-org-card-footer">
+                <button type="button" class="apb-org-btn-info" onclick="openProfileModal('Gede Pradiva Adiningrat, S. AB., M.AB., M.M.', 'Ketua Bidang Hubungan Internasional', 'Kemitraan Global, Kolaborasi Riset Internasional & Akreditasi APBISDI (Periode 2026–2029)')">
+                  See Info
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- 3. Bidang Strategi dan Inovasi Bisnis -->
+          <article class="apb-org-card">
+            <div class="apb-org-photo-frame">
+              {% comment %}
+                <img src="{% static 'img/pengurus/bidang_bisnis.jpg' %}" alt="Syamsu Alam, S.Si. M.Si" class="apb-org-photo-img" loading="lazy">
+              {% endcomment %}
+              <div class="apb-org-photo-placeholder">
+                <div class="placeholder-avatar">
+                  <i class="ri-line-chart-line"></i>
+                </div>
+                <span class="placeholder-hint">Foto Ketua Bidang</span>
+              </div>
+            </div>
+
+            <div class="apb-org-info">
+              <h4 class="apb-org-name" title="Syamsu Alam, S.Si. M.Si">
+                Syamsu Alam, S.Si. M.Si
+              </h4>
+              <p class="apb-org-role">Ketua Bidang Strategi dan Inovasi Bisnis</p>
+              
+              <div class="apb-org-card-footer">
+                <button type="button" class="apb-org-btn-info" onclick="openProfileModal('Syamsu Alam, S.Si. M.Si', 'Ketua Bidang Strategi dan Inovasi Bisnis', 'Pengembangan Kemitraan Industri, Inkubasi & Hilirisasi Bisnis Digital APBISDI (Periode 2026–2029)')">
+                  See Info
+                </button>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- =========================================================================
+     MODAL DETAIL PROFIL (Popup See Info)
+     ========================================================================= -->
+<div class="apb-org-modal-backdrop" id="orgModalBackdrop" onclick="handleBackdropClick(event)">
+  <div class="apb-org-modal">
+    <div class="apb-org-modal-header">
+      <button type="button" class="apb-org-modal-close" onclick="closeProfileModal()" aria-label="Tutup">
+        <i class="ri-close-line"></i>
+      </button>
+      <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; background: rgba(255,255,255,0.2); padding: 0.25rem 0.75rem; border-radius: 9999px; margin-bottom: 0.5rem;">
+        <i class="ri-shield-user-line"></i> Profil Pengurus
+      </div>
+      <h3 id="modalName" style="font-size: 1.25rem; font-weight: 800; color: #ffffff; margin: 0; line-height: 1.3;"></h3>
+      <p id="modalRole" style="font-size: 0.9rem; color: rgba(255,255,255,0.9); margin: 0.25rem 0 0 0;"></p>
+    </div>
+
+    <div class="apb-org-modal-body">
+      <div style="margin-bottom: 1.25rem;">
+        <label style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: #64748b; display: block; margin-bottom: 0.25rem;">
+          Tugas & Tanggung Jawab
+        </label>
+        <p id="modalDesc" style="font-size: 0.95rem; color: #334155; line-height: 1.5; margin: 0;"></p>
+      </div>
+
+      <div style="border-top: 1px solid #e2e8f0; padding-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.8rem; color: #64748b;">
+          <i class="ri-building-line"></i> APBISDI 2026–2029
+        </span>
+        <button type="button" class="apb-btn apb-btn-primary" style="padding: 0.4rem 1rem; font-size: 0.85rem;" onclick="closeProfileModal()">
+          Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Toggle Accordion sections
+  function toggleAccordion(id) {
+    const section = document.getElementById(id);
+    if (section) {
+      section.classList.toggle('active');
+    }
+  }
+
+  // Open Profile Modal
+  function openProfileModal(name, role, desc) {
+    document.getElementById('modalName').textContent = name;
+    document.getElementById('modalRole').textContent = role;
+    document.getElementById('modalDesc').textContent = desc;
+    
+    const modal = document.getElementById('orgModalBackdrop');
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  // Close Profile Modal
+  function closeProfileModal() {
+    const modal = document.getElementById('orgModalBackdrop');
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // Close when clicking outside modal box
+  function handleBackdropClick(event) {
+    if (event.target.id === 'orgModalBackdrop') {
+      closeProfileModal();
+    }
+  }
+
+  // Close modal on Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeProfileModal();
+    }
+  });
+</script>
+{% endblock %}
