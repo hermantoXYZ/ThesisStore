@@ -171,8 +171,8 @@ def buku_edit(request, uuid):
             for f in media_files:
                 MediaBooks.objects.create(book=book, media=f)
 
-            messages.success(request, f'Data buku "{book.judul}" berhasil diperbarui!')
-            return redirect('app:buku_list')
+            messages.success(request, f'Data buku "{book.judul}" berhasil diperbarui oleh admin')
+            return redirect('app:buku_edit', uuid=book.uuid)
         else:
             messages.error(request, 'Gagal memperbarui buku. Silakan periksa isian form.')
     else:

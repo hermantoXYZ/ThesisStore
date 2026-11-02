@@ -197,3 +197,4 @@ class MediaBooks(models.Model):
 
     def __str__(self):
         return f"Media: {self.book.judul}"
+
