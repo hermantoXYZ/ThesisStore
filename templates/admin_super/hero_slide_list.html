@@ -1,0 +1,149 @@
+{% extends "admin_super/base.html" %}
+{% load static %}
+
+{% block content1 %}
+
+<div class="dashboard-content">
+
+    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+        <div style="margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    <i class="ri-slideshow-3-line" style="color: #1d84c6; margin-right: 6px;"></i>Kelola Hero Slide Beranda
+                </h3>
+                <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                    Kelola slide banner utama yang tampil di bagian atas (Hero) Beranda website.
+                </p>
+            </div>
+            <a href="{% url 'app:admin_hero_slide_create' %}" class="btn primary" style="display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
+                <i class="ri-add-line"></i> Tambah Slide Baru
+            </a>
+        </div>
+
+        {% if slides %}
+        <div style="display: grid; gap: 16px;">
+            {% for slide in slides %}
+            <div style="border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.04); transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                <div style="display: grid; grid-template-columns: 200px 1fr auto; gap: 0; align-items: stretch;">
+
+                    <!-- Banner Preview -->
+                    <div style="background: #0d1b2e; min-height: 130px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                        {% if slide.get_banner_url %}
+                            <img src="{{ slide.get_banner_url }}" alt="{{ slide.judul }}" style="width: 100%; height: 100%; object-fit: cover; display: block; opacity: {% if slide.is_active %}1{% else %}0.4{% endif %};">
+                        {% else %}
+                            <div style="text-align: center; color: #4a5568; padding: 12px;">
+                                <i class="ri-image-line" style="font-size: 32px; display: block; margin-bottom: 4px;"></i>
+                                <span style="font-size: 11px;">Belum ada banner</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Info Slide -->
+                    <div style="padding: 16px 20px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                            <span style="background: #e8f4fd; color: #1d84c6; border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 700;">
+                                Urutan #{{ slide.urutan }}
+                            </span>
+                            {% if slide.is_active %}
+                                <span class="grade-badge a" style="background-color: #27ae60; font-size: 11px; padding: 2px 8px;">
+                                    <i class="ri-checkbox-circle-line"></i> Aktif
+                                </span>
+                            {% else %}
+                                <span class="grade-badge d" style="background-color: #e74c3c; font-size: 11px; padding: 2px 8px;">
+                                    <i class="ri-close-circle-line"></i> Nonaktif
+                                </span>
+                            {% endif %}
+                            {% if slide.badge_text %}
+                                <span style="background: #f1f5f9; color: #475569; border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 500;">
+                                    {% if slide.badge_icon %}<i class="{{ slide.badge_icon }}" style="margin-right: 3px;"></i>{% endif %}
+                                    {{ slide.badge_text }}
+                                </span>
+                            {% endif %}
+                        </div>
+                        <h4 style="font-size: 16px; font-weight: 700; color: #1e293b; margin: 0 0 6px;">
+                            {{ slide.judul }}
+                            {% if slide.judul_highlight %}
+                                <span style="color: #1d84c6;">{{ slide.judul_highlight }}</span>
+                            {% endif %}
+                        </h4>
+                        <p style="font-size: 13px; color: #64748b; margin: 0 0 10px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            {{ slide.deskripsi }}
+                        </p>
+                        <div style="font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
+                            <i class="ri-link-m"></i> Tombol: <strong style="color: #475569;">"{{ slide.tombol_teks }}"</strong> &rarr; <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #1d84c6;">{{ slide.tombol_url }}</code>
+                        </div>
+                    </div>
+
+                    <!-- Aksi -->
+                    <div style="padding: 16px 14px; display: flex; flex-direction: column; gap: 8px; justify-content: center; border-left: 1px solid #f1f5f9; min-width: 120px; align-items: stretch;">
+                        <a href="{% url 'app:admin_hero_slide_edit' slide.id %}" class="btn warning small" title="Edit Slide" style="text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                            <i class="ri-edit-line"></i> Edit
+                        </a>
+
+                        <!-- Toggle aktif -->
+                        <form method="post" action="{% url 'app:admin_hero_slide_list' %}" style="margin: 0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="toggle_id" value="{{ slide.id }}">
+                            <button type="submit" class="btn {% if slide.is_active %}secondary{% else %}primary{% endif %} small" title="{% if slide.is_active %}Nonaktifkan{% else %}Aktifkan{% endif %}" style="width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                {% if slide.is_active %}
+                                    <i class="ri-eye-off-line"></i> Nonaktif
+                                {% else %}
+                                    <i class="ri-eye-line"></i> Aktifkan
+                                {% endif %}
+                            </button>
+                        </form>
+
+                        <button type="button" class="btn danger small" title="Hapus Slide" onclick="bukaModalHapusSlide('{{ slide.id }}', '{{ slide.judul|escapejs }}')" style="cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                            <i class="ri-delete-bin-line"></i> Hapus
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <div style="text-align: center; padding: 50px 20px; color: #94a3b8;">
+            <i class="ri-slideshow-3-line" style="font-size: 48px; display: block; margin-bottom: 12px; color: #cbd5e1;"></i>
+            <p style="font-size: 15px; font-weight: 500; color: #64748b; margin-bottom: 4px;">Belum ada Hero Slide</p>
+            <p style="font-size: 13px;">Klik tombol <strong>Tambah Slide Baru</strong> di atas untuk membuat slide pertama.</p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<!-- MODAL KONFIRMASI HAPUS SLIDE -->
+<div id="modalHapusSlide" class="modal-edit">
+    <div class="modal-content-edit" style="max-width: 440px;">
+        <span class="close" onclick="closeModal('modalHapusSlide')">&times;</span>
+        <div class="modal-icon" style="color: #e74c3c;">
+            <i class="ri-delete-bin-line"></i>
+        </div>
+        <h2 style="color: #2c3e50;">Hapus Hero Slide</h2>
+        <p id="pesanHapusSlide" style="font-size: 14px; line-height: 1.6; color: #555;">
+            Apakah Anda yakin ingin menghapus slide ini? Tindakan ini tidak dapat dibatalkan.
+        </p>
+        <div class="modal-actions" style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+            <button class="btn secondary" type="button" onclick="closeModal('modalHapusSlide')">
+                Batal
+            </button>
+            <a id="btnActionHapusSlide" href="#" class="btn danger" style="text-decoration: none;">
+                <i class="ri-delete-bin-line"></i> Ya, Hapus
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function bukaModalHapusSlide(slideId, judul) {
+    var baseUrl = "{% url 'app:admin_hero_slide_delete' '00000000-0000-0000-0000-000000000000' %}";
+    var url = baseUrl.replace('00000000-0000-0000-0000-000000000000', slideId);
+    document.getElementById('pesanHapusSlide').innerHTML = 'Apakah Anda yakin ingin menghapus slide: <strong>' + judul + '</strong>?';
+    document.getElementById('btnActionHapusSlide').setAttribute('href', url);
+    openModal('modalHapusSlide');
+}
+</script>
+
+{% endblock content1 %}

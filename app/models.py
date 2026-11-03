@@ -7,6 +7,9 @@ import os
 from django.conf import settings
 from django.urls import reverse
 
+from django.utils.text import slugify
+from datetime import date
+
 User.add_to_class("__str__", lambda self: f"{self.username} - {self.first_name}")
 
 class Provinsi(models.Model):
@@ -198,3 +201,219 @@ class MediaBooks(models.Model):
     def __str__(self):
         return f"Media: {self.book.judul}"
 
+class Category(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = "Categories"
+        ordering = ['name']
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+def rename_featured_image(instance, filename):
+    ext = filename.split('.')[-1]
+    title_slug = slugify(instance.title)
+    timestamp = timezone.now().strftime('%Y%m%d%H%M%S')
+    new_filename = f"{title_slug}_{timestamp}.{ext}"
+    return os.path.join('articles/featured_images/', new_filename)
+
+class Article(models.Model):
+
+    STATUS_CHOICES = (
+        ('draft', 'Draft'),
+        ('published', 'Published'),
+        ('archived', 'Archived'),
+    )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=200, unique=True, blank=True)
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='articles')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='articles')
+    content = models.TextField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
+    featured_image = models.ImageField(upload_to=rename_featured_image, blank=True, null=True)
+    views_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
+
+
+def rename_dokumentasi_article(instance, filename):
+    ext = filename.split('.')[-1]
+    timestamp = timezone.now().strftime('%Y%m%d%H%M%S')
+    random_str = uuid.uuid4().hex[:6]
+    return os.path.join('articles/dokumentasi/', f"doc_art_{timestamp}_{random_str}.{ext}")
+
+
+class DokumentasiArticle(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='dokumentasi_foto')
+    foto = models.ImageField(upload_to=rename_dokumentasi_article)
+    caption = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Dokumentasi Artikel'
+        verbose_name_plural = 'Dokumentasi Artikel'
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Dokumentasi: {self.article.title}"
+
+
+def rename_page_hero_image(instance, filename):
+    ext = filename.split('.')[-1]
+    title_slug = slugify(instance.title)
+    timestamp = timezone.now().strftime('%Y%m%d%H%M%S')
+    new_filename = f"{title_slug}_{timestamp}.{ext}"
+    return os.path.join('pages/hero_images/', new_filename)
+
+
+class Page(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=200)
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='pages')
+    slug = models.SlugField(max_length=200, unique=True, blank=True)
+    content = models.TextField()
+    featured_image = models.ImageField(upload_to=rename_page_hero_image, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        else:
+            self.slug = slugify(self.slug)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
+
+
+def rename_dokumentasi_page(instance, filename):
+    ext = filename.split('.')[-1]
+    timestamp = timezone.now().strftime('%Y%m%d%H%M%S')
+    random_str = uuid.uuid4().hex[:6]
+    return os.path.join('pages/dokumentasi/', f"doc_page_{timestamp}_{random_str}.{ext}")
+
+
+class DokumentasiPage(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    page = models.ForeignKey(Page, on_delete=models.CASCADE, related_name='dokumentasi_foto')
+    foto = models.ImageField(upload_to=rename_dokumentasi_page)
+    caption = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Dokumentasi Halaman'
+        verbose_name_plural = 'Dokumentasi Halaman'
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Dokumentasi: {self.page.title}"
+
+
+class WebSetting(models.Model):
+    nama_web = models.CharField(max_length=200)
+    alamat = models.TextField()
+    no_telp = models.CharField(max_length=20)
+    email = models.EmailField()
+    logo = models.ImageField(upload_to='web_setting/logo/', blank=True, null=True)
+    favicon = models.ImageField(upload_to='web_setting/favicon/', blank=True, null=True)
+    link_instagram = models.URLField(blank=True, null=True)
+    link_facebook = models.URLField(blank=True, null=True)
+    link_tiktok = models.URLField(blank=True, null=True)
+    link_youtube = models.URLField(blank=True, null=True)
+    link_linkedin = models.URLField(blank=True, null=True)
+    link_maps = models.URLField(blank=True, null=True)
+    smtp_host = models.CharField(max_length=100, default='smtp.gmail.com', verbose_name='SMTP Host')
+    smtp_port = models.PositiveIntegerField(default=587, verbose_name='SMTP Port')
+    smtp_user = models.EmailField(blank=True, null=True, verbose_name='Email Pengirim (SMTP User)')
+    smtp_password = models.CharField(max_length=128, blank=True, null=True, verbose_name='Password Aplikasi / SMTP Password')
+    smtp_from_email = models.CharField(max_length=200, blank=True, null=True, verbose_name='Nama & Email Pengirim (From)')
+
+    class Meta:
+        verbose_name = 'Pengaturan Website'
+        verbose_name_plural = 'Pengaturan Website'
+
+    def __str__(self):
+        return self.nama_organisasi
+    
+
+class KerjaSama(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    nama_kerjasama = models.CharField(max_length=200)
+    logo = models.ImageField(upload_to='kerja_sama/logo/', blank=True, null=True)
+    link_website = models.URLField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Kerja Sama'
+        verbose_name_plural = 'Kerja Sama'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.nama_kerjasama
+
+
+def rename_hero_slide_banner(instance, filename):
+    ext = filename.split('.')[-1]
+    timestamp = timezone.now().strftime('%Y%m%d%H%M%S')
+    random_str = uuid.uuid4().hex[:6]
+    new_filename = f"slide_{timestamp}_{random_str}.{ext}"
+    return os.path.join('hero_slides/', new_filename)
+
+
+class HeroSlide(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    judul = models.CharField(max_length=200, verbose_name='Judul Slide')
+    judul_highlight = models.CharField(max_length=200, blank=True, null=True, verbose_name='Judul (Bagian Highlight/Warna)')
+    badge_icon = models.CharField(max_length=100, blank=True, null=True, verbose_name='Ikon Badge (Remix Icon class)', help_text='Contoh: ri-shield-flash-line')
+    badge_text = models.CharField(max_length=100, blank=True, null=True, verbose_name='Teks Badge')
+    deskripsi = models.TextField(verbose_name='Deskripsi Slide')
+    tombol_teks = models.CharField(max_length=100, default='Pelajari Lebih Lanjut', verbose_name='Teks Tombol CTA')
+    tombol_url = models.CharField(max_length=200, default='#', verbose_name='URL Tombol CTA', help_text='Contoh: /daftar, #section-id, atau URL lengkap')
+    banner = models.ImageField(upload_to=rename_hero_slide_banner, blank=True, null=True, verbose_name='Gambar Banner Slide', help_text='Upload gambar atau GIF banner untuk slide ini')
+    banner_url_eksternal = models.URLField(blank=True, null=True, verbose_name='URL Banner Eksternal', help_text='Isi jika menggunakan banner dari URL eksternal (misal GIF dari server lain). Kosongkan jika upload file.')
+    urutan = models.PositiveIntegerField(default=0, verbose_name='Urutan Tampil')
+    is_active = models.BooleanField(default=True, verbose_name='Aktif')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Hero Slide'
+        verbose_name_plural = 'Hero Slides'
+        ordering = ['urutan', 'created_at']
+
+    def get_banner_url(self):
+        if self.banner_url_eksternal:
+            return self.banner_url_eksternal
+        if self.banner:
+            return self.banner.url
+        return ''
+
+    def __str__(self):
+        return f"{self.urutan}. {self.judul}"

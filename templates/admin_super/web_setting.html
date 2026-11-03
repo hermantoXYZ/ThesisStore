@@ -1,0 +1,374 @@
+{% extends "admin_super/base.html" %}
+{% load static %}
+
+{% block extra_head %}
+<style>
+    .ws-card {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid #eef0f3;
+    }
+    .ws-card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 2px solid #f4f6f9;
+        padding-bottom: 12px;
+        margin-bottom: 20px;
+    }
+    .ws-card-header h3 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+    }
+    .ws-card-header i {
+        font-size: 20px;
+        color: #1d84c6;
+    }
+    .ws-grid-2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 18px;
+    }
+    .ws-img-box {
+        background: #f8f9fa;
+        border: 1px dashed #d1d5db;
+        border-radius: 8px;
+        padding: 16px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 140px;
+    }
+    .ws-img-preview {
+        max-height: 90px;
+        max-width: 100%;
+        object-fit: contain;
+        margin-bottom: 10px;
+        border-radius: 4px;
+    }
+    .ws-img-preview-fav {
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+        margin-bottom: 10px;
+        border-radius: 6px;
+        border: 1px solid #e5e7eb;
+        background: #fff;
+        padding: 4px;
+    }
+    .ws-help {
+        font-size: 11.5px;
+        color: #7f8c8d;
+        margin-top: 4px;
+        display: block;
+    }
+</style>
+{% endblock extra_head %}
+
+{% block content1 %}
+<div class="dashboard-content">
+
+    <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div>
+            <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                <i class="ri-settings-3-line" style="color: #1d84c6; margin-right: 6px;"></i>Pengaturan Website
+            </h3>
+            <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                Kelola identitas website/toko, kontak sekretariat, logo, media sosial, dan konfigurasi email SMTP.
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'homepage' %}" target="_blank" class="btn secondary small" style="display: inline-flex; align-items: center; gap: 4px;">
+                <i class="ri-external-link-line"></i> Lihat Website
+            </a>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- SECTION 1: IDENTITAS ORGANISASI & KONTAK -->
+        <div class="ws-card">
+            <div class="ws-card-header">
+                <i class="ri-building-line"></i>
+                <h3>Identitas Website & Kontak</h3>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label for="id_nama_organisasi" style="font-weight: 600; font-size: 13.5px; margin-bottom: 6px; display: block;">
+                    Nama Organisasi / Toko / Portal <span style="color: red;">*</span>
+                </label>
+                {{ form.nama_organisasi }}
+                {% if form.nama_organisasi.errors %}
+                    <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.nama_organisasi.errors.0 }}</small>
+                {% endif %}
+                <span class="ws-help">Ditampilkan pada judul halaman browser, navbar header, dan footer website.</span>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label for="id_alamat" style="font-weight: 600; font-size: 13.5px; margin-bottom: 6px; display: block;">
+                    Alamat Lengkap <span style="color: red;">*</span>
+                </label>
+                {{ form.alamat }}
+                {% if form.alamat.errors %}
+                    <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.alamat.errors.0 }}</small>
+                {% endif %}
+            </div>
+
+            <div class="ws-grid-2">
+                <div class="form-group">
+                    <label for="id_no_telp" style="font-weight: 600; font-size: 13.5px; margin-bottom: 6px; display: block;">
+                        Nomor Telepon / WhatsApp <span style="color: red;">*</span>
+                    </label>
+                    {{ form.no_telp }}
+                    {% if form.no_telp.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.no_telp.errors.0 }}</small>
+                    {% endif %}
+                    <span class="ws-help">Contoh: +62 812 2227 20568</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_email" style="font-weight: 600; font-size: 13.5px; margin-bottom: 6px; display: block;">
+                        Email Resmi <span style="color: red;">*</span>
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.email.errors.0 }}</small>
+                    {% endif %}
+                    <span class="ws-help">Contoh: info@thesisstore.com</span>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 18px;">
+                <label for="id_link_maps" style="font-weight: 600; font-size: 13.5px; margin-bottom: 6px; display: block;">
+                    Tautan Google Maps Lokasi
+                </label>
+                {{ form.link_maps }}
+                {% if form.link_maps.errors %}
+                    <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.link_maps.errors.0 }}</small>
+                {% endif %}
+                <span class="ws-help">URL Google Maps untuk mempermudah pengunjung menemukan alamat.</span>
+            </div>
+        </div>
+
+        <!-- SECTION 2: LOGO & FAVICON -->
+        <div class="ws-card">
+            <div class="ws-card-header">
+                <i class="ri-image-line"></i>
+                <h3>Logo & Favicon Website</h3>
+            </div>
+
+            <div class="ws-grid-2">
+                <!-- LOGO -->
+                <div>
+                    <label style="font-weight: 600; font-size: 13.5px; margin-bottom: 6px; display: block;">
+                        Logo Website (PNG / SVG Transparan disarankan)
+                    </label>
+                    <div class="ws-img-box">
+                        {% if setting and setting.logo %}
+                            <img src="{{ setting.logo.url }}" alt="Logo Saat Ini" id="logo-preview" class="ws-img-preview">
+                            <span style="font-size: 11px; color: #16a34a; font-weight: 600; margin-bottom: 6px;">
+                                <i class="ri-checkbox-circle-fill"></i> Logo Aktif Terpasang
+                            </span>
+                        {% else %}
+                            <img src="{% static 'img/logo.png' %}" alt="Default Logo" id="logo-preview" class="ws-img-preview">
+                            <span style="font-size: 11px; color: #64748b; margin-bottom: 6px;">Menggunakan logo default</span>
+                        {% endif %}
+                        {{ form.logo }}
+                        {% if form.logo.errors %}
+                            <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.logo.errors.0 }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- FAVICON -->
+                <div>
+                    <label style="font-weight: 600; font-size: 13.5px; margin-bottom: 6px; display: block;">
+                        Favicon Browser (Ikon Tab)
+                    </label>
+                    <div class="ws-img-box">
+                        {% if setting and setting.favicon %}
+                            <img src="{{ setting.favicon.url }}" alt="Favicon Saat Ini" id="favicon-preview" class="ws-img-preview-fav">
+                            <span style="font-size: 11px; color: #16a34a; font-weight: 600; margin-bottom: 6px;">
+                                <i class="ri-checkbox-circle-fill"></i> Favicon Aktif
+                            </span>
+                        {% else %}
+                            <img src="{% static 'img/logo.png' %}" alt="Default Favicon" id="favicon-preview" class="ws-img-preview-fav">
+                            <span style="font-size: 11px; color: #64748b; margin-bottom: 6px;">Menggunakan default ikon</span>
+                        {% endif %}
+                        {{ form.favicon }}
+                        {% if form.favicon.errors %}
+                            <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.favicon.errors.0 }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: MEDIA SOSIAL -->
+        <div class="ws-card">
+            <div class="ws-card-header">
+                <i class="ri-share-line"></i>
+                <h3>Tautan Media Sosial Resmi</h3>
+            </div>
+
+            <div class="ws-grid-2">
+                <div class="form-group">
+                    <label for="id_link_instagram" style="font-weight: 600; font-size: 13.5px; margin-bottom: 6px; display: block;">
+                        <i class="ri-instagram-line" style="color: #e1306c; margin-right: 4px;"></i> Instagram URL
+                    </label>
+                    {{ form.link_instagram }}
+                    {% if form.link_instagram.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.link_instagram.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_link_facebook" style="font-weight: 600; font-size: 13.5px; margin-bottom: 6px; display: block;">
+                        <i class="ri-facebook-fill" style="color: #1877f2; margin-right: 4px;"></i> Facebook URL
+                    </label>
+                    {{ form.link_facebook }}
+                    {% if form.link_facebook.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.link_facebook.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_link_linkedin" style="font-weight: 600; font-size: 13.5px; margin-bottom: 6px; display: block;">
+                        <i class="ri-linkedin-fill" style="color: #0a66c2; margin-right: 4px;"></i> LinkedIn URL
+                    </label>
+                    {{ form.link_linkedin }}
+                    {% if form.link_linkedin.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.link_linkedin.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_link_youtube" style="font-weight: 600; font-size: 13.5px; margin-bottom: 6px; display: block;">
+                        <i class="ri-youtube-fill" style="color: #ff0000; margin-right: 4px;"></i> YouTube URL
+                    </label>
+                    {{ form.link_youtube }}
+                    {% if form.link_youtube.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.link_youtube.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_link_tiktok" style="font-weight: 600; font-size: 13.5px; margin-bottom: 6px; display: block;">
+                        <i class="ri-tiktok-fill" style="color: #000000; margin-right: 4px;"></i> TikTok URL
+                    </label>
+                    {{ form.link_tiktok }}
+                    {% if form.link_tiktok.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.link_tiktok.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4: PENGATURAN EMAIL SMTP -->
+        <div class="ws-card">
+            <div class="ws-card-header">
+                <i class="ri-mail-line"></i>
+                <h3>Konfigurasi Email SMTP</h3>
+            </div>
+            <div class="ws-grid-2">
+                <div class="form-group">
+                    <label for="id_smtp_host" style="font-weight: 600; font-size: 13.5px; margin-bottom: 6px; display: block;">
+                        SMTP Host <span style="color: red;">*</span>
+                    </label>
+                    {{ form.smtp_host }}
+                    {% if form.smtp_host.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.smtp_host.errors.0 }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_smtp_port" style="font-weight: 600; font-size: 13.5px; margin-bottom: 6px; display: block;">
+                        SMTP Port <span style="color: red;">*</span>
+                    </label>
+                    {{ form.smtp_port }}
+                    {% if form.smtp_port.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.smtp_port.errors.0 }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_smtp_user" style="font-weight: 600; font-size: 13.5px; margin-bottom: 6px; display: block;">
+                        SMTP User (Email) <span style="color: red;">*</span>
+                    </label>
+                    {{ form.smtp_user }}
+                    {% if form.smtp_user.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.smtp_user.errors.0 }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_smtp_password" style="font-weight: 600; font-size: 13.5px; margin-bottom: 6px; display: block;">
+                        SMTP Password <span style="color: red;">*</span>
+                        <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color: #1d84c6; font-size: 11.5px; font-weight: normal; margin-left: 6px;">(App Password Gmail)</a>
+                    </label>
+                    {{ form.smtp_password }}
+                    {% if form.smtp_password.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.smtp_password.errors.0 }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_smtp_from_email" style="font-weight: 600; font-size: 13.5px; margin-bottom: 6px; display: block;">
+                        SMTP From Email (Pengirim) <span style="color: red;">*</span>
+                    </label>
+                    {{ form.smtp_from_email }}
+                    {% if form.smtp_from_email.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.smtp_from_email.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div style="background: #ffffff; padding: 18px 24px; border-radius: 12px; border: 1px solid #eef0f3; display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+            <button type="submit" class="btn primary">
+                <i class="ri-save-line"></i> Simpan Pengaturan Website
+            </button>
+        </div>
+    </form>
+
+</div>
+
+<script>
+    // Live preview for Logo
+    const logoInput = document.getElementById('id_logo');
+    const logoPreview = document.getElementById('logo-preview');
+    if (logoInput && logoPreview) {
+        logoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    logoPreview.src = evt.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Live preview for Favicon
+    const favInput = document.getElementById('id_favicon');
+    const favPreview = document.getElementById('favicon-preview');
+    if (favInput && favPreview) {
+        favInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    favPreview.src = evt.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+</script>
+{% endblock content1 %}

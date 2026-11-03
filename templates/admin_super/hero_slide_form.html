@@ -1,0 +1,196 @@
+{% extends "admin_super/base.html" %}
+{% load static %}
+
+{% block content1 %}
+
+<div class="dashboard-content">
+
+    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+        <div style="margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    <i class="{% if is_edit %}ri-edit-line{% else %}ri-add-circle-line{% endif %}" style="color: #1d84c6; margin-right: 6px;"></i>
+                    {% if is_edit %}Edit Hero Slide: {{ slide.judul|truncatewords:5 }}{% else %}Tambah Hero Slide Baru{% endif %}
+                </h3>
+                <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                    Atur konten teks, tombol aksi, serta banner visual untuk hero slider beranda.
+                </p>
+            </div>
+            <a href="{% url 'app:admin_hero_slide_list' %}" class="btn secondary">
+                <i class="ri-arrow-left-line"></i> Kembali ke Daftar Slide
+            </a>
+        </div>
+
+        {% if is_edit and slide.get_banner_url %}
+        <div style="margin-bottom: 20px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <p style="font-size: 13px; font-weight: 600; color: #475569; margin: 0 0 8px;">Banner Saat Ini:</p>
+            <img src="{{ slide.get_banner_url }}" alt="{{ slide.judul }}" style="max-height: 180px; max-width: 100%; border-radius: 6px; border: 1px solid #e2e8f0; object-fit: cover; display: block;">
+        </div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- SECTION 1: KONTEN TEKS SLIDE -->
+            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+                1. Teks & Judul Slide
+            </h4>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                <!-- Judul -->
+                <div class="form-group">
+                    <label for="id_judul" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Judul Utama Slide <span style="color: red;">*</span>
+                    </label>
+                    {{ form.judul }}
+                    <small style="color: #7f8c8d; font-size: 11px;">Teks judul utama yang tampil di slide</small>
+                    {% if form.judul.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.judul.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <!-- Judul Highlight -->
+                <div class="form-group">
+                    <label for="id_judul_highlight" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Judul Highlight <span style="color: #7f8c8d; font-weight: normal; font-size: 12px;">(opsional)</span>
+                    </label>
+                    {{ form.judul_highlight }}
+                    <small style="color: #7f8c8d; font-size: 11px;">Kata/frasa yang diberi warna berbeda</small>
+                    {% if form.judul_highlight.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.judul_highlight.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                <!-- Badge Text -->
+                <div class="form-group">
+                    <label for="id_badge_text" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Teks Badge Label <span style="color: #7f8c8d; font-weight: normal; font-size: 12px;">(opsional)</span>
+                    </label>
+                    {{ form.badge_text }}
+                    <small style="color: #7f8c8d; font-size: 11px;">Pill label kecil di atas judul (misal: Platform Belanja Buku #1)</small>
+                    {% if form.badge_text.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.badge_text.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <!-- Badge Icon -->
+                <div class="form-group">
+                    <label for="id_badge_icon" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Ikon Badge <span style="color: #7f8c8d; font-weight: normal; font-size: 12px;">(opsional)</span>
+                    </label>
+                    {{ form.badge_icon }}
+                    <small style="color: #7f8c8d; font-size: 11px;">
+                        Class Remix Icon, misal: <code style="background: #f1f5f9; padding: 1px 4px; border-radius: 3px;">ri-shield-flash-line</code>
+                    </small>
+                    {% if form.badge_icon.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.badge_icon.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Deskripsi -->
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="id_deskripsi" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                    Deskripsi Slide <span style="color: red;">*</span>
+                </label>
+                {{ form.deskripsi }}
+                {% if form.deskripsi.errors %}
+                    <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.deskripsi.errors.0 }}</small>
+                {% endif %}
+            </div>
+
+            <!-- SECTION 2: TOMBOL AKSI CTA -->
+            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-top: 24px; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+                2. Tombol Aksi (Call To Action)
+            </h4>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                <!-- Tombol Teks -->
+                <div class="form-group">
+                    <label for="id_tombol_teks" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Teks Tombol
+                    </label>
+                    {{ form.tombol_teks }}
+                    <small style="color: #7f8c8d; font-size: 11px;">Contoh: Lihat Katalog, Beli Sekarang, Pelajari</small>
+                    {% if form.tombol_teks.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.tombol_teks.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <!-- Tombol URL -->
+                <div class="form-group">
+                    <label for="id_tombol_url" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Tautan URL Tombol
+                    </label>
+                    {{ form.tombol_url }}
+                    <small style="color: #7f8c8d; font-size: 11px;">Contoh: <code style="background: #f1f5f9; padding: 1px 4px; border-radius: 3px;">/produk</code>, <code style="background: #f1f5f9; padding: 1px 4px; border-radius: 3px;">#katalog</code>, atau URL lengkap</small>
+                    {% if form.tombol_url.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.tombol_url.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- SECTION 3: GAMBAR BANNER & URUTAN -->
+            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-top: 24px; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+                3. Banner Slide & Urutan
+            </h4>
+
+            <div style="padding: 18px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; margin-bottom: 20px;">
+                <p style="font-size: 14px; font-weight: 600; color: #334155; margin: 0 0 12px;">
+                    <i class="ri-image-line" style="color: #1d84c6;"></i> Banner Slide
+                    <span style="font-size: 12px; color: #7f8c8d; font-weight: 400;">(Pilih salah satu: Upload file atau masukkan URL eksternal)</span>
+                </p>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+                    <div class="form-group">
+                        <label for="id_banner_slide" style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block;">
+                            Upload File Banner (JPG/PNG/GIF/WebP)
+                        </label>
+                        {{ form.banner }}
+                        <small style="color: #7f8c8d; font-size: 11px; display: block; margin-top: 4px;">Upload gambar atau banner langsung dari komputer.</small>
+                        {% if form.banner.errors %}
+                            <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.banner.errors.0 }}</small>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_banner_url_eksternal" style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block;">
+                            — atau — URL Banner Eksternal
+                        </label>
+                        {{ form.banner_url_eksternal }}
+                        <small style="color: #7f8c8d; font-size: 11px; display: block; margin-top: 4px;">Gunakan jika banner/GIF dihosting di server lain.</small>
+                        {% if form.banner_url_eksternal.errors %}
+                            <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.banner_url_eksternal.errors.0 }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" style="max-width: 220px; margin-bottom: 24px;">
+                <label for="id_urutan" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                    Nomor Urut Tampil
+                </label>
+                {{ form.urutan }}
+                <small style="color: #7f8c8d; font-size: 11px; display: block; margin-top: 4px;">Urutan 0 akan tampil pertama.</small>
+                {% if form.urutan.errors %}
+                    <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.urutan.errors.0 }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-actions" style="display: flex; gap: 10px; border-top: 2px solid #f0f0f0; padding-top: 18px; margin-top: 20px;">
+                <button type="submit" class="btn primary">
+                    <i class="ri-save-line"></i> {% if is_edit %}Simpan Perubahan{% else %}Tambah Hero Slide{% endif %}
+                </button>
+                <a href="{% url 'app:admin_hero_slide_list' %}" class="btn secondary">
+                    Batal
+                </a>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+
+{% endblock content1 %}

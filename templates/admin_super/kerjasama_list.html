@@ -1,0 +1,171 @@
+{% extends "admin_super/base.html" %}
+{% load static %}
+
+{% block content1 %}
+
+<div class="dashboard-content">
+
+    <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div>
+            <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                <i class="ri-shake-hands-line" style="color: #1d84c6; margin-right: 6px;"></i>Mitra & Kerja Sama
+            </h3>
+            <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                Kelola daftar logo dan tautan mitra instansi kerja sama yang ditampilkan di website.
+            </p>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; align-items: start;">
+        
+        <!-- FORM TAMBAH KERJA SAMA -->
+        <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+            <div style="margin-bottom: 18px; border-bottom: 2px solid #f0f0f0; padding-bottom: 12px;">
+                <h4 style="font-size: 16px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    <i class="ri-add-circle-line" style="color: #1d84c6; margin-right: 6px;"></i>Tambah Mitra Baru
+                </h4>
+            </div>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label for="id_nama_kerjasama" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Nama Instansi / Mitra <span style="color: red;">*</span>
+                    </label>
+                    {{ form.nama_kerjasama }}
+                    {% if form.nama_kerjasama.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.nama_kerjasama.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label for="id_logo_kerjasama" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Logo Mitra (PNG Transparan / JPG / WebP)
+                    </label>
+                    {{ form.logo }}
+                    {% if form.logo.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.logo.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label for="id_link_website" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Tautan Website (Opsional)
+                    </label>
+                    {{ form.link_website }}
+                    {% if form.link_website.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.link_website.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn primary" style="width: 100%;">
+                    <i class="ri-add-line"></i> Simpan Mitra Kerja Sama
+                </button>
+            </form>
+        </div>
+
+        <!-- DAFTAR KERJA SAMA -->
+        <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+            <div style="margin-bottom: 18px; border-bottom: 2px solid #f0f0f0; padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <h4 style="font-size: 16px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    <i class="ri-list-check" style="color: #1d84c6; margin-right: 6px;"></i>Daftar Mitra Kerja Sama
+                </h4>
+                <span class="badge" style="background: #e8f4fd; color: #1d84c6; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                    {{ kerjasama_list.count }} Mitra
+                </span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="student-table" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th style="width: 70px; text-align: center;">Logo</th>
+                            <th>Nama Mitra</th>
+                            <th>Website</th>
+                            <th style="text-align: center; width: 90px;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in kerjasama_list %}
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">
+                                {% if item.logo %}
+                                    <img src="{{ item.logo.url }}" alt="{{ item.nama_kerjasama }}" style="max-height: 38px; max-width: 60px; object-fit: contain; border-radius: 4px; border: 1px solid #e2e8f0; padding: 2px; background: #fff;">
+                                {% else %}
+                                    <div style="width: 44px; height: 32px; background: #f1f5f9; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 11px; font-weight: 700;">
+                                        Teks
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td style="vertical-align: middle;">
+                                <strong style="color: #2c3e50; font-size: 13.5px;">{{ item.nama_kerjasama }}</strong>
+                            </td>
+                            <td style="vertical-align: middle;">
+                                {% if item.link_website %}
+                                    <a href="{{ item.link_website }}" target="_blank" rel="noopener noreferrer" style="color: #1d84c6; text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
+                                        <i class="ri-external-link-line"></i> Kunjungi
+                                    </a>
+                                {% else %}
+                                    <span style="color: #aaa; font-size: 12px;">-</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: center; vertical-align: middle; white-space: nowrap;">
+                                <a href="{% url 'app:admin_kerjasama_edit' item.id %}" class="btn warning small" title="Edit Mitra">
+                                    <i class="ri-edit-line"></i>
+                                </a>
+                                <button type="button" class="btn danger small" title="Hapus Mitra" onclick="bukaModalHapusKS('{{ item.id }}', '{{ item.nama_kerjasama|escapejs }}')">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 30px; color: #888;">
+                                <i class="ri-information-line" style="font-size: 28px; display: block; margin-bottom: 6px; color: #ccc;"></i>
+                                Belum ada data mitra kerja sama.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- MODAL KONFIRMASI HAPUS KERJA SAMA -->
+<div id="modalHapusKerjaSama" class="modal-edit">
+    <div class="modal-content-edit" style="max-width: 440px;">
+        <span class="close" onclick="closeModal('modalHapusKerjaSama')">&times;</span>
+        <div class="modal-icon" style="color: #e74c3c;">
+            <i class="ri-delete-bin-line"></i>
+        </div>
+        <h2 style="color: #2c3e50;">Hapus Kerja Sama</h2>
+        <p id="pesanHapusKS" style="font-size: 14px; line-height: 1.6; color: #555;">
+            Apakah Anda yakin ingin menghapus data kerja sama ini?
+        </p>
+        <div class="modal-actions" style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+            <button class="btn secondary" type="button" onclick="closeModal('modalHapusKerjaSama')">
+                Batal
+            </button>
+            <a id="btnActionHapusKS" href="#" class="btn danger" style="text-decoration: none;">
+                <i class="ri-delete-bin-line"></i> Ya, Hapus
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function bukaModalHapusKS(ksId, name) {
+    var baseUrl = "{% url 'app:admin_kerjasama_delete' '00000000-0000-0000-0000-000000000000' %}";
+    var url = baseUrl.replace('00000000-0000-0000-0000-000000000000', ksId);
+    document.getElementById('pesanHapusKS').innerHTML = 'Apakah Anda yakin ingin menghapus mitra kerja sama: <strong>' + name + '</strong>?';
+    document.getElementById('btnActionHapusKS').setAttribute('href', url);
+    openModal('modalHapusKerjaSama');
+}
+</script>
+
+{% endblock content1 %}

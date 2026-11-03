@@ -1,0 +1,148 @@
+{% extends "admin_super/base.html" %}
+{% block content1 %}
+
+<div class="dashboard-content">
+
+    <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div>
+            <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                <i class="ri-folder-2-line" style="color: #1d84c6; margin-right: 6px;"></i>Kategori Artikel & Berita
+            </h3>
+            <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                Kelola kategori untuk mengelompokkan artikel, berita, dan pengumuman.
+            </p>
+        </div>
+        <a href="{% url 'app:admin_article_list' %}" class="btn secondary">
+            <i class="ri-arrow-left-line"></i> Kembali ke Daftar Artikel
+        </a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; align-items: start;">
+        
+        <!-- FORM TAMBAH KATEGORI -->
+        <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+            <div style="margin-bottom: 18px; border-bottom: 2px solid #f0f0f0; padding-bottom: 12px;">
+                <h4 style="font-size: 16px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    <i class="ri-add-circle-line" style="color: #1d84c6; margin-right: 6px;"></i>Tambah Kategori Baru
+                </h4>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label for="id_name" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Nama Kategori <span style="color: red;">*</span>
+                    </label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.name.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label for="id_description" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Deskripsi Singkat
+                    </label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.description.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn primary" style="width: 100%;">
+                    <i class="ri-add-line"></i> Tambahkan Kategori
+                </button>
+            </form>
+        </div>
+
+        <!-- DAFTAR KATEGORI -->
+        <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+            <div style="margin-bottom: 18px; border-bottom: 2px solid #f0f0f0; padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <h4 style="font-size: 16px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    <i class="ri-list-check" style="color: #1d84c6; margin-right: 6px;"></i>Daftar Kategori Tersedia
+                </h4>
+                <span class="badge" style="background: #e8f4fd; color: #1d84c6; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                    {{ categories.count }} Kategori
+                </span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="student-table" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px; text-align: center;">No</th>
+                            <th>Nama Kategori</th>
+                            <th>Slug</th>
+                            <th style="text-align: center; width: 70px;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cat in categories %}
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">{{ forloop.counter }}</td>
+                            <td style="vertical-align: middle;">
+                                <strong style="color: #2c3e50;">{{ cat.name }}</strong>
+                                {% if cat.description %}
+                                    <small style="display: block; color: #7f8c8d; font-size: 12px; margin-top: 2px;">{{ cat.description }}</small>
+                                {% endif %}
+                            </td>
+                            <td style="vertical-align: middle; color: #555;">
+                                <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 11px;">{{ cat.slug }}</code>
+                            </td>
+                            <td style="text-align: center; vertical-align: middle; white-space: nowrap;">
+                                <button type="button" class="btn danger small" title="Hapus Kategori" onclick="bukaModalHapusCat('{{ cat.id }}', '{{ cat.name|escapejs }}')">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 30px; color: #888;">
+                                <i class="ri-inbox-line" style="font-size: 32px; display: block; margin-bottom: 8px;"></i>
+                                Belum ada kategori artikel dibuat.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- MODAL KONFIRMASI HAPUS KATEGORI -->
+<div id="modalHapusKategori" class="modal-edit">
+    <div class="modal-content-edit" style="max-width: 440px;">
+        <span class="close" onclick="closeModal('modalHapusKategori')">&times;</span>
+        <div class="modal-icon" style="color: #e74c3c;">
+            <i class="ri-delete-bin-line"></i>
+        </div>
+        <h2 style="color: #2c3e50;">Hapus Kategori</h2>
+        <p id="pesanHapusCat" style="font-size: 14px; line-height: 1.6; color: #555;">
+            Apakah Anda yakin ingin menghapus kategori ini?
+        </p>
+        <div class="modal-actions" style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+            <button class="btn secondary" type="button" onclick="closeModal('modalHapusKategori')">
+                Batal
+            </button>
+            <a id="btnActionHapusCat" href="#" class="btn danger" style="text-decoration: none;">
+                <i class="ri-delete-bin-line"></i> Ya, Hapus
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function bukaModalHapusCat(catId, name) {
+    var baseUrl = "{% url 'app:admin_category_delete' '00000000-0000-0000-0000-000000000000' %}";
+    var url = baseUrl.replace('00000000-0000-0000-0000-000000000000', catId);
+    document.getElementById('pesanHapusCat').innerHTML = 'Apakah Anda yakin ingin menghapus kategori: <strong>' + name + '</strong>?';
+    document.getElementById('btnActionHapusCat').setAttribute('href', url);
+    openModal('modalHapusKategori');
+}
+</script>
+
+{% endblock content1 %}

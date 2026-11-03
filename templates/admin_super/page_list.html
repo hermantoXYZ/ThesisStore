@@ -1,0 +1,111 @@
+{% extends "admin_super/base.html" %}
+{% block content1 %}
+
+<div class="dashboard-content">
+
+    <!-- MAIN SECTION -->
+    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 14px;">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    <i class="ri-pages-line" style="color: #1d84c6; margin-right: 6px;"></i>Kelola Halaman Statis
+                </h3>
+                <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                    Halaman untuk konten statis seperti Profil, Tentang Kami, Syarat & Ketentuan, Kebijakan Privasi, dll.
+                </p>
+            </div>
+            
+            <div>
+                <a href="{% url 'app:admin_page_create' %}" class="btn primary small" style="display: inline-flex; align-items: center; gap: 4px;">
+                    <i class="ri-add-line"></i> Buat Halaman Baru
+                </a>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="student-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center;">No</th>
+                        <th>Judul Halaman</th>
+                        <th>Slug / URL Halaman</th>
+                        <th>Penulis</th>
+                        <th>Terakhir Diperbarui</th>
+                        <th style="width: 140px; text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in list_pages %}
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle;">{{ forloop.counter }}</td>
+                        <td style="vertical-align: middle;">
+                            <strong style="color: #2c3e50; font-size: 14px;">{{ item.title }}</strong>
+                        </td>
+                        <td style="vertical-align: middle;">
+                            <span style="font-family: monospace; color: #1d84c6; background: #eef6fc; padding: 3px 8px; border-radius: 4px; font-size: 12px;">
+                                /page/{{ item.slug }}/
+                            </span>
+                        </td>
+                        <td style="vertical-align: middle; color: #555;">
+                            {{ item.author.first_name|default:item.author.username|default:'Admin' }}
+                        </td>
+                        <td style="vertical-align: middle; color: #666; font-size: 12px;">
+                            {{ item.updated_at|date:"d M Y H:i" }}
+                        </td>
+                        <td style="text-align: center; vertical-align: middle; white-space: nowrap;">
+                            <a href="{% url 'app:admin_page_edit' item.id %}" class="btn warning small" title="Edit Halaman">
+                                <i class="ri-edit-line"></i>
+                            </a>
+                            <button type="button" class="btn danger small" title="Hapus Halaman" onclick="bukaModalHapusPage('{{ item.id }}', '{{ item.title|escapejs }}')">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 30px; color: #888;">
+                            <i class="ri-pages-line" style="font-size: 32px; display: block; margin-bottom: 8px; color: #ccc;"></i>
+                            Belum ada halaman statis. <a href="{% url 'app:admin_page_create' %}" style="color: #1d84c6; text-decoration: underline;">Buat halaman baru sekarang</a>.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL KONFIRMASI HAPUS HALAMAN -->
+<div id="modalHapusPage" class="modal-edit">
+    <div class="modal-content-edit" style="max-width: 440px;">
+        <span class="close" onclick="closeModal('modalHapusPage')">&times;</span>
+        <div class="modal-icon" style="color: #e74c3c;">
+            <i class="ri-delete-bin-line"></i>
+        </div>
+        <h2 style="color: #2c3e50;">Hapus Halaman</h2>
+        <p id="pesanHapusPage" style="font-size: 14px; line-height: 1.6; color: #555;">
+            Apakah Anda yakin ingin menghapus halaman ini?
+        </p>
+        <div class="modal-actions" style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+            <button class="btn secondary" type="button" onclick="closeModal('modalHapusPage')">
+                Batal
+            </button>
+            <a id="btnActionHapusPage" href="#" class="btn danger" style="text-decoration: none;">
+                <i class="ri-delete-bin-line"></i> Ya, Hapus
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function bukaModalHapusPage(pageId, title) {
+    var baseUrl = "{% url 'app:admin_page_delete' '00000000-0000-0000-0000-000000000000' %}";
+    var url = baseUrl.replace('00000000-0000-0000-0000-000000000000', pageId);
+    document.getElementById('pesanHapusPage').innerHTML = 'Apakah Anda yakin ingin menghapus halaman: <strong>' + title + '</strong>?';
+    document.getElementById('btnActionHapusPage').setAttribute('href', url);
+    openModal('modalHapusPage');
+}
+</script>
+
+{% endblock content1 %}

@@ -1,0 +1,258 @@
+{% extends "admin_super/base.html" %}
+{% load static %}
+
+{% block extra_head %}
+<!-- Summernote WYSIWYG CSS -->
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+<style>
+    .note-editor.note-frame {
+        border: 1px solid #ddd !important;
+        border-radius: 8px !important;
+        overflow: hidden;
+        background: #fff;
+    }
+    .note-toolbar {
+        background: #f8f9fa !important;
+        border-bottom: 1px solid #eee !important;
+        padding: 6px 10px !important;
+    }
+    .note-btn {
+        background: #fff !important;
+        border: 1px solid #e0e0e0 !important;
+        border-radius: 4px !important;
+        color: #333 !important;
+        padding: 4px 8px !important;
+        font-size: 13px !important;
+    }
+    .note-btn:hover {
+        background: #eef6fc !important;
+        border-color: #1d84c6 !important;
+        color: #1d84c6 !important;
+    }
+    .note-editable {
+        min-height: 400px !important;
+        font-size: 14px;
+        line-height: 1.6;
+        color: #333;
+        background: #fff;
+    }
+</style>
+{% endblock extra_head %}
+
+{% block content1 %}
+
+<div class="dashboard-content">
+
+    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+        <div style="margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    <i class="{% if is_edit %}ri-edit-line{% else %}ri-file-add-line{% endif %}" style="color: #1d84c6; margin-right: 6px;"></i>
+                    {% if is_edit %}Form Edit Halaman: {{ page.title|truncatewords:5 }}{% else %}Form Buat Halaman Statis Baru{% endif %}
+                </h3>
+                <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                    {% if is_edit %}
+                        Terakhir diupdate: {{ page.updated_at|date:"d M Y H:i" }} | Slug: <code style="color: #1d84c6; background: #eef6fc; padding: 2px 6px; border-radius: 4px;">{{ page.slug }}</code>
+                    {% else %}
+                        Buat halaman statis baru untuk website (Tentang Kami, Kebijakan, Layanan, dsb).
+                    {% endif %}
+                </p>
+            </div>
+            <a href="{% url 'app:admin_page_list' %}" class="btn secondary">
+                <i class="ri-arrow-left-line"></i> Kembali ke Daftar Halaman
+            </a>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- SECTION 1: INFORMASI HALAMAN -->
+            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+                1. Informasi Judul & Slug URL
+            </h4>
+
+            <div class="form-row" style="margin-bottom: 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                <div class="form-group">
+                    <label for="id_title" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Judul Halaman <span style="color: red;">*</span>
+                    </label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.title.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_slug" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>Slug / URL Halaman <span style="color: red;">*</span></span>
+                        <small style="color: #7f8c8d; font-weight: normal; font-size: 11px;">Tautan publik</small>
+                    </label>
+                    {{ form.slug }}
+                    <small style="color: #7f8c8d; display: block; margin-top: 4px; font-size: 11.5px;">
+                        URL Halaman: <span style="color: #1d84c6; font-family: monospace;">/page/<span id="slug-preview">{% if page.slug %}{{ page.slug }}{% else %}judul-halaman{% endif %}</span>/</span>
+                    </small>
+                    {% if form.slug.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.slug.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- SECTION 2: GAMBAR HERO / BANNER -->
+            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-top: 24px; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+                2. Gambar Hero / Banner Latar Halaman
+            </h4>
+
+            <div class="form-group" style="margin-bottom: 20px; background: #fafafa; padding: 18px; border-radius: 8px; border: 1px dashed #ddd;">
+                <label for="id_featured_image" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                    <i class="ri-image-2-line" style="color: #1d84c6; margin-right: 4px;"></i> Gambar Hero Banner (Opsional)
+                </label>
+                <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                    <div style="flex-shrink: 0;">
+                        <img src="{% if page.featured_image %}/media/{{ page.featured_image }}{% else %}https://placehold.co/180x100?text=No+Hero+Image{% endif %}"
+                             alt="Hero Preview"
+                             id="preview-featured-image"
+                             style="width: 160px; height: 95px; object-fit: cover; border-radius: 8px; border: 1px solid #ccc; background: #fff;">
+                    </div>
+                    <div style="flex-grow: 1;">
+                        {{ form.featured_image }}
+                        <small style="color: #7f8c8d; display: block; margin-top: 4px;">Format didukung: JPG, PNG, WEBP. Tampil sebagai latar belakang banner di atas halaman.</small>
+                        {% if form.featured_image.errors %}
+                            <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.featured_image.errors.0 }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: KONTEN HALAMAN -->
+            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-top: 24px; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+                3. Isi Konten Halaman
+            </h4>
+
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label for="id_content" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                    Konten Lengkap <span style="color: red;">*</span>
+                </label>
+                {{ form.content }}
+                {% if form.content.errors %}
+                    <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.content.errors.0 }}</small>
+                {% endif %}
+            </div>
+
+            <!-- SECTION 4: GALERI DOKUMENTASI TAMBAHAN -->
+            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-top: 24px; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+                4. Galeri & Media Dokumentasi Foto Tambahan
+            </h4>
+
+            <div class="form-group" style="margin-bottom: 24px; background: #f8fafc; padding: 18px; border-radius: 8px; border: 1px dashed #cbd5e1;">
+                <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block; color: #1e293b;">
+                    <i class="ri-gallery-upload-line" style="color: #0284c7; margin-right: 4px;"></i> Upload Multiple Foto Dokumentasi (Opsional)
+                </label>
+                <p style="font-size: 12.5px; color: #64748b; margin-bottom: 12px;">
+                    Unggah beberapa foto dokumentasi, sertifikat, atau infografis pendukung halaman ini.
+                </p>
+                <input type="file" name="dokumentasi_files" multiple accept="image/*" class="form-control" style="background: #ffffff;">
+
+                {% if is_edit and dokumentasi_list %}
+                    <div style="margin-top: 16px;">
+                        <span style="font-size: 13px; font-weight: 600; color: #334155; display: block; margin-bottom: 8px;">
+                            Foto Media Tersimpan ({{ dokumentasi_list|length }} foto):
+                        </span>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px;">
+                            {% for dok in dokumentasi_list %}
+                                <div style="position: relative; border-radius: 6px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                    <img src="{{ dok.foto.url }}" alt="Dokumentasi" style="width: 100%; height: 80px; object-fit: cover; display: block;">
+                                    <a href="{% url 'app:admin_delete_dokumentasi_page' dok.id %}" 
+                                       onclick="return confirm('Hapus foto dokumentasi ini?')"
+                                       style="position: absolute; top: 4px; right: 4px; background: rgba(220, 38, 38, 0.88); color: #fff; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; text-decoration: none;"
+                                       title="Hapus foto">
+                                        <i class="ri-close-line"></i>
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-actions" style="display: flex; gap: 10px; border-top: 2px solid #f0f0f0; padding-top: 18px; margin-top: 20px;">
+                <button type="submit" class="btn primary">
+                    <i class="ri-save-line"></i> {% if is_edit %}Simpan Perubahan Halaman{% else %}Simpan & Buat Halaman{% endif %}
+                </button>
+                <a href="{% url 'app:admin_page_list' %}" class="btn secondary">
+                    Batal
+                </a>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+{% endblock content1 %}
+
+{% block script_costum %}
+<!-- Summernote Lite JS -->
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Inisialisasi Rich Text Editor Summernote
+        $('#id_content, .summernote-editor').summernote({
+            placeholder: 'Tulis isi konten halaman statis di sini...',
+            tabsize: 2,
+            height: 420,
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'italic', 'underline', 'clear', 'strikethrough']],
+                ['fontname', ['fontname']],
+                ['fontsize', ['fontsize']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['table', ['table']],
+                ['insert', ['link', 'picture', 'video', 'hr']],
+                ['view', ['fullscreen', 'codeview', 'help']]
+            ]
+        });
+
+        // Live preview untuk Featured / Hero Image
+        $('#id_featured_image').on('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#preview-featured-image').attr('src', e.target.result);
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Slug helper function
+        function slugifyText(text) {
+            return text.toString().toLowerCase().trim()
+                .replace(/\s+/g, '-')           // Replace spaces with -
+                .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+                .replace(/\-\-+/g, '-');        // Replace multiple - with single -
+        }
+
+        // Live slug preview & auto-generation
+        $('#id_slug').on('input', function() {
+            const val = $(this).val();
+            $('#slug-preview').text(slugifyText(val) || 'url-halaman');
+        });
+
+        {% if not is_edit %}
+        // Auto-populate slug from title when creating new page
+        $('#id_title').on('input', function() {
+            if (!$('#id_slug').data('manually-edited')) {
+                const slug = slugifyText($(this).val());
+                $('#id_slug').val(slug);
+                $('#slug-preview').text(slug || 'url-halaman');
+            }
+        });
+
+        $('#id_slug').on('keydown', function() {
+            $(this).data('manually-edited', true);
+        });
+        {% endif %}
+    });
+</script>
+{% endblock script_costum %}

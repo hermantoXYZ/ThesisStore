@@ -1,0 +1,75 @@
+{% extends "admin_super/base.html" %}
+{% load static %}
+
+{% block content1 %}
+
+<div class="dashboard-content">
+
+    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); max-width: 680px;">
+        <div style="margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    <i class="ri-edit-line" style="color: #1d84c6; margin-right: 6px;"></i>Edit Mitra: {{ kerjasama.nama_kerjasama }}
+                </h3>
+                <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                    Perbarui nama instansi, logo mitra, atau tautan situs resmi.
+                </p>
+            </div>
+            <a href="{% url 'app:admin_kerjasama_list' %}" class="btn secondary">
+                <i class="ri-arrow-left-line"></i> Kembali
+            </a>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="id_nama_kerjasama" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                    Nama Instansi / Mitra <span style="color: red;">*</span>
+                </label>
+                {{ form.nama_kerjasama }}
+                {% if form.nama_kerjasama.errors %}
+                    <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.nama_kerjasama.errors.0 }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="id_logo_kerjasama" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                    Logo Mitra (Format: PNG / JPG / WebP)
+                </label>
+                {% if kerjasama.logo %}
+                    <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 12px; background: #f8fafc; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <img src="{{ kerjasama.logo.url }}" alt="{{ kerjasama.nama_kerjasama }}" style="max-height: 48px; max-width: 100px; object-fit: contain; background: #fff; padding: 4px; border-radius: 4px; border: 1px solid #cbd5e1;">
+                        <span style="font-size: 12px; color: #64748b;">Logo saat ini terpasang. Unggah file baru untuk mengganti.</span>
+                    </div>
+                {% endif %}
+                {{ form.logo }}
+                {% if form.logo.errors %}
+                    <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.logo.errors.0 }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label for="id_link_website" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                    Tautan Website Resmi Mitra
+                </label>
+                {{ form.link_website }}
+                {% if form.link_website.errors %}
+                    <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.link_website.errors.0 }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-actions" style="display: flex; gap: 10px; border-top: 2px solid #f0f0f0; padding-top: 18px; margin-top: 20px;">
+                <button type="submit" class="btn primary">
+                    <i class="ri-save-line"></i> Simpan Perubahan
+                </button>
+                <a href="{% url 'app:admin_kerjasama_list' %}" class="btn secondary">
+                    Batal
+                </a>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+{% endblock content1 %}

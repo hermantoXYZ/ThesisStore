@@ -1,0 +1,205 @@
+{% extends "admin_super/base.html" %}
+{% block content1 %}
+
+<div class="dashboard-content">
+
+    <!-- STATS CARDS -->
+    <div class="stats-cards">
+        <div class="stat-card blue">
+            <i class="ri-newspaper-line"></i>
+            <div class="stat-info">
+                <p>Total Artikel</p>
+                <h3>{{ total_articles }}</h3>
+            </div>
+        </div>
+        <div class="stat-card green">
+            <i class="ri-checkbox-circle-line"></i>
+            <div class="stat-info">
+                <p>Published</p>
+                <h3>{{ published_count }}</h3>
+            </div>
+        </div>
+        <div class="stat-card orange">
+            <i class="ri-draft-line"></i>
+            <div class="stat-info">
+                <p>Draft</p>
+                <h3>{{ draft_count }}</h3>
+            </div>
+        </div>
+        <div class="stat-card red">
+            <i class="ri-archive-line"></i>
+            <div class="stat-info">
+                <p>Archived</p>
+                <h3>{{ archived_count }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN SECTION -->
+    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); margin-top: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 14px;">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    <i class="ri-article-line" style="color: #1d84c6; margin-right: 6px;"></i>Daftar Artikel & Berita
+                </h3>
+                <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                    Kelola artikel, berita, dan pengumuman untuk website.
+                </p>
+            </div>
+            
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                <a href="{% url 'app:admin_article_create' %}" class="btn primary small" style="display: inline-flex; align-items: center; gap: 4px;">
+                    <i class="ri-add-line"></i> Tulis Artikel Baru
+                </a>
+                <a href="{% url 'app:admin_category_list' %}" class="btn secondary small" style="display: inline-flex; align-items: center; gap: 4px;">
+                    <i class="ri-folder-2-line"></i> Kategori Berita
+                </a>
+            </div>
+        </div>
+
+        <!-- FILTER & SEARCH BAR -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <a href="{% url 'app:admin_article_list' %}?status=all" class="btn {% if status_filter == 'all' %}primary{% else %}secondary{% endif %} small">
+                    Semua ({{ total_articles }})
+                </a>
+                <a href="{% url 'app:admin_article_list' %}?status=published" class="btn {% if status_filter == 'published' %}success{% else %}secondary{% endif %} small">
+                    Published ({{ published_count }})
+                </a>
+                <a href="{% url 'app:admin_article_list' %}?status=draft" class="btn {% if status_filter == 'draft' %}warning{% else %}secondary{% endif %} small">
+                    Draft ({{ draft_count }})
+                </a>
+                <a href="{% url 'app:admin_article_list' %}?status=archived" class="btn {% if status_filter == 'archived' %}danger{% else %}secondary{% endif %} small">
+                    Archived ({{ archived_count }})
+                </a>
+            </div>
+
+            <form method="get" style="display: flex; gap: 6px;">
+                <input type="hidden" name="status" value="{{ status_filter }}">
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Cari judul, kategori..." class="form-control" style="padding: 6px 12px; font-size: 13px; width: 220px;">
+                <button type="submit" class="btn secondary small">
+                    <i class="ri-search-line"></i>
+                </button>
+                {% if search_query %}
+                    <a href="{% url 'app:admin_article_list' %}?status={{ status_filter }}" class="btn secondary small" title="Reset Search">
+                        <i class="ri-close-line"></i>
+                    </a>
+                {% endif %}
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="student-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center;">No</th>
+                        <th style="width: 80px;">Gambar</th>
+                        <th>Judul & Info</th>
+                        <th>Kategori</th>
+                        <th style="text-align: center; width: 100px;">Status</th>
+                        <th style="text-align: center; width: 80px;">Views</th>
+                        <th style="width: 140px;">Tanggal Dibuat</th>
+                        <th style="width: 140px; text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in list_articles %}
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle;">{{ forloop.counter }}</td>
+                        <td style="vertical-align: middle;">
+                            {% if item.featured_image %}
+                                <img src="/media/{{ item.featured_image }}" alt="Thumbnail" style="width: 64px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd;">
+                            {% else %}
+                                <div style="width: 64px; height: 44px; background: #f0f0f0; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 18px;">
+                                    <i class="ri-image-line"></i>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td style="vertical-align: middle; max-width: 280px; white-space: normal;">
+                            <strong style="color: #2c3e50; font-size: 14px; display: block;">{{ item.title }}</strong>
+                            <small style="color: #888; font-family: monospace;">Slug: {{ item.slug }}</small>
+                            <div style="font-size: 11px; color: #666; margin-top: 2px;">
+                                Penulis: <strong>{{ item.author.first_name|default:item.author.username|default:'Admin' }}</strong>
+                            </div>
+                        </td>
+                        <td style="vertical-align: middle;">
+                            {% if item.category %}
+                                <span class="badge" style="display: inline-block; background: #e8f4fd; color: #1d84c6; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">
+                                    {{ item.category.name }}
+                                </span>
+                            {% else %}
+                                <span style="color: #999; font-size: 12px;">Tanpa Kategori</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; vertical-align: middle;">
+                            {% if item.status == 'published' %}
+                                <span class="grade-badge a" style="background-color: #27ae60;">Published</span>
+                            {% elif item.status == 'draft' %}
+                                <span class="grade-badge b" style="background-color: #f39c12;">Draft</span>
+                            {% else %}
+                                <span class="grade-badge d" style="background-color: #e74c3c;">Archived</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; vertical-align: middle; font-weight: 600; font-size: 13px; color: #555;">
+                            {{ item.views_count }}
+                        </td>
+                        <td style="vertical-align: middle; color: #666; font-size: 12px;">
+                            {{ item.created_at|date:"d M Y H:i" }}
+                        </td>
+                        <td style="text-align: center; vertical-align: middle; white-space: nowrap;">
+                            <a href="{% url 'app:admin_article_edit' item.id %}" class="btn warning small" title="Edit Artikel">
+                                <i class="ri-edit-line"></i>
+                            </a>
+                            <button type="button" class="btn danger small" title="Hapus Artikel" onclick="bukaModalHapus('{{ item.id }}', '{{ item.title|escapejs }}')">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 30px; color: #999;">
+                            <i class="ri-article-line" style="font-size: 32px; display: block; margin-bottom: 8px; color: #ccc;"></i>
+                            Belum ada artikel ditemukan. <a href="{% url 'app:admin_article_create' %}" style="color: #1d84c6; text-decoration: underline;">Buat artikel baru sekarang</a>.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL KONFIRMASI HAPUS ARTIKEL -->
+<div id="modalHapusArtikel" class="modal-edit">
+    <div class="modal-content-edit" style="max-width: 440px;">
+        <span class="close" onclick="closeModal('modalHapusArtikel')">&times;</span>
+        <div class="modal-icon" style="color: #e74c3c;">
+            <i class="ri-delete-bin-line"></i>
+        </div>
+        <h2 style="color: #2c3e50;">Hapus Artikel</h2>
+        <p id="pesanHapusArtikel" style="font-size: 14px; line-height: 1.6; color: #555;">
+            Apakah Anda yakin ingin menghapus artikel ini? Tindakan ini tidak dapat dibatalkan.
+        </p>
+        <div class="modal-actions" style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+            <button class="btn secondary" type="button" onclick="closeModal('modalHapusArtikel')">
+                Batal
+            </button>
+            <a id="btnActionHapus" href="#" class="btn danger" style="text-decoration: none;">
+                <i class="ri-delete-bin-line"></i> Ya, Hapus
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function bukaModalHapus(articleId, title) {
+    var baseUrl = "{% url 'app:admin_article_delete' '00000000-0000-0000-0000-000000000000' %}";
+    var url = baseUrl.replace('00000000-0000-0000-0000-000000000000', articleId);
+    document.getElementById('pesanHapusArtikel').innerHTML = 'Apakah Anda yakin ingin menghapus artikel: <strong>' + title + '</strong>?';
+    document.getElementById('btnActionHapus').setAttribute('href', url);
+    openModal('modalHapusArtikel');
+}
+</script>
+
+{% endblock content1 %}

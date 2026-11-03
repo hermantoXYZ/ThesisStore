@@ -26,18 +26,43 @@
             
             <nav class="sidebar-menu">
                 <ul>
-                    <li class="{% if title == 'Dashboard' %}active{% endif %}">
+                    <li class="{% if request.resolver_match.url_name == 'dashboard' or title == 'Dashboard' %}active{% endif %}">
                         <a href="{% url "app:dashboard" %}"><i class="ri-dashboard-line"></i> Dashboard</a>
                     </li>
-                    <li class="nav-section-label"><span>Buku</span></li>
-                    <li class="{% if 'buku' in request.path and 'kategori' not in request.path %}active{% endif %}">
+
+                    <li class="nav-section-label"><span>Katalog Buku</span></li>
+                    <li class="{% if '/buku/' in request.path and '/kategori/' not in request.path %}active{% endif %}">
                         <a href="{% url "app:buku_list" %}"><i class="ri-book-2-line"></i> Kelola Buku</a>
                     </li>
-                    <li class="{% if 'kategori' in request.path %}active{% endif %}">
+                    <li class="{% if '/buku/kategori/' in request.path %}active{% endif %}">
                         <a href="{% url "app:kategori_buku_list" %}"><i class="ri-price-tag-3-line"></i> Kategori Buku</a>
                     </li>
-                    <li class="{% if title == 'Profile Admin' or title == 'Edit Profile' %}active{% endif %}">
-                        <a href="{% url "app:profile_admin" %}"><i class="ri-user-settings-line"></i> Profile</a>
+
+                    <li class="nav-section-label"><span>Artikel & Halaman</span></li>
+                    <li class="{% if '/admin/article' in request.path %}active{% endif %}">
+                        <a href="{% url "app:admin_article_list" %}"><i class="ri-newspaper-line"></i> Kelola Artikel</a>
+                    </li>
+                    <li class="{% if '/admin/category' in request.path %}active{% endif %}">
+                        <a href="{% url "app:admin_category_list" %}"><i class="ri-folder-2-line"></i> Kategori Artikel</a>
+                    </li>
+                    <li class="{% if '/admin/page' in request.path %}active{% endif %}">
+                        <a href="{% url "app:admin_page_list" %}"><i class="ri-pages-line"></i> Kelola Halaman</a>
+                    </li>
+
+                    <li class="nav-section-label"><span>Tampilan & Mitra</span></li>
+                    <li class="{% if '/admin/hero-slides' in request.path %}active{% endif %}">
+                        <a href="{% url "app:admin_hero_slide_list" %}"><i class="ri-slideshow-3-line"></i> Hero Slide</a>
+                    </li>
+                    <li class="{% if '/admin/kerjasama' in request.path %}active{% endif %}">
+                        <a href="{% url "app:admin_kerjasama_list" %}"><i class="ri-shake-hands-line"></i> Kerja Sama</a>
+                    </li>
+
+                    <li class="nav-section-label"><span>Pengaturan</span></li>
+                    <li class="{% if '/admin/web-setting' in request.path %}active{% endif %}">
+                        <a href="{% url "app:admin_web_setting" %}"><i class="ri-settings-3-line"></i> Pengaturan Website</a>
+                    </li>
+                    <li class="{% if '/profile/' in request.path or title == 'Profile Admin' or title == 'Edit Profile' %}active{% endif %}">
+                        <a href="{% url "app:profile_admin" %}"><i class="ri-user-settings-line"></i> Profile Admin</a>
                     </li>                 
                 </ul>
             </nav>
