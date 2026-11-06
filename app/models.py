@@ -360,7 +360,7 @@ class WebSetting(models.Model):
         verbose_name_plural = 'Pengaturan Website'
 
     def __str__(self):
-        return self.nama_organisasi
+        return self.nama_web
     
 
 class KerjaSama(models.Model):

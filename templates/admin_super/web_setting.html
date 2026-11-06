@@ -102,11 +102,11 @@
             </div>
 
             <div class="form-group" style="margin-bottom: 18px;">
-                <label for="id_nama_organisasi" style="font-weight: 600; font-size: 13.5px; margin-bottom: 6px; display: block;">
+                <label for="id_nama_web" style="font-weight: 600; font-size: 13.5px; margin-bottom: 6px; display: block;">
                     Nama Organisasi / Toko / Portal <span style="color: red;">*</span>
                 </label>
-                {{ form.nama_organisasi }}
-                {% if form.nama_organisasi.errors %}
+                {{ form.nama_web }}
+                {% if form.nama_web.errors %}
                     <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.nama_organisasi.errors.0 }}</small>
                 {% endif %}
                 <span class="ws-help">Ditampilkan pada judul halaman browser, navbar header, dan footer website.</span>

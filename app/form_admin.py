@@ -326,7 +326,7 @@ class WebSettingForm(forms.ModelForm):
             'smtp_from_email',
         ]
         widgets = {
-            'nama_organisasi': forms.TextInput(attrs={
+            'nama_web': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Contoh: Asosiasi Profesi dan Pendidikan Bisnis Digital Indonesia (APBISDI)',
                 'required': 'required'
