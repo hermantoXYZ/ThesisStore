@@ -1,0 +1,123 @@
+{% extends "admin_super/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content">
+    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; border-bottom: 2px solid #f0f0f0; padding-bottom: 14px;">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    Daftar Course &amp; Pelatihan
+                </h3>
+                <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                    Kelola program kursus, seminar, webinar, workshop, pemateri, kuota, dan jadwal agenda.
+                </p>
+            </div>
+            <a href="{% url 'app:admin_course_create' %}" class="btn primary">
+                <i class="ri-add-line"></i> Tambah Course Baru
+            </a>
+        </div>
+
+        <div class="table-responsive" style="margin-top: 15px;">
+            <table id="layananTable" class="student-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center;">No</th>
+                        <th>Kegiatan</th>
+                        <th>Jenis &amp; Format</th>
+                        <th>Pemateri / Coach</th>
+                        <th>Jadwal Pelaksanaan</th>
+                        <th>Biaya</th>
+                        <th style="width: 80px; text-align: center;">Status</th>
+                        <th style="width: 130px; text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for course in courses %}
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle;">{{ forloop.counter }}</td>
+                        <td style="vertical-align: middle; max-width: 250px; white-space: normal;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                {% if course.thumbnail %}
+                                    <img src="{{ course.thumbnail.url }}" alt="{{ course.name }}" style="width: 48px; height: 36px; object-fit: cover; border-radius: 4px; border: 1px solid #eee; flex-shrink: 0;">
+                                {% endif %}
+                                <div>
+                                    <strong style="color: #2c3e50;">{{ course.name }}</strong>
+                                    {% if course.max_participants %}
+                                    <div style="font-size: 12px; color: #7f8c8d;">
+                                        Kuota: {{ course.max_participants }} peserta
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td style="vertical-align: middle;">
+                            <span style="display: inline-block; background: #e8f4fd; color: #2c4cf4; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">
+                                {{ course.get_course_type_display }}
+                            </span>
+                            <div style="margin-top: 4px; font-size: 12px; color: #555;">
+                                {% if course.format == 'online' %}
+                                    <i class="ri-vidicon-line" style="color: #2c4cf4;"></i> Online
+                                {% elif course.format == 'offline' %}
+                                    <i class="ri-map-pin-2-line" style="color: #e67e22;"></i> Offline
+                                {% else %}
+                                    <i class="ri-shuffle-line" style="color: #8e44ad;"></i> Hybrid
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td style="vertical-align: middle; max-width: 180px; white-space: normal; font-size: 13px;">
+                            {% for coach in course.coaches.all %}
+                                <span style="display: inline-block; background: #f0f3f6; color: #2c3e50; padding: 2px 8px; border-radius: 4px; margin: 2px; font-size: 11px; font-weight: 500;">
+                                    {{ coach.user.first_name|default:coach.user.username }}
+                                </span>
+                            {% empty %}
+                                <span style="color: #aaa;">-</span>
+                            {% endfor %}
+                        </td>
+                        <td style="vertical-align: middle; font-size: 12px;">
+                            {% if course.start_date %}
+                                <div><i class="ri-calendar-event-line"></i> {{ course.start_date|date:"d M Y" }}</div>
+                                {% if course.end_date and course.end_date != course.start_date %}
+                                    <div style="color: #7f8c8d;">s/d {{ course.end_date|date:"d M Y" }}</div>
+                                {% endif %}
+                            {% else %}
+                                <span style="color: #aaa;">Belum dijadwalkan</span>
+                            {% endif %}
+                        </td>
+                        <td style="vertical-align: middle;">
+                            {% if course.fee_type == 'free' or course.price == 0 %}
+                                <span style="color: #27ae60; font-weight: 600; font-size: 13px;">Gratis</span>
+                            {% else %}
+                                <span style="color: #e67e22; font-weight: 600; font-size: 13px;">Rp {{ course.formatted_price }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; vertical-align: middle;">
+                            {% if course.is_active %}
+                                <span class="grade-badge a" style="background-color: #27ae60;">Aktif</span>
+                            {% else %}
+                                <span class="grade-badge d" style="background-color: #95a5a6;">Nonaktif</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; vertical-align: middle; white-space: nowrap;">
+                            <a href="{% url 'app:admin_course_edit' course.uuid %}" class="btn warning small" title="Edit Course & Agenda">
+                                <i class="ri-edit-line"></i>
+                            </a>
+                            <a href="{% url 'app:admin_course_delete' course.uuid %}" class="btn danger small" title="Hapus Course" onclick="return confirm('Yakin ingin menghapus course &quot;{{ course.name|escapejs }}&quot; beserta seluruh agendanya?');">
+                                <i class="ri-delete-bin-line"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #888;">
+                            <i class="ri-graduation-cap-line" style="font-size: 36px; display: block; margin-bottom: 10px; color: #bdc3c7;"></i>
+                            Belum ada course/pelatihan yang ditambahkan. Klik <strong>Tambah Course Baru</strong> untuk mulai.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock content1 %}
+

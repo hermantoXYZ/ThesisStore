@@ -1,47 +1,26 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from app.models import UserAdmin, Books, CategoryBooks, MediaBooks, Article, Page, Category, KerjaSama, WebSetting, HeroSlide, DokumentasiArticle, DokumentasiPage
-from .form_admin import formProfile, CategoryBooksForm, BooksForm, ArticleForm, PageForm, CategoryForm, WebSettingForm, KerjaSamaForm, HeroSlideForm
+from app.models import (
+    UserAdmin, Books, CategoryBooks, MediaBooks, Article, Page, Category,
+    KerjaSama, WebSetting, HeroSlide, DokumentasiArticle, DokumentasiPage,
+    Course, CourseAgenda, JurnalMaster, LoaJurnal, NoSuratThesis, KodeSurat
+)
+from .form_admin import (
+    formProfile, CategoryBooksForm, BooksForm, ArticleForm, PageForm, CategoryForm,
+    WebSettingForm, KerjaSamaForm, HeroSlideForm, CourseForm, CourseAgendaForm,
+    JurnalMasterForm, LoaJurnalForm, KodeSuratForm, NoSuratThesisForm
+)
 from app.decorators_admin import admin_required
 from django.db.models import Q
 from django.utils.text import slugify
+from .views_admin_set import profile_admin
+from django.utils import timezone
+from datetime import datetime
 
 def _get_admin_photo(request):
     useradmin = UserAdmin.objects.filter(username=request.user).first()
     return useradmin.photo if useradmin and useradmin.photo else None
 
-
-@admin_required
-def profile_admin(request):
-    try:
-        useradmin = UserAdmin.objects.get(username=request.user)
-    except UserAdmin.DoesNotExist:
-        useradmin = UserAdmin(username=request.user)
-
-    if request.method == 'POST':
-        form = formProfile(request.POST, request.FILES, instance=useradmin)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Profil Anda berhasil diperbarui!')
-            return redirect('app:profile_admin')
-        else:
-            messages.error(request, 'Gagal memperbarui profil. Periksa isian form.')
-    else:
-        form = formProfile(instance=useradmin)
-
-    context = {
-        'title': 'Profile Admin',
-        'heading': 'Edit Profile Admin',
-        'useradmin': useradmin,
-        'photo': useradmin.photo if getattr(useradmin, 'photo', None) else None,
-        'form': form,
-    }
-    return render(request, 'admin_super/profile_admin.html', context)
-
-
-# ==========================================
-# KATEGORI BUKU
-# ==========================================
 
 @admin_required
 def kategori_buku_list(request):
@@ -658,3 +637,502 @@ def hero_slide_delete(request, slide_id):
     slide.delete()
     messages.warning(request, f'Hero slide "{judul}" berhasil dihapus.')
     return redirect('app:admin_hero_slide_list')
+
+@admin_required
+def course_list(request):
+    courses = Course.objects.prefetch_related('coaches__user').order_by('-created_at')
+    context = {
+        'title': 'Kelola Course',
+        'heading': 'Daftar Course & Pelatihan',
+        'courses': courses,
+        'photo': _get_admin_photo(request),
+    }
+    return render(request, 'admin_super/course_list.html', context)
+
+
+@admin_required
+def course_create(request):
+    if request.method == 'POST':
+        form = CourseForm(request.POST, request.FILES)
+        if form.is_valid():
+            course = form.save()
+            messages.success(request, f'Course "{course.name}" berhasil ditambahkan!')
+            return redirect('app:admin_course_edit', uuid=course.uuid)
+        else:
+            messages.error(request, 'Gagal menyimpan course. Silakan periksa isian form.')
+    else:
+        form = CourseForm()
+
+    context = {
+        'title': 'Tambah Course Baru',
+        'heading': 'Tambah Course / Pelatihan Baru',
+        'form': form,
+        'course': None,
+        'photo': _get_admin_photo(request),
+        'is_edit': False,
+    }
+    return render(request, 'admin_super/course_form.html', context)
+
+
+@admin_required
+def course_edit(request, uuid):
+    course = get_object_or_404(Course.objects.prefetch_related('coaches', 'agendas'), uuid=uuid)
+
+    if request.method == 'POST':
+        form = CourseForm(request.POST, request.FILES, instance=course)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Course "{course.name}" berhasil diperbarui!')
+            return redirect('app:admin_course_edit', uuid=course.uuid)
+        else:
+            messages.error(request, 'Gagal memperbarui course. Silakan periksa isian form.')
+    else:
+        form = CourseForm(instance=course)
+
+    agendas = course.agendas.select_related('pengajar__user').order_by('session_number', 'agenda_date')
+
+    context = {
+        'title': 'Edit Course',
+        'heading': f'Edit Course: {course.name}',
+        'form': form,
+        'course': course,
+        'agendas': agendas,
+        'photo': _get_admin_photo(request),
+        'is_edit': True,
+    }
+    return render(request, 'admin_super/course_form.html', context)
+
+
+@admin_required
+def course_delete(request, uuid):
+    course = get_object_or_404(Course, uuid=uuid)
+    name = course.name
+    course.delete()
+    messages.warning(request, f'Course "{name}" berhasil dihapus.')
+    return redirect('app:admin_course_list')
+
+
+@admin_required
+def course_agenda_add(request, course_uuid):
+    course = get_object_or_404(Course, uuid=course_uuid)
+    if request.method == 'POST':
+        form = CourseAgendaForm(request.POST)
+        if form.is_valid():
+            agenda = form.save(commit=False)
+            agenda.course = course
+            agenda.save()
+            messages.success(request, f'Agenda sesi "{agenda.title}" berhasil ditambahkan!')
+        else:
+            messages.error(request, 'Gagal menambahkan agenda. Periksa isian form.')
+    return redirect('app:admin_course_edit', uuid=course_uuid)
+
+
+@admin_required
+def course_agenda_edit(request, agenda_id):
+    agenda = get_object_or_404(CourseAgenda, id=agenda_id)
+    course_uuid = agenda.course.uuid
+    if request.method == 'POST':
+        form = CourseAgendaForm(request.POST, instance=agenda)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Agenda "{agenda.title}" berhasil diperbarui!')
+        else:
+            messages.error(request, 'Gagal memperbarui agenda.')
+    return redirect('app:admin_course_edit', uuid=course_uuid)
+
+
+@admin_required
+def course_agenda_delete(request, agenda_id):
+    agenda = get_object_or_404(CourseAgenda, id=agenda_id)
+    course_uuid = agenda.course.uuid
+    title = agenda.title
+    agenda.delete()
+    messages.warning(request, f'Agenda "{title}" berhasil dihapus.')
+    return redirect('app:admin_course_edit', uuid=course_uuid)
+
+
+@admin_required
+def jurnal_list(request):
+    jurnals = JurnalMaster.objects.all()
+    context = {
+        'title': 'Master Jurnal',
+        'heading': 'Kelola Master Jurnal Ilmiah',
+        'jurnal_list': jurnals,
+        'photo': _get_admin_photo(request),
+    }
+    return render(request, 'admin_super/jurnal_list.html', context)
+
+
+@admin_required
+def jurnal_tambah(request):
+    if request.method == 'POST':
+        form = JurnalMasterForm(request.POST, request.FILES)
+        if form.is_valid():
+            jurnal = form.save()
+            messages.success(request, f'Jurnal "{jurnal.nama}" berhasil ditambahkan!')
+            return redirect('app:admin_jurnal_list')
+        else:
+            messages.error(request, 'Gagal menambahkan jurnal. Periksa kembali isian form.')
+    else:
+        form = JurnalMasterForm()
+
+    context = {
+        'title': 'Tambah Master Jurnal',
+        'heading': 'Tambah Master Jurnal Baru',
+        'form': form,
+        'jurnal': None,
+        'photo': _get_admin_photo(request),
+        'is_edit': False,
+    }
+    return render(request, 'admin_super/jurnal_form.html', context)
+
+
+@admin_required
+def jurnal_edit(request, uuid):
+    jurnal = get_object_or_404(JurnalMaster, id=uuid)
+    if request.method == 'POST':
+        form = JurnalMasterForm(request.POST, request.FILES, instance=jurnal)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Data Jurnal "{jurnal.nama}" berhasil diperbarui!')
+            return redirect('app:admin_jurnal_list')
+        else:
+            messages.error(request, 'Gagal memperbarui data jurnal. Periksa isian form.')
+    else:
+        form = JurnalMasterForm(instance=jurnal)
+
+    context = {
+        'title': 'Edit Master Jurnal',
+        'heading': f'Edit Jurnal: {jurnal.nama}',
+        'form': form,
+        'jurnal': jurnal,
+        'photo': _get_admin_photo(request),
+        'is_edit': True,
+    }
+    return render(request, 'admin_super/jurnal_form.html', context)
+
+
+@admin_required
+def jurnal_hapus(request, uuid):
+    jurnal = get_object_or_404(JurnalMaster, id=uuid)
+    nama = jurnal.nama
+    jurnal.delete()
+    messages.warning(request, f'Jurnal "{nama}" berhasil dihapus.')
+    return redirect('app:admin_jurnal_list')
+
+@admin_required
+def loa_jurnal_list(request):
+    status_filter = request.GET.get('status', 'all')
+    jurnal_filter = request.GET.get('jurnal', 'all')
+
+    loa_qs = LoaJurnal.objects.select_related('nama_jurnal', 'created_by').order_by('-created_at')
+
+    if status_filter in ['accepted', 'declined']:
+        loa_qs = loa_qs.filter(status=status_filter)
+
+    if jurnal_filter != 'all':
+        loa_qs = loa_qs.filter(nama_jurnal__id=jurnal_filter)
+
+    jurnals = JurnalMaster.objects.all().order_by('nama')
+
+    context = {
+        'title': 'LOA Jurnal',
+        'heading': 'Daftar Penerbitan LOA Jurnal',
+        'loa_list': loa_qs,
+        'jurnals': jurnals,
+        'status_filter': status_filter,
+        'jurnal_filter': jurnal_filter,
+        'total_loa': LoaJurnal.objects.count(),
+        'accepted_count': LoaJurnal.objects.filter(status='accepted').count(),
+        'declined_count': LoaJurnal.objects.filter(status='declined').count(),
+        'photo': _get_admin_photo(request),
+    }
+    return render(request, 'admin_super/loa_list.html', context)
+
+
+@admin_required
+def loa_jurnal_tambah(request):
+    if request.method == 'POST':
+        form = LoaJurnalForm(request.POST)
+        if form.is_valid():
+            loa = form.save(commit=False)
+            loa.created_by = request.user
+            if not loa.no_surat:
+                tahun = str(timezone.now().year)
+                no_surat_cek = NoSuratThesis.objects.filter(tahun=tahun).order_by('-nomor').first()
+                if no_surat_cek and no_surat_cek.nomor:
+                    next_nomor = no_surat_cek.nomor + 1
+                else:
+                    next_nomor = 1
+
+                kodesurat = KodeSurat.objects.get(jenis='Letter Of Acceptance')
+                if not kodesurat:
+                    kodesurat = KodeSurat.objects.create(
+                        jenis='Letter Of Acceptance',
+                        kode='LOA'
+                    )
+
+                addnosurat = NoSuratThesis.objects.create(
+                    nomor=next_nomor,
+                    kode=f'{kodesurat.kode}/{loa.nama_jurnal.singkatan}',
+                    tahun=tahun,
+                    perihal=f'Letter Of Acceptance Jurnal {loa.nama_jurnal.nama}',
+                    tujuan=loa.penulis if loa.penulis else 'Yth. Redaksi Jurnal Ilmiah',
+                    adminp=request.user
+                )
+
+                # Format nomor surat resmi LOA
+                if loa.nama_jurnal and loa.nama_jurnal.singkatan:
+                    loa.no_surat = f"{addnosurat.nomor}/{kodesurat.kode}-{loa.nama_jurnal.singkatan}/{tahun}"
+                else:
+                    loa.no_surat = f"{addnosurat.nomor}/{kodesurat.kode}/{tahun}"
+            else:
+                # Jika nomor surat diisi manual, tetap catat ke buku agenda NoSuratThesis
+                tahun = str(loa.periode_tahun or timezone.now().year)
+                no_surat_cek = NoSuratThesis.objects.filter(tahun=tahun).order_by('-nomor').first()
+                next_nomor = (no_surat_cek.nomor + 1) if (no_surat_cek and no_surat_cek.nomor) else 1
+
+                kodesurat = (
+                    KodeSurat.objects.filter(kode__iexact='LOA').first() or
+                    KodeSurat.objects.filter(jenis__icontains='Letter Of Acceptance').first()
+                )
+                kode_val = kodesurat.kode if kodesurat else 'LOA'
+
+                NoSuratThesis.objects.create(
+                    nomor=next_nomor,
+                    kode=kode_val,
+                    tahun=tahun,
+                    perihal=f'Letter Of Acceptance Jurnal {loa.nama_jurnal.nama if loa.nama_jurnal else ""}'[:255],
+                    tujuan=loa.penulis[:255] if loa.penulis else 'Yth. Redaksi Jurnal Ilmiah',
+                    adminp=request.user
+                )
+
+            loa.save()
+            messages.success(request, f'LOA No. "{loa.no_surat}" untuk naskah "{loa.judul_naskah[:40]}..." berhasil dibuat!')
+            return redirect('app:admin_loa_jurnal_list')
+        else:
+            messages.error(request, 'Gagal menyimpan LOA. Periksa isian form.')
+    else:
+        # Default tahun berjalan
+        current_year = timezone.now().year
+        form = LoaJurnalForm(initial={'periode_tahun': current_year})
+
+    context = {
+        'title': 'Buat LOA Jurnal',
+        'heading': 'Penerbitan LOA Jurnal Baru',
+        'form': form,
+        'loa': None,
+        'photo': _get_admin_photo(request),
+        'is_edit': False,
+    }
+    return render(request, 'admin_super/loa_form.html', context)
+
+
+@admin_required
+def loa_jurnal_edit(request, uuid):
+    loa = get_object_or_404(LoaJurnal, id=uuid)
+    if request.method == 'POST':
+        form = LoaJurnalForm(request.POST, instance=loa)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'LOA No. "{loa.no_surat}" berhasil diperbarui!')
+            return redirect('app:admin_loa_jurnal_list')
+        else:
+            messages.error(request, 'Gagal memperbarui LOA. Periksa isian form.')
+    else:
+        form = LoaJurnalForm(instance=loa)
+
+    context = {
+        'title': 'Edit LOA Jurnal',
+        'heading': f'Edit LOA: {loa.no_surat}',
+        'form': form,
+        'loa': loa,
+        'photo': _get_admin_photo(request),
+        'is_edit': True,
+    }
+    return render(request, 'admin_super/loa_form.html', context)
+
+
+@admin_required
+def loa_jurnal_hapus(request, uuid):
+    loa = get_object_or_404(LoaJurnal, id=uuid)
+    no_surat = loa.no_surat
+    loa.delete()
+    messages.warning(request, f'LOA "{no_surat}" berhasil dihapus.')
+    return redirect('app:admin_loa_jurnal_list')
+
+
+@admin_required
+def loa_jurnal_detail(request, uuid):
+    loa = get_object_or_404(LoaJurnal.objects.select_related('nama_jurnal', 'created_by'), id=uuid)
+    context = {
+        'title': f'Detail LOA - {loa.no_surat}',
+        'heading': f'Preview LOA: {loa.no_surat}',
+        'loa': loa,
+        'photo': _get_admin_photo(request),
+    }
+    return render(request, 'admin_super/loa_detail.html', context)
+
+# =====================================================================
+#                      3. NOMOR SURAT KELUAR THESIS
+# =====================================================================
+
+@admin_required
+def surat_list(request):
+    current_year = str(timezone.now().year)
+    tahun_filter = request.GET.get('tahun', current_year)
+    
+    surat_qs = NoSuratThesis.objects.select_related('adminp').order_by('-date_in')
+    if tahun_filter != 'all':
+        surat_qs = surat_qs.filter(tahun=tahun_filter)
+
+    available_years = NoSuratThesis.objects.values_list('tahun', flat=True).distinct().order_by('-tahun')
+
+    context = {
+        'title': 'Nomor Surat Thesis',
+        'heading': 'Tata Kelola Nomor Surat Keluar',
+        'surat_list': surat_qs,
+        'tahun_filter': tahun_filter,
+        'available_years': available_years,
+        'current_year': current_year,
+        'total_surat': NoSuratThesis.objects.count(),
+        'photo': _get_admin_photo(request),
+    }
+    return render(request, 'admin_super/surat_list.html', context)
+
+
+@admin_required
+def surat_tambah(request):
+    current_year = str(timezone.now().year)
+
+    if request.method == 'POST':
+        form = NoSuratThesisForm(request.POST)
+        if form.is_valid():
+            surat = form.save(commit=False)
+            surat.adminp = request.user
+            surat.save()
+            messages.success(request, f'Nomor surat {surat.nomor}/{surat.kode}/{surat.tahun} berhasil dicatat!')
+            return redirect('app:admin_surat_list')
+        else:
+            messages.error(request, 'Gagal mencatat nomor surat. Periksa isian form.')
+    else:
+        # Rekomendasi nomor berikutnya otomatis berdasarkan tahun berjalan
+        last_surat = NoSuratThesis.objects.filter(tahun=current_year).order_by('-nomor').first()
+        next_nomor = (last_surat.nomor + 1) if last_surat and last_surat.nomor else 1
+        form = NoSuratThesisForm(initial={
+            'tahun': current_year,
+            'nomor': next_nomor
+        })
+
+    kode_surats = KodeSurat.objects.all().order_by('jenis')
+
+    context = {
+        'title': 'Ambil Nomor Surat Baru',
+        'heading': 'Catat Nomor Surat Keluar Baru',
+        'form': form,
+        'kode_surats': kode_surats,
+        'surat': None,
+        'photo': _get_admin_photo(request),
+        'is_edit': False,
+    }
+    return render(request, 'admin_super/surat_form.html', context)
+
+
+@admin_required
+def surat_edit(request, uuid):
+    surat = get_object_or_404(NoSuratThesis, id=uuid)
+    if request.method == 'POST':
+        form = NoSuratThesisForm(request.POST, instance=surat)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Data surat nomor {surat.nomor}/{surat.kode}/{surat.tahun} berhasil diperbarui!')
+            return redirect('app:admin_surat_list')
+        else:
+            messages.error(request, 'Gagal memperbarui nomor surat. Periksa isian form.')
+    else:
+        form = NoSuratThesisForm(instance=surat)
+
+    kode_surats = KodeSurat.objects.all().order_by('jenis')
+
+    context = {
+        'title': 'Edit Nomor Surat',
+        'heading': f'Edit Nomor Surat: {surat.nomor}/{surat.kode}/{surat.tahun}',
+        'form': form,
+        'kode_surats': kode_surats,
+        'surat': surat,
+        'photo': _get_admin_photo(request),
+        'is_edit': True,
+    }
+    return render(request, 'admin_super/surat_form.html', context)
+
+
+@admin_required
+def surat_hapus(request, uuid):
+    surat = get_object_or_404(NoSuratThesis, id=uuid)
+    info = f"{surat.nomor}/{surat.kode}/{surat.tahun}"
+    surat.delete()
+    messages.warning(request, f'Nomor surat {info} berhasil dihapus.')
+    return redirect('app:admin_surat_list')
+
+
+# =====================================================================
+#                      4. KODE KLASIFIKASI SURAT
+# =====================================================================
+
+@admin_required
+def kode_surat_list(request):
+    if request.method == 'POST':
+        form = KodeSuratForm(request.POST)
+        if form.is_valid():
+            ks = form.save()
+            messages.success(request, f'Kode surat "{ks.jenis} ({ks.kode})" berhasil ditambahkan!')
+            return redirect('app:admin_kode_surat_list')
+        else:
+            messages.error(request, 'Gagal menambahkan kode surat.')
+    else:
+        form = KodeSuratForm()
+
+    kode_list = KodeSurat.objects.all().order_by('jenis')
+
+    context = {
+        'title': 'Kode Surat',
+        'heading': 'Daftar Kode & Klasifikasi Surat',
+        'kode_list': kode_list,
+        'form': form,
+        'photo': _get_admin_photo(request),
+    }
+    return render(request, 'admin_super/kode_surat_list.html', context)
+
+
+@admin_required
+def kode_surat_edit(request, uuid):
+    ks = get_object_or_404(KodeSurat, id=uuid)
+    if request.method == 'POST':
+        form = KodeSuratForm(request.POST, instance=ks)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Kode surat "{ks.jenis}" berhasil diperbarui!')
+            return redirect('app:admin_kode_surat_list')
+        else:
+            messages.error(request, 'Gagal memperbarui kode surat.')
+    else:
+        form = KodeSuratForm(instance=ks)
+
+    context = {
+        'title': 'Edit Kode Surat',
+        'heading': f'Edit Kode: {ks.jenis}',
+        'form': form,
+        'ks': ks,
+        'photo': _get_admin_photo(request),
+    }
+    return render(request, 'admin_super/kode_surat_form.html', context)
+
+
+@admin_required
+def kode_surat_hapus(request, uuid):
+    ks = get_object_or_404(KodeSurat, id=uuid)
+    jenis = ks.jenis
+    ks.delete()
+    messages.warning(request, f'Kode surat "{jenis}" berhasil dihapus.')
+    return redirect('app:admin_kode_surat_list')
+

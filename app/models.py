@@ -146,8 +146,8 @@ class Books(models.Model):
     slug = models.SlugField(blank=True, max_length=200)
     penulis = models.ManyToManyField(UserPengguna, blank=True, related_name='penulis_buku')
     editor = models.ManyToManyField(UserPengguna, blank=True, related_name='editor_buku')
-    harga = models.DecimalField(max_digits=10, decimal_places=2)
     featured_image = models.ImageField(upload_to=rename_featured_image, max_length=255, blank=True, null=True)
+    harga = models.DecimalField(max_digits=10, decimal_places=2)
     harga_potongan = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     stok = models.IntegerField()
     deskripsi = models.TextField()
@@ -200,6 +200,219 @@ class MediaBooks(models.Model):
 
     def __str__(self):
         return f"Media: {self.book.judul}"
+
+class Course(models.Model):
+
+    COURSE_TYPE_CHOICES = [
+        ('training', 'Pelatihan'),
+        ('seminar', 'Seminar'),
+        ('webinar', 'Webinar'),
+        ('workshop', 'Workshop'),
+        ('bootcamp', 'Bootcamp'),
+        ('other', 'Lainnya'),
+    ]
+
+    FORMAT_CHOICES = [
+        ('online', 'Online'),
+        ('offline', 'Offline / Tatap Muka'),
+        ('hybrid', 'Hybrid'),
+    ]
+
+    FEE_TYPE_CHOICES = [
+        ('free', 'Gratis'),
+        ('paid', 'Berbayar / Donasi (Tripay Payment Gateway)'),
+    ]
+
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    name = models.CharField(max_length=255, verbose_name="Nama Kegiatan")
+    slug = models.SlugField(max_length=255, unique=True, blank=True, null=True, verbose_name="Slug URL")
+    description = models.TextField(max_length=1000, verbose_name="Deskripsi")
+    course_type = models.CharField(max_length=20, choices=COURSE_TYPE_CHOICES, default='training', verbose_name="Jenis Kegiatan")
+    format = models.CharField(max_length=10, choices=FORMAT_CHOICES, default='online', verbose_name="Format Pelaksanaan")
+    coaches = models.ManyToManyField(UserPengguna, blank=True, related_name='coached_courses')
+    start_date = models.DateField(null=True, blank=True, verbose_name="Tanggal Mulai", help_text="Tanggal pelaksanaan dimulai")
+    end_date = models.DateField(null=True, blank=True, verbose_name="Tanggal Selesai", help_text="Tanggal pelaksanaan berakhir")
+    harga = models.DecimalField(max_digits=10, decimal_places=2)
+    harga_potongan = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    max_participants = models.PositiveIntegerField(null=True, blank=True, verbose_name="Kuota Peserta", help_text="Kosongkan jika tidak ada batas peserta")
+    registration_deadline = models.DateTimeField(null=True, blank=True, verbose_name="Batas Pendaftaran", help_text="Batas akhir pendaftaran peserta")
+    meeting_url = models.URLField(max_length=500, blank=True, null=True, verbose_name="Link Meeting", help_text="Link Zoom / Google Meet (untuk online/hybrid)")
+    thumbnail = models.ImageField(upload_to='courses/thumbnails/', blank=True, null=True, verbose_name="Thumbnail", help_text="Gambar sampul kegiatan")
+    fee_type = models.CharField(max_length=20, choices=FEE_TYPE_CHOICES, default='free', verbose_name="Tipe Biaya")
+    price = models.DecimalField(max_digits=12, decimal_places=0, default=0, verbose_name="Nominal Biaya / Donasi (Rp)", help_text="Isi 0 jika gratis")
+    is_active = models.BooleanField(default=True, verbose_name="Aktif")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug and self.name:
+            base_slug = slugify(self.name)
+            slug = base_slug
+            counter = 1
+            while Course.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.name} ({self.get_course_type_display()})"
+
+    def get_absolute_url(self):
+        if self.slug:
+            return reverse('course_detail', kwargs={'slug': self.slug})
+        return reverse('course_detail', kwargs={'slug': str(self.uuid)})
+
+    @property
+    def formatted_price(self):
+        try:
+            return f"{int(self.price):,}".replace(",", ".")
+        except (ValueError, TypeError):
+            return "0"
+
+    @property
+    def persentase_diskon(self):
+        if self.harga and self.harga > 0 and self.harga_potongan and self.harga_potongan < self.harga:
+            return int(round(((self.harga - self.harga_potongan) / self.harga) * 100))
+        return 0
+
+
+
+class CourseAgenda(models.Model):
+    course = models.ForeignKey(Course, related_name='agendas', on_delete=models.CASCADE)
+    session_number = models.PositiveSmallIntegerField(null=True, blank=True) 
+    title = models.CharField(max_length=255)
+    agenda_date = models.DateTimeField(null=True, blank=False, help_text="Tanggal & jam pelaksanaan")
+    pengajar = models.ForeignKey(UserPengguna, on_delete=models.SET_NULL, null=True, blank=True, related_name='teaching_agendas', help_text="Dosen pengampu sesi ini (bisa berbeda dari pembuat)")
+    jp_count = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name="Jumlah JP", help_text="Jumlah Jam Pelajaran (JP) pada sesi ini")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['session_number', 'agenda_date']
+        unique_together = [('course', 'session_number')]  # Satu nomor sesi per course
+
+    def __str__(self):
+        if self.session_number:
+            return f"{self.course.name} - Sesi {self.session_number}: {self.title}"
+        return f"{self.course.name} - {self.title}"
+
+def rename_jurnal_cover(instance, filename):
+    ext = filename.split('.')[-1]
+    name_clean = slugify(instance.nama)[:50].replace("-", "_")
+    timestamp = timezone.now().strftime('%Y%m%d%H%M%S')
+    new_filename = f"jurnal_{name_clean}_{timestamp}.{ext}"
+    return os.path.join('jurnal/covers/', new_filename)
+
+def rename_jurnal_ttd(instance, filename):
+    ext = filename.split('.')[-1]
+    name_clean = slugify(instance.nama)[:50].replace("-", "_")
+    timestamp = timezone.now().strftime('%Y%m%d%H%M%S')
+    new_filename = f"ttd_{name_clean}_{timestamp}.{ext}"
+    return os.path.join('jurnal/ttd/', new_filename)
+
+def rename_jurnal_index(instance, filename):
+    ext = filename.split('.')[-1]
+    name_clean = slugify(instance.nama)[:50].replace("-", "_")
+    timestamp = timezone.now().strftime('%Y%m%d%H%M%S')
+    new_filename = f"indeks_{name_clean}_{timestamp}.{ext}"
+    return os.path.join('jurnal/indeks/', new_filename)
+
+
+class JurnalMaster(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    nama = models.CharField(max_length=255, verbose_name="Nama Jurnal", unique=True)
+    singkatan = models.CharField(max_length=50, verbose_name="Singkatan Jurnal", blank=True, null=True, help_text="Contoh: TheMas, JPT, dll. Digunakan untuk nomor surat.")
+    cover = models.ImageField(upload_to=rename_jurnal_cover, blank=True, null=True, verbose_name="Cover Jurnal")
+    issn = models.CharField(max_length=30, blank=True, null=True, verbose_name="ISSN")
+    e_issn = models.CharField(max_length=30, blank=True, null=True, verbose_name="E-ISSN")
+    penerbit = models.CharField(max_length=255, blank=True, null=True, verbose_name="Penerbit")
+    url_jurnal = models.URLField(max_length=500, blank=True, null=True, verbose_name="URL Jurnal")
+    file_sk = models.FileField(upload_to='jurnal_sk/', blank=True, null=True, verbose_name="File SK (Surat Keputusan Jurnal)")
+    ttd_nama = models.CharField(max_length=255, verbose_name="Nama Penandatangan TTD", blank=True, null=True)
+    ttd_jabatan = models.CharField(max_length=255, verbose_name="Jabatan Penandatangan TTD", blank=True, null=True)
+    ttd_gambar = models.ImageField(upload_to=rename_jurnal_ttd, blank=True, null=True, verbose_name="Gambar TTD")
+    indeks_1 = models.ImageField(upload_to=rename_jurnal_index, blank=True, null=True, verbose_name="Logo Indeksasi 1")
+    indeks_2 = models.ImageField(upload_to=rename_jurnal_index, blank=True, null=True, verbose_name="Logo Indeksasi 2")
+    indeks_3 = models.ImageField(upload_to=rename_jurnal_index, blank=True, null=True, verbose_name="Logo Indeksasi 3")
+    indeks_4 = models.ImageField(upload_to=rename_jurnal_index, blank=True, null=True, verbose_name="Logo Indeksasi 4")
+    is_active = models.BooleanField(default=True, verbose_name="Aktif")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['nama']
+        verbose_name = "Master Jurnal"
+        verbose_name_plural = "Master Jurnal"
+
+    def __str__(self):
+        issn_info = f" (ISSN: {self.issn})" if self.issn else ""
+        return f"{self.nama}{issn_info}"
+
+class LoaJurnal(models.Model):
+    STATUS_CHOICES = [
+        ('accepted', 'Accepted'),
+        ('declined', 'Declined'),
+    ]
+
+    BULAN_CHOICES = [
+        ('Januari', 'Januari'),
+        ('Februari', 'Februari'),
+        ('Maret', 'Maret'),
+        ('April', 'April'),
+        ('Mei', 'Mei'),
+        ('Juni', 'Juni'),
+        ('Juli', 'Juli'),
+        ('Agustus', 'Agustus'),
+        ('September', 'September'),
+        ('Oktober', 'Oktober'),
+        ('November', 'November'),
+        ('Desember', 'Desember'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    no_surat = models.CharField(max_length=50, verbose_name="Nomor Surat")
+    judul_naskah = models.CharField(max_length=500, verbose_name="Judul Naskah")
+    penulis = models.CharField(max_length=255, verbose_name="Penulis")
+    id_naskah = models.CharField(max_length=100, verbose_name="ID Naskah")
+    nama_jurnal = models.ForeignKey(JurnalMaster, on_delete=models.SET_NULL, null=True, blank=True,related_name='loa_jurnals', verbose_name="Nama Jurnal")
+    volume = models.PositiveIntegerField(default=1, verbose_name="Volume")
+    nomor_jurnal = models.PositiveIntegerField(default=1, verbose_name="Nomor Jurnal")
+    periode_bulan = models.CharField(max_length=20, choices=BULAN_CHOICES, default='Juli', verbose_name="Bulan Terbit")
+    periode_tahun = models.PositiveIntegerField(verbose_name="Tahun Terbit")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='accepted', verbose_name="Status LOA")
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,related_name='loa_jurnals', verbose_name="Dibuat Oleh")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "LOA Jurnal"
+        verbose_name_plural = "LOA Jurnal"
+
+    def __str__(self):
+        return f"LOA: {self.judul_naskah} – {self.penulis} ({self.get_status_display()})"
+
+    @property
+    def nomor_surat_formatted(self):
+        return self.no_surat or "-"
+
+class NoSuratThesis(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    date_in = models.DateTimeField(auto_now_add=True)
+    adminp = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="nosuratth_admin")
+    tahun = models.CharField(max_length=5, blank=False, null=False)
+    nomor = models.IntegerField(blank=False, null=False)
+    perihal = models.CharField(max_length=255, blank=False, null=False)
+    tujuan = models.CharField(max_length=255, blank=False, null=False)
+    kode = models.CharField(max_length=50, blank=False, null=False)
+
+class KodeSurat(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    jenis = models.CharField(max_length=100, blank=False, null=False)
+    kode = models.CharField(max_length=50, blank=False, null=False)
+    def __str__(self):
+        return f"{self.jenis} - {self.kode}"
+
 
 class Category(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

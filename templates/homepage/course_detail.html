@@ -1,0 +1,1133 @@
+{% extends 'homepage/base_public.html' %}
+{% load static %}
+
+{% block title %}{{ course.name }} | {{ webname|default:"ThesisStore" }}{% endblock %}
+{% block meta_description %}{{ course.description|striptags|truncatewords:25 }}{% endblock %}
+
+{% block content %}
+<!-- BREADCRUMB -->
+<div style="background-color: #ffffff; border-bottom: 1px solid #f1f5f9; padding: 1rem 0;">
+  <div class="apb-container">
+    <nav class="course-breadcrumb" aria-label="Breadcrumb">
+      <a href="{% url 'homepage' %}">Beranda</a>
+      <span class="breadcrumb-separator"><i class="ri-arrow-right-s-line"></i></span>
+      <a href="{% url 'homepage' %}#pelatihan">Pelatihan &amp; Course</a>
+      <span class="breadcrumb-separator"><i class="ri-arrow-right-s-line"></i></span>
+      <span class="breadcrumb-badge">{{ course.get_course_type_display }}</span>
+      <span class="breadcrumb-separator"><i class="ri-arrow-right-s-line"></i></span>
+      <span class="breadcrumb-current">{{ course.name }}</span>
+    </nav>
+  </div>
+</div>
+
+<!-- MAIN DETAIL SECTION -->
+<section style="background-color: #ffffff; padding: 2.5rem 0 4rem 0;">
+  <div class="apb-container">
+    <div class="course-detail-grid">
+      
+      <!-- KOLOM KIRI: POSTER, COACHES & BENEFIT -->
+      <div class="course-gallery-col">
+        <!-- Poster Box -->
+        <div class="main-poster-wrapper">
+          {% if course.harga_potongan %}
+            <span class="discount-badge">DISKON {{ course.persentase_diskon }}%</span>
+          {% endif %}
+
+          <div class="poster-aspect-box">
+            {% if course.thumbnail %}
+              <img id="mainCourseImage" src="{{ course.thumbnail.url }}" alt="{{ course.name }}">
+            {% else %}
+              <div class="poster-placeholder">
+                <i class="ri-graduation-cap-line"></i>
+                <span class="ph-title">{{ webname|default:"ThesisStore" }}</span>
+                <span class="ph-sub">{{ course.get_course_type_display }}</span>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Box Profil Instruktur / Coaches -->
+        <div class="coaches-card-box">
+          <h3 class="side-box-title">
+            <i class="ri-user-star-line"></i> Instruktur &amp; Pemateri
+          </h3>
+          <div class="coaches-list">
+            {% for coach in course.coaches.all %}
+              <div class="coach-item">
+                <div class="coach-avatar">
+                  {% if coach.photo %}
+                    <img src="{{ coach.photo.url }}" alt="{{ coach.user.first_name }}">
+                  {% else %}
+                    <div class="coach-avatar-ph">
+                      <i class="ri-user-3-line"></i>
+                    </div>
+                  {% endif %}
+                </div>
+                <div class="coach-info">
+                  <div class="coach-name">{{ coach.user.first_name|default:coach.user.username }}</div>
+                  {% if coach.bidang_penelitian %}
+                    <div class="coach-field">{{ coach.bidang_penelitian.nama_bidang }}</div>
+                  {% endif %}
+                  {% if coach.jafung %}
+                    <div class="coach-meta">{{ coach.jafung }}</div>
+                  {% endif %}
+                  <!-- Link Profil Akademik -->
+                  <div class="coach-links">
+                    {% if coach.link_sinta %}
+                      <a href="{{ coach.link_sinta }}" target="_blank" title="Sinta Profile" class="coach-link-btn"><i class="ri-external-link-line"></i> Sinta</a>
+                    {% endif %}
+                    {% if coach.link_scopus %}
+                      <a href="{{ coach.link_scopus }}" target="_blank" title="Scopus Profile" class="coach-link-btn"><i class="ri-external-link-line"></i> Scopus</a>
+                    {% endif %}
+                    {% if coach.link_google_scholar %}
+                      <a href="{{ coach.link_google_scholar }}" target="_blank" title="Google Scholar" class="coach-link-btn"><i class="ri-google-fill"></i> Scholar</a>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            {% empty %}
+              <div style="font-size: 0.85rem; color: #94a3b8; font-style: italic;">
+                Dosen &amp; Praktisi Spesialis ThesisEdu
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Benefit Keikutsertaan -->
+        <div class="benefits-card-box">
+          <h3 class="side-box-title">
+            <i class="ri-gift-line"></i> Fasilitas &amp; Benefit
+          </h3>
+          <ul class="benefits-list">
+            <li><i class="ri-checkbox-circle-fill"></i> E-Sertifikat Resmi Bernomor</li>
+            <li><i class="ri-checkbox-circle-fill"></i> Modul &amp; Materi Presentasi Lengkap</li>
+            <li><i class="ri-checkbox-circle-fill"></i> Akses Rekaman Video Sesi Pembelajaran</li>
+            <li><i class="ri-checkbox-circle-fill"></i> Grup Diskusi &amp; Bimbingan Interaktif</li>
+            <li><i class="ri-checkbox-circle-fill"></i> Konsultasi Kepenulisan &amp; Publikasi</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- KOLOM KANAN: DETAIL INFO, BIAYA, AGENDA & DESKRIPSI -->
+      <div class="course-info-col">
+        <!-- Header Judul -->
+        <div class="course-title-header">
+          <div class="course-tags-row">
+            <span class="badge-course-type">{{ course.get_course_type_display }}</span>
+            <span class="badge-course-format">
+              {% if course.format == 'online' %}
+                <i class="ri-vidicon-line"></i> Online (Virtual)
+              {% elif course.format == 'offline' %}
+                <i class="ri-map-pin-2-line"></i> Offline / Tatap Muka
+              {% else %}
+                <i class="ri-shuffle-line"></i> Hybrid (Online &amp; Tatap Muka)
+              {% endif %}
+            </span>
+          </div>
+
+          <h1 class="course-title">{{ course.name }}</h1>
+
+          <div class="course-header-actions">
+            <button type="button" class="action-btn" id="btnWishlist" onclick="toggleWishlist()">
+              <i class="ri-heart-line" id="wishlistIcon"></i>
+              <span>Favorit</span>
+            </button>
+            <button type="button" class="action-btn" onclick="shareCourse()">
+              <i class="ri-share-line"></i>
+              <span>Bagikan</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- OPSI PENDAFTARAN & BIAYA -->
+        <div class="registration-options-section">
+          <h2 class="sub-heading">Biaya &amp; Pendaftaran</h2>
+          <div class="registration-box-row">
+            <div class="registration-card selected">
+              <span class="registration-card-label">Biaya Kegiatan</span>
+              <div class="registration-card-price">
+                {% if course.fee_type == 'free' or course.price == 0 %}
+                  <span class="price-main free-label">Gratis</span>
+                  <span class="price-sub">Terbuka untuk umum</span>
+                {% else %}
+                  {% if course.harga_potongan %}
+                    <span class="price-main">Rp {{ course.harga_potongan|floatformat:0 }}</span>
+                    <span class="price-strike">Rp {{ course.price|floatformat:0 }}</span>
+                  {% else %}
+                    <span class="price-main">Rp {{ course.formatted_price }}</span>
+                  {% endif %}
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- CTA WA Pendaftaran -->
+            <div class="registration-cta-wrap">
+              <a href="https://wa.me/6281234567890?text=Halo%20Admin%20ThesisStore,%20saya%20tertarik%20mendaftar%20kegiatan%20berikut:%0A%0A*Nama%20Kegiatan:*%20{{ course.name|urlencode }}%0A*Jenis:*%20{{ course.get_course_type_display|urlencode }}%0A*Format:*%20{{ course.get_format_display|urlencode }}%0A*Biaya:*%20{% if course.fee_type == 'free' or course.price == 0 %}Gratis{% else %}Rp%20{{ course.formatted_price }}{% endif %}%0A*Link:*%20{{ request.build_absolute_uri|urlencode }}%0A%0AMohon%20informasi%20petunjuk%20tata%20cara%20pendaftaran.%20Terima%20kasih!"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 class="btn-buy-wa">
+                <i class="ri-whatsapp-line"></i>
+                <span>Daftar Sekarang via WhatsApp</span>
+              </a>
+
+              <div class="registration-status-meta">
+                {% if course.max_participants %}
+                  <span class="stock-info in-stock">
+                    <i class="ri-user-line"></i> Kuota: {{ course.max_participants }} Peserta
+                  </span>
+                {% else %}
+                  <span class="stock-info in-stock">
+                    <i class="ri-checkbox-circle-fill"></i> Kuota Terbuka
+                  </span>
+                {% endif %}
+
+                {% if course.registration_deadline %}
+                  <span class="deadline-info">
+                    <i class="ri-timer-line"></i> Batas: {{ course.registration_deadline|date:"d M Y, H:i" }} WIB
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CALLOUT BANNER -->
+        <div class="info-callout-banner">
+          <div class="info-callout-content">
+            <div class="info-callout-title">Program Resmi Edukasi &amp; Pengembangan Akademik</div>
+            <div class="info-callout-desc">
+              Diselenggarakan secara profesional oleh ThesisEdu dengan kurikulum terstruktur, studi kasus nyata, dan bimbingan langsung dari pakar.
+            </div>
+          </div>
+          <div class="info-callout-badges">
+            <span class="badge-item"><i class="ri-award-fill"></i> Sertifikat Resmi</span>
+            <span class="badge-item"><i class="ri-customer-service-2-fill"></i> Pendampingan</span>
+          </div>
+        </div>
+
+        <!-- AGENDA SESI PEMBELAJARAN (CourseAgenda) -->
+        <div class="course-agenda-section">
+          <div class="agenda-section-header">
+            <h2 class="sub-heading" style="margin-bottom: 0;">
+              <i class="ri-calendar-event-line" style="color: #2c4cf4;"></i> Jadwal &amp; Rincian Sesi Pembelajaran
+            </h2>
+            <span class="agenda-count-badge">{{ agendas|length }} Sesi</span>
+          </div>
+
+          {% if agendas %}
+            <div class="agenda-timeline">
+              {% for ag in agendas %}
+                <div class="agenda-timeline-item">
+                  <div class="agenda-marker">
+                    <span>{{ ag.session_number|default:forloop.counter }}</span>
+                  </div>
+                  <div class="agenda-content-card">
+                    <div class="agenda-card-top">
+                      <h4 class="agenda-card-title">{{ ag.title }}</h4>
+                      <span class="agenda-jp-badge">
+                        <i class="ri-time-line"></i> {{ ag.jp_count }} JP
+                      </span>
+                    </div>
+
+                    <div class="agenda-card-meta">
+                      {% if ag.agenda_date %}
+                        <span class="agenda-meta-item">
+                          <i class="ri-calendar-line"></i> {{ ag.agenda_date|date:"l, d F Y" }}
+                        </span>
+                        <span class="agenda-meta-item">
+                          <i class="ri-time-line"></i> {{ ag.agenda_date|time:"H:i" }} WIB
+                        </span>
+                      {% endif %}
+                      {% if ag.pengajar %}
+                        <span class="agenda-meta-item pengajar-tag">
+                          <i class="ri-user-voice-line"></i> {{ ag.pengajar.user.first_name|default:ag.pengajar.user.username }}
+                        </span>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="agenda-empty-box">
+              <i class="ri-calendar-line"></i>
+              <p>Rincian jadwal per sesi akan dibagikan kepada peserta sebelum kegiatan dimulai.</p>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- DESKRIPSI KEGIATAN -->
+        <div class="course-description-section">
+          <h2 class="sub-heading">Deskripsi Kegiatan</h2>
+          <div class="desc-content-wrapper collapsed" id="descWrapper">
+            <div class="desc-text" id="descText">
+              {{ course.description|safe }}
+            </div>
+            <div class="desc-fade-overlay" id="descOverlay"></div>
+          </div>
+          <button type="button" class="btn-toggle-desc" id="btnToggleDesc" onclick="toggleDescription()">
+            <span>Baca selengkapnya</span>
+            <i class="ri-arrow-down-s-line"></i>
+          </button>
+        </div>
+
+        <!-- INFORMASI & SPESIFIKASI KEGIATAN -->
+        <div class="course-spec-section">
+          <h2 class="sub-heading">Informasi Lengkap Kegiatan</h2>
+          <div class="spec-table-grid">
+            <div class="spec-col">
+              <div class="spec-row">
+                <span class="spec-label">Jenis Kegiatan</span>
+                <span class="spec-divider">:</span>
+                <span class="spec-val">{{ course.get_course_type_display }}</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">Format Pelaksanaan</span>
+                <span class="spec-divider">:</span>
+                <span class="spec-val">{{ course.get_format_display }}</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">Tanggal Pelaksanaan</span>
+                <span class="spec-divider">:</span>
+                <span class="spec-val">
+                  {% if course.start_date %}
+                    {{ course.start_date|date:"d M Y" }}
+                    {% if course.end_date and course.end_date != course.start_date %}
+                      s/d {{ course.end_date|date:"d M Y" }}
+                    {% endif %}
+                  {% else %}
+                    Akan diumumkan
+                  {% endif %}
+                </span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">Total Sesi</span>
+                <span class="spec-divider">:</span>
+                <span class="spec-val">{{ agendas|length }} Sesi Pertemuan</span>
+              </div>
+            </div>
+
+            <div class="spec-col">
+              <div class="spec-row">
+                <span class="spec-label">Batas Pendaftaran</span>
+                <span class="spec-divider">:</span>
+                <span class="spec-val">
+                  {% if course.registration_deadline %}
+                    {{ course.registration_deadline|date:"d M Y, H:i" }} WIB
+                  {% else %}
+                    Hingga kuota terpenuhi
+                  {% endif %}
+                </span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">Kuota Peserta</span>
+                <span class="spec-divider">:</span>
+                <span class="spec-val">
+                  {% if course.max_participants %}
+                    {{ course.max_participants }} Peserta
+                  {% else %}
+                    Tidak dibatasi
+                  {% endif %}
+                </span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">Media Virtual</span>
+                <span class="spec-divider">:</span>
+                <span class="spec-val">Zoom Meeting / Google Meet</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">Penyelenggara</span>
+                <span class="spec-divider">:</span>
+                <span class="spec-val">{{ webname|default:"ThesisStore" }} Academy</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PELATIHAN TERKAIT LAINNYA -->
+{% if related_courses %}
+<section style="background-color: #fafbfc; border-top: 1px solid #f1f5f9; padding: 3.5rem 0;">
+  <div class="apb-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h2 style="font-size: 1.4rem; font-weight: 700; color: #1e293b; margin: 0 0 0.25rem 0;">Pelatihan &amp; Course Lainnya</h2>
+        <p style="font-size: 0.9rem; color: #64748b; margin: 0;">Program pengembangan akademik dan riset lainnya yang dapat Anda ikuti.</p>
+      </div>
+      <a href="{% url 'homepage' %}#pelatihan" style="color: #2c4cf4; text-decoration: none; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+        Lihat Semua <i class="ri-arrow-right-line"></i>
+      </a>
+    </div>
+
+    <div class="courses-showcase-grid">
+      {% for rc in related_courses %}
+        <article class="course-showcase-card" style="display: flex; flex-direction: column;">
+          <div class="course-showcase-thumb">
+            <a href="{{ rc.get_absolute_url }}" class="course-thumb-link">
+              {% if rc.thumbnail %}
+                <img src="{{ rc.thumbnail.url }}" alt="{{ rc.name }}" class="course-thumb-img" loading="lazy">
+              {% else %}
+                <div class="course-thumb-ph">
+                  <i class="ri-graduation-cap-line"></i>
+                  <span>{{ rc.get_course_type_display }}</span>
+                </div>
+              {% endif %}
+            </a>
+            <span class="course-badge-type">{{ rc.get_course_type_display }}</span>
+            <span class="course-badge-format">
+              {% if rc.format == 'online' %}<i class="ri-vidicon-line"></i> Online
+              {% elif rc.format == 'offline' %}<i class="ri-map-pin-2-line"></i> Offline
+              {% else %}<i class="ri-shuffle-line"></i> Hybrid{% endif %}
+            </span>
+          </div>
+
+          <div class="course-showcase-body">
+            <div class="course-showcase-meta">
+              <span class="meta-coaches">
+                <i class="ri-user-star-line"></i>
+                {% for coach in rc.coaches.all %}
+                  {{ coach.user.first_name|default:coach.user.username }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                  Instruktur ThesisEdu
+                {% endfor %}
+              </span>
+              {% if rc.start_date %}
+                <span class="meta-date"><i class="ri-calendar-line"></i> {{ rc.start_date|date:"d M Y" }}</span>
+              {% endif %}
+            </div>
+
+            <h3 class="course-showcase-title">
+              <a href="{{ rc.get_absolute_url }}">{{ rc.name }}</a>
+            </h3>
+
+            <p class="course-showcase-desc">
+              {{ rc.description|striptags|truncatewords:12 }}
+            </p>
+
+            <div class="course-showcase-footer">
+              <div class="course-price-wrap">
+                {% if rc.fee_type == 'free' or rc.price == 0 %}
+                  <span class="course-price-free">Gratis</span>
+                {% else %}
+                  <span class="price-val">Rp {{ rc.formatted_price }}</span>
+                {% endif %}
+              </div>
+              <a href="{{ rc.get_absolute_url }}" class="apb-btn apb-btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem; border-radius: 8px;">
+                Detail <i class="ri-arrow-right-line"></i>
+              </a>
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- =========================================================================
+     CSS DETAIL COURSE (Mengikuti Standar Desain ThesisStore)
+     ========================================================================= -->
+<style>
+/* Breadcrumb */
+.course-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+.course-breadcrumb a {
+  color: #475569;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.course-breadcrumb a:hover {
+  color: #2c4cf4;
+}
+.breadcrumb-separator {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+}
+.breadcrumb-badge {
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.breadcrumb-current {
+  color: #0f172a;
+  font-weight: 600;
+  max-width: 420px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 2-Column Grid */
+.course-detail-grid {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 3.5rem;
+  align-items: start;
+}
+@media (max-width: 1024px) {
+  .course-detail-grid {
+    grid-template-columns: 320px 1fr;
+    gap: 2rem;
+  }
+}
+@media (max-width: 868px) {
+  .course-detail-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+}
+
+/* Gallery / Poster Column */
+.course-gallery-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: sticky;
+  top: 90px;
+}
+.main-poster-wrapper {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+}
+.poster-aspect-box {
+  background: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.poster-aspect-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.poster-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #94a3b8;
+  height: 100%;
+}
+.poster-placeholder i {
+  font-size: 3.5rem;
+  color: #8c54fc;
+}
+.poster-placeholder .ph-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+.poster-placeholder .ph-sub {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+.discount-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
+  z-index: 3;
+}
+
+/* Side Box: Coaches & Benefits */
+.coaches-card-box,
+.benefits-card-box {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+.side-box-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 0.65rem;
+}
+.side-box-title i {
+  color: #2c4cf4;
+}
+
+/* Coaches List */
+.coaches-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.coach-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+.coach-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #f1f5f9;
+  border: 2px solid #e2e8f0;
+  flex-shrink: 0;
+}
+.coach-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.coach-avatar-ph {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 1.3rem;
+}
+.coach-info {
+  flex: 1;
+  min-width: 0;
+}
+.coach-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.coach-field {
+  font-size: 0.78rem;
+  color: #2c4cf4;
+  font-weight: 600;
+}
+.coach-meta {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+.coach-links {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+.coach-link-btn {
+  font-size: 0.7rem;
+  color: #475569;
+  background: #f1f5f9;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.coach-link-btn:hover {
+  background: #e2e8f0;
+  color: #2c4cf4;
+}
+
+/* Benefits List */
+.benefits-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.benefits-list li {
+  font-size: 0.85rem;
+  color: #334155;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.4;
+}
+.benefits-list li i {
+  color: #10b981;
+  font-size: 1rem;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+/* Right Column: Content Header */
+.course-title-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+.course-tags-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0.75rem;
+}
+.badge-course-type {
+  background: #2c4cf4;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.badge-course-format {
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.course-title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.35;
+  margin: 0 0 1rem 0;
+}
+.course-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.action-btn {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  color: #475569;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+.action-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+.action-btn.favorited i {
+  color: #ef4444;
+}
+
+/* Registration & Pricing Section */
+.registration-options-section {
+  margin-bottom: 2rem;
+}
+.sub-heading {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 1rem 0;
+}
+.registration-box-row {
+  display: flex;
+  gap: 1.5rem;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+.registration-card {
+  border: 2px solid #2c4cf4;
+  background: #f0f9ff;
+  border-radius: 10px;
+  padding: 1.25rem 1.75rem;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.registration-card-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #0369a1;
+  margin-bottom: 4px;
+}
+.registration-card-price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.price-main {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #2c4cf4;
+}
+.price-main.free-label {
+  color: #10b981;
+}
+.price-sub {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+.price-strike {
+  font-size: 0.95rem;
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+.registration-cta-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  justify-content: center;
+  min-width: 260px;
+}
+.btn-buy-wa {
+  background: #25d366;
+  color: #ffffff;
+  padding: 0.85rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+  transition: all 0.2s ease;
+}
+.btn-buy-wa:hover {
+  background: #20ba59;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 211, 102, 0.4);
+}
+.registration-status-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+}
+.stock-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  color: #059669;
+}
+.deadline-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #e11d48;
+  font-weight: 600;
+}
+
+/* Callout Banner */
+.info-callout-banner {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.info-callout-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+.info-callout-desc {
+  font-size: 0.85rem;
+  color: #475569;
+  line-height: 1.45;
+}
+.info-callout-badges {
+  display: flex;
+  gap: 8px;
+}
+.badge-item {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #334155;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Agenda Section */
+.course-agenda-section {
+  margin-bottom: 2.5rem;
+}
+.agenda-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+.agenda-count-badge {
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.agenda-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.agenda-timeline-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.agenda-marker {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #2c4cf4;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(44, 76, 244, 0.3);
+}
+.agenda-content-card {
+  flex: 1;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+}
+.agenda-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.4rem;
+}
+.agenda-card-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+.agenda-jp-badge {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.agenda-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+.agenda-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.agenda-meta-item.pengajar-tag {
+  color: #2c4cf4;
+  font-weight: 600;
+}
+.agenda-empty-box {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  padding: 2rem;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+.agenda-empty-box i {
+  font-size: 2rem;
+  color: #94a3b8;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+/* Description Section (Collapsible) */
+.course-description-section {
+  margin-bottom: 2.5rem;
+}
+.desc-content-wrapper {
+  position: relative;
+  overflow: hidden;
+  transition: max-height 0.35s ease;
+}
+.desc-content-wrapper.collapsed {
+  max-height: 220px;
+}
+.desc-fade-overlay {
+  display: none;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
+}
+.desc-content-wrapper.collapsed .desc-fade-overlay {
+  display: block;
+}
+.desc-text {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #334155;
+}
+.btn-toggle-desc {
+  background: none;
+  border: none;
+  color: #2c4cf4;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 0.5rem 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 0.5rem;
+}
+
+/* Specs Table */
+.course-spec-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+.spec-table-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem 2rem;
+}
+@media (max-width: 680px) {
+  .spec-table-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+.spec-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.spec-row {
+  display: grid;
+  grid-template-columns: 140px 10px 1fr;
+  font-size: 0.88rem;
+  align-items: baseline;
+}
+.spec-label {
+  color: #64748b;
+  font-weight: 500;
+}
+.spec-divider {
+  color: #94a3b8;
+}
+.spec-val {
+  color: #0f172a;
+  font-weight: 600;
+}
+</style>
+
+<!-- SCRIPT UNTUK INTERAKSI DETAIL -->
+<script>
+function toggleDescription() {
+  var wrapper = document.getElementById('descWrapper');
+  var btn = document.getElementById('btnToggleDesc');
+  var isCollapsed = wrapper.classList.contains('collapsed');
+
+  if (isCollapsed) {
+    wrapper.classList.remove('collapsed');
+    btn.querySelector('span').innerText = 'Tutup deskripsi';
+    btn.querySelector('i').className = 'ri-arrow-up-s-line';
+  } else {
+    wrapper.classList.add('collapsed');
+    btn.querySelector('span').innerText = 'Baca selengkapnya';
+    btn.querySelector('i').className = 'ri-arrow-down-s-line';
+  }
+}
+
+function toggleWishlist() {
+  var btn = document.getElementById('btnWishlist');
+  var icon = document.getElementById('wishlistIcon');
+  if (btn.classList.contains('favorited')) {
+    btn.classList.remove('favorited');
+    icon.className = 'ri-heart-line';
+  } else {
+    btn.classList.add('favorited');
+    icon.className = 'ri-heart-fill';
+  }
+}
+
+function shareCourse() {
+  if (navigator.share) {
+    navigator.share({
+      title: '{{ course.name|escapejs }}',
+      text: 'Ikuti program {{ course.get_course_type_display|escapejs }} di ThesisStore: {{ course.name|escapejs }}',
+      url: window.location.href,
+    }).catch(function(err) {
+      console.log('Error sharing:', err);
+    });
+  } else {
+    navigator.clipboard.writeText(window.location.href).then(function() {
+      alert('Tautan halaman kursus berhasil disalin ke clipboard!');
+    });
+  }
+}
+</script>
+{% endblock content %}
+

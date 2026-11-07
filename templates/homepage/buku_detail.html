@@ -220,7 +220,7 @@
         <h2 style="font-size: 1.4rem; font-weight: 700; color: #1e293b; margin: 0 0 0.25rem 0;">Buku Terkait Lainnya</h2>
         <p style="font-size: 0.9rem; color: #64748b; margin: 0;">Rekomendasi buku lainnya dalam kategori serupa.</p>
       </div>
-      <a href="{% url 'homepage' %}#katalog-buku" style="color: #0284c7; text-decoration: none; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+      <a href="{% url 'homepage' %}#katalog-buku" style="color: #2c4cf4; text-decoration: none; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
         Lihat Semua <i class="ri-arrow-right-line"></i>
       </a>
     </div>
@@ -270,7 +270,7 @@
             </p>
 
             <div style="margin-top: auto; padding-top: 0.75rem; border-top: 1px solid var(--apb-border-subtle); display: flex; align-items: center; justify-content: space-between;">
-              <span style="font-size: 1.1rem; font-weight: 800; color: #0284c7;">
+              <span style="font-size: 1.1rem; font-weight: 800; color: #2c4cf4;">
                 Rp {% if rb.harga_potongan %}{{ rb.harga_potongan|floatformat:0 }}{% else %}{{ rb.harga|floatformat:0 }}{% endif %}
               </span>
               <a href="{{ rb.get_absolute_url }}" class="apb-article-readmore">
@@ -299,7 +299,7 @@
   transition: color 0.2s ease;
 }
 .book-breadcrumb a:hover {
-  color: #0284c7;
+  color: #2c4cf4;
 }
 .breadcrumb-separator {
   color: #94a3b8;
@@ -432,8 +432,8 @@
   border-color: #94a3b8;
 }
 .thumb-item.active {
-  border-color: #0284c7;
-  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.25);
+  border-color: #2c4cf4;
+  box-shadow: 0 0 0 2px rgba(44, 76, 244, 0.25);
 }
 .thumb-progress-bar {
   height: 3px;
@@ -445,7 +445,7 @@
 .thumb-progress-active {
   height: 100%;
   width: 30%;
-  background: #0284c7;
+  background: #2c4cf4;
   border-radius: 3px;
   transition: width 0.3s ease;
 }
@@ -495,7 +495,7 @@
 }
 .action-btn:hover {
   background: #f1f5f9;
-  color: #0284c7;
+  color: #2c4cf4;
 }
 .action-btn i {
   font-size: 1.15rem;
@@ -638,7 +638,7 @@
   gap: 5px;
   font-size: 0.78rem;
   font-weight: 600;
-  color: #0284c7;
+  color: #2c4cf4;
   background: #e0f2fe;
   padding: 4px 10px;
   border-radius: 6px;
@@ -712,7 +712,7 @@
   transition: color 0.15s ease;
 }
 .btn-toggle-desc:hover {
-  color: #0284c7;
+  color: #2c4cf4;
 }
 
 /* Metadata Key-Value Table */

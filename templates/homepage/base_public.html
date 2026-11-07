@@ -36,39 +36,38 @@
               Profil <i class="ri-arrow-down-s-line dropdown-icon"></i>
             </a>
             <div class="apb-dropdown">
-              <a href="{% url 'page_detail' 'sejarah' %}" class="apb-dropdown-item">Sejarah</a>
-              <a href="{% url 'page_detail' 'visi-misi' %}" class="apb-dropdown-item">Visi & Misi</a>
-              <a href="{% url 'page_detail' 'tujuan-fungsi-tugas' %}" class="apb-dropdown-item">Tujuan,Fungsi,Tugas</a>
-              <a href="{% url 'struktur_organisasi' %}" class="apb-dropdown-item">Struktur Organisasi</a>
+              <a href="{% url 'page_detail' 'tentang-kami' %}" class="apb-dropdown-item">Tentang Kami</a>
+              <a href="{% url 'page_detail' 'team' %}" class="apb-dropdown-item">Team</a>
             </div>
           </li>
            <li class="apb-nav-item">
-            <a href="{% url 'login' %}" class="apb-nav-link">Keanggotaan</a>
+            <a href="{% url 'katalog_pelatihan' %}" class="apb-nav-link">Pelatihan &amp; Course</a>
           </li>
-          <!-- Edukasi & Artikel -->
-          <li class="apb-nav-item">
-            <a href="{% url 'article_list' %}" class="apb-nav-link">Berita</a>
-          </li>
-
            <li class="apb-nav-item">
-            <a href="{% url 'aktivitas_list' %}" class="apb-nav-link">Aktivitas</a>
-          </li>
-
-          <li class="apb-nav-item">
-            <a href="{% url 'contact_page' %}" class="apb-nav-link">Hubungi Kami</a>
-          </li>
-          <!-- Dashboard Dropdown -->
-          <li class="apb-nav-item">
-            <a href="{% url 'public_dashboard_sebaran' %}" class="apb-nav-link">
-              Statistik <i class="ri-arrow-down-s-line dropdown-icon"></i>
+            <a href="javascript:void(0);" class="apb-nav-link">
+              Journal &amp; Article <i class="ri-arrow-down-s-line dropdown-icon"></i>
             </a>
-            <div class="apb-dropdown">
-              <a href="{% url 'public_dashboard_sebaran' %}" class="apb-dropdown-item">Sebaran Wilayah</a>
-              <a href="{% url 'public_dashboard_anggota' %}" class="apb-dropdown-item">Anggota Individu</a>
-              <a href="{% url 'public_dashboard_institusi' %}" class="apb-dropdown-item">Anggota Institusi</a>
+            <div class="apb-dropdown" style="max-height: 420px; overflow-y: auto;">
+              <a href="{% url 'journal_list' %}" class="apb-dropdown-item" style="color: var(--apb-primary); font-weight: 700; background: #eef2ff;">Direktori Jurnal Ilmiah
+              </a>
+              <div style="border-top: 1px solid var(--apb-border); margin: 0.35rem 0;"></div>
+              <a href="https://journal.thesisedu.org/index.php/BENAR" target="_blank" rel="noopener noreferrer" class="apb-dropdown-item">Journal BENAR</a>
+              <a href="https://journal.thesisedu.org/index.php/GAWI" target="_blank" rel="noopener noreferrer" class="apb-dropdown-item">Journal GAWI</a>
+              <a href="https://journal.thesisedu.org/index.php/JEDTI" target="_blank" rel="noopener noreferrer" class="apb-dropdown-item">Journal JEDTI</a>
+              <a href="https://journal.thesisedu.org/index.php/JNADA" target="_blank" rel="noopener noreferrer" class="apb-dropdown-item">Journal JNADA</a>
+              <a href="https://journal.thesisedu.org/index.php/JTANI" target="_blank" rel="noopener noreferrer" class="apb-dropdown-item">Journal JTANI</a>
+              <a href="https://journal.thesisedu.org/index.php/JUMBA" target="_blank" rel="noopener noreferrer" class="apb-dropdown-item">Journal JUMBA</a>
+              <a href="https://journal.thesisedu.org/index.php/TheMAS" target="_blank" rel="noopener noreferrer" class="apb-dropdown-item">Journal TheMAS</a>
+              <a href="https://journal.thesisedu.org/index.php/TJIEK" target="_blank" rel="noopener noreferrer" class="apb-dropdown-item">Journal TJIEK</a>
+              <div style="border-top: 1px solid var(--apb-border); margin: 0.35rem 0;"></div>
+              <a href="{% url 'article_list' %}" class="apb-dropdown-item" style="color: var(--apb-primary); font-weight: 600;">
+                <i class="ri-newspaper-line" style="margin-right: 4px;"></i> Artikel &amp; Riset
+              </a>
             </div>
           </li>
-          
+          <li class="apb-nav-item">
+            <a href="{% url 'contact_page' %}" class="apb-nav-link">Contact</a>
+          </li>
         </ul>
 
         <!-- Action / CTA Buttons -->
@@ -102,16 +101,11 @@
 <!-- Mobile Drawer (Placed outside header to avoid backdrop-filter stacking context trap) -->
 <div class="apb-mobile-menu" id="mobileMenu">
   <a href="{% url 'homepage' %}" class="apb-mobile-link">Beranda</a>
-  <a href="{% url 'homepage' %}#tentang" class="apb-mobile-link">Profil Organisasi</a>
-  <a href="{% url 'homepage' %}#visi-misi" class="apb-mobile-link">Visi & Misi</a>
-  <a href="{% url 'homepage' %}#tujuan" class="apb-mobile-link">Tujuan,Fungsi,Tugas</a>
+  <a href="{% url 'journal_list' %}" class="apb-mobile-link">Direktori Jurnal Ilmiah</a>
+  <a href="{% url 'katalog_pelatihan' %}" class="apb-mobile-link">Pelatihan &amp; Course</a>
+  <a href="https://journal.thesisedu.org" target="_blank" rel="noopener noreferrer" class="apb-mobile-link">Portal E-Journal (OJS)</a>
+  <a href="{% url 'article_list' %}" class="apb-mobile-link">Artikel &amp; Riset</a>
   <a href="{% url 'struktur_organisasi' %}" class="apb-mobile-link">Struktur Organisasi</a>
-  <a href="{% url 'public_dashboard_sebaran' %}" class="apb-mobile-link">Dashboard Sebaran</a>
-  <a href="{% url 'public_dashboard_anggota' %}" class="apb-mobile-link">Anggota Individu</a>
-  <a href="{% url 'public_dashboard_institusi' %}" class="apb-mobile-link">Anggota Institusi</a>
-  <a href="{% url 'login' %}" class="apb-mobile-link">Keanggotaan</a>
-  <a href="{% url 'aktivitas_list' %}" class="apb-mobile-link">Aktivitas</a>
-  <a href="{% url 'article_list' %}" class="apb-mobile-link">Berita</a>
   <a href="{% url 'contact_page' %}" class="apb-mobile-link">Kontak</a>
   <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
     {% if user.is_authenticated %}
@@ -142,7 +136,7 @@
             </div>
             <ul class="apb-footer-nav-list">
               <li><a href="{% url 'homepage' %}" class="apb-footer-nav-link">Home</a></li>
-              <li><a href="{% url 'page_detail' 'sejarah' %}" class="apb-footer-nav-link">Sejarah</a></li>
+              <li><a href="{% url 'page_detail' 'tentang-kami' %}" class="apb-footer-nav-link">Tentang Kami</a></li>
               <li><a href="{% url 'page_detail' 'visi-misi' %}" class="apb-footer-nav-link">Visi & Misi</a></li>
               <li><a href="{% url 'page_detail' 'tujuan-fungsi-tugas' %}" class="apb-footer-nav-link">Tujuan, Fungsi, & Tugas</a></li>
               <li><a href="{% url 'struktur_organisasi' %}" class="apb-footer-nav-link">Struktur Organisasi</a></li>

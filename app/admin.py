@@ -1,3 +1,4 @@
+from app.models import NoSuratThesis
 from django.contrib import admin
 from .models import (
     UserPengguna,
@@ -6,7 +7,19 @@ from .models import (
     BidangPenelitian,
     CategoryBooks,
     Books,
-    MediaBooks
+    MediaBooks,
+    KerjaSama,
+    WebSetting,
+    HeroSlide,
+    DokumentasiArticle,
+    DokumentasiPage,
+    Course,
+    CourseAgenda,
+    Article,
+    Page,
+    Category,
+    JurnalMaster,
+    KodeSurat
 )
 
 admin.site.register(CategoryBooks)
@@ -16,3 +29,17 @@ admin.site.register(UserPengguna)
 admin.site.register(UserAdmin)
 admin.site.register(Provinsi)
 admin.site.register(BidangPenelitian)
+admin.site.register(KerjaSama)
+admin.site.register(WebSetting)
+admin.site.register(HeroSlide)
+admin.site.register(DokumentasiArticle)
+admin.site.register(DokumentasiPage)
+admin.site.register(Course)
+admin.site.register(CourseAgenda)
+admin.site.register(Article)
+admin.site.register(Page)
+admin.site.register(Category)
+admin.site.register(JurnalMaster)
+admin.site.register(KodeSurat)
+admin.site.register(NoSuratThesis)
+

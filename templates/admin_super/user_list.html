@@ -1,0 +1,198 @@
+{% extends "admin_super/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content">
+    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; border-bottom: 2px solid #f0f0f0; padding-bottom: 14px;">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    Kelola Akun Pengguna &amp; Admin
+                </h3>
+                <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                    Daftar seluruh akun pengguna/anggota dan administrator pada platform ThesisStore.
+                </p>
+            </div>
+
+            <!-- Role Switcher Tabs -->
+            <div style="display: flex; gap: 8px;">
+                <a href="{% url 'app:user_list' %}?role=Pengguna" class="btn {% if role == 'Pengguna' %}primary{% else %}secondary{% endif %}" style="font-size: 13px;">
+                    <i class="ri-user-line"></i> Pengguna ({{ total_pengguna }})
+                </a>
+                <a href="{% url 'app:user_list' %}?role=Admin" class="btn {% if role == 'Admin' %}primary{% else %}secondary{% endif %}" style="font-size: 13px;">
+                    <i class="ri-shield-user-line"></i> Administrator ({{ total_admin }})
+                </a>
+            </div>
+        </div>
+
+        <div class="table-responsive" style="margin-top: 15px;">
+            <table id="layananTable" class="student-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center;">No</th>
+                        <th>Pengguna</th>
+                        <th>Email</th>
+                        <th style="white-space: nowrap;">Nomor Telepon</th>
+                        {% if role == 'Pengguna' %}
+                            <th>Domisili</th>
+                        {% else %}
+                            <th>Jenis Kelamin</th>
+                        {% endif %}
+                        <th style="width: 80px; text-align: center;">Status</th>
+                        <th style="width: 120px; text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in user_data %}
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle;">{{ forloop.counter }}</td>
+                        
+                        <!-- Kolom Info Pengguna -->
+                        <td style="vertical-align: middle;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div>
+                                    <strong style="color: #1e293b; font-size: 14px;">
+                                        {% if role == 'Pengguna' %}
+                                            {{ item.user.first_name }}
+                                        {% else %}
+                                            {{ item.username.first_name }}
+                                        {% endif %}
+                                    </strong>
+                                    <div style="font-size: 12px; color: #64748b; text-transform: lowercase;">
+                                        @{% if role == 'Pengguna' %}{{ item.user.username }}{% else %}{{ item.username.username }}{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Kolom Kontak -->
+                        <td style="vertical-align: middle; font-size: 13px; text-transform: lowercase;">
+                                {% if role == 'Pengguna' %}
+                                    {{ item.user.email|default:"-" }}
+                                {% else %}
+                                    {{ item.username.email|default:"-" }}
+                                {% endif %}
+                        </td>
+                        <td style="white-space: nowrap; vertical-align: middle;">{{ item.telp|default:"-" }}</td>
+
+                        {% if role == 'Pengguna' %}
+                            <td style="vertical-align: middle; font-size: 12px; color: #475569;">
+                                <div><i class="ri-map-pin-line"></i> {{ item.provinsi_anggota.nama_provinsi|default:"-" }}</div>
+                                {% if item.alamat %}
+                                    <div style="font-size: 11px; color: #94a3b8; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ item.alamat }}">{{ item.alamat }}</div>
+                                {% endif %}
+                            </td>
+                        {% else %}
+                            <td style="vertical-align: middle; font-size: 13px;">
+                                {{ item.gender|default:"-" }}
+                            </td>
+                        {% endif %}
+
+                        <!-- Status Akun -->
+                        <td style="text-align: center; vertical-align: middle;">
+                            {% if role == 'Pengguna' %}
+                                {% if item.user.is_active %}
+                                    <span class="grade-badge a" style="background-color: #27ae60;">Aktif</span>
+                                {% else %}
+                                    <span class="grade-badge d" style="background-color: #e74c3c;">Nonaktif</span>
+                                {% endif %}
+                            {% else %}
+                                {% if item.username.is_active %}
+                                    <span class="grade-badge a" style="background-color: #27ae60;">Aktif</span>
+                                {% else %}
+                                    <span class="grade-badge d" style="background-color: #e74c3c;">Nonaktif</span>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; vertical-align: middle; white-space: nowrap;">
+                            {% if role == 'Pengguna' %}
+                                <a href="{% url 'app:user_edit' id=item.user.username role='Pengguna' %}" class="btn warning small" title="Edit Data Pengguna">
+                                    <i class="ri-edit-line"></i>
+                                </a>
+                                <button type="button" class="btn secondary small" title="Ganti Password" onclick="openPasswordModal('{{ item.user.id }}', '{{ item.user.username|escapejs }}')">
+                                    <i class="ri-key-line"></i>
+                                </button>
+                            {% else %}
+                                <a href="{% url 'app:user_edit' id=item.username.username role='Admin' %}" class="btn warning small" title="Edit Data Admin">
+                                    <i class="ri-edit-line"></i>
+                                </a>
+                                <button type="button" class="btn secondary small" title="Ganti Password" onclick="openPasswordModal('{{ item.username.id }}', '{{ item.username.username|escapejs }}')">
+                                    <i class="ri-key-line"></i>
+                                </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #888;">
+                            <i class="ri-user-search-line" style="font-size: 36px; display: block; margin-bottom: 10px; color: #bdc3c7;"></i>
+                            Belum ada data {{ role }} yang terdaftar.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL GANTI PASSWORD -->
+<div id="modal-password" class="modal-edit" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999;">
+    <div class="modal-content-edit" style="background: #fff; border-radius: 12px; padding: 24px; max-width: 480px; width: 92%; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+        <span class="close" onclick="closePasswordModal()" style="position: absolute; top: 16px; right: 20px; font-size: 24px; cursor: pointer; color: #7f8c8d;">&times;</span>
+        <h3 style="font-size: 16px; margin: 0 0 8px 0; color: #2c3e50;">
+            <i class="ri-key-line" style="color: #2c4cf4;"></i> Ganti Password Akun
+        </h3>
+        <p style="font-size: 13px; color: #64748b; margin: 0 0 16px 0;">
+            Ganti password untuk pengguna: <strong id="modal-target-username" style="color: #2c4cf4;"></strong>
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="user_id" id="modal_user_id">
+            
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label style="font-weight: 600; font-size: 13px; margin-bottom: 5px; display: block;">Password Baru <span style="color:red;">*</span></label>
+                <input type="password" name="new_password" class="form-control" placeholder="Minimal 6 karakter" required minlength="6">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="font-weight: 600; font-size: 13px; margin-bottom: 5px; display: block;">Konfirmasi Password Baru <span style="color:red;">*</span></label>
+                <input type="password" name="confirm_password" class="form-control" placeholder="Ketik ulang password baru" required minlength="6">
+            </div>
+
+            <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 14px;">
+                <button type="button" class="btn secondary" onclick="closePasswordModal()">Batal</button>
+                <button type="submit" class="btn primary">
+                    <i class="ri-save-line"></i> Perbarui Password
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openPasswordModal(userId, username) {
+    document.getElementById('modal_user_id').value = userId;
+    document.getElementById('modal-target-username').innerText = username;
+    const modal = document.getElementById('modal-password');
+    modal.style.display = 'flex';
+}
+
+function closePasswordModal() {
+    const modal = document.getElementById('modal-password');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('modal-password');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closePasswordModal();
+        });
+    }
+});
+</script>
+{% endblock content1 %}
+

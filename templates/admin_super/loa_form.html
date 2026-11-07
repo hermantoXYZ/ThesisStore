@@ -1,0 +1,154 @@
+{% extends "admin_super/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content">
+    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+        <div style="margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    {% if is_edit %}Edit LOA: {{ loa.no_surat }}{% else %}Penerbitan LOA Jurnal Baru{% endif %}
+                </h3>
+                <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                    Lengkapi nomor surat, data penulis, judul artikel ilmiah, target jurnal, serta periode terbit.
+                </p>
+            </div>
+            <a href="{% url 'app:admin_loa_jurnal_list' %}" class="btn secondary">
+                <i class="ri-arrow-left-line"></i> Kembali ke Daftar
+            </a>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- SECTION 1: NOMOR SURAT & JURNAL -->
+            <h4 style="font-size: 15px; font-weight: 600; color: #2c4cf4; margin-bottom: 15px; border-left: 4px solid #2c4cf4; padding-left: 10px;">
+                1. Registrasi &amp; Target Jurnal
+            </h4>
+
+            <div class="form-row" style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <div class="form-group" style="flex: 1; min-width: 250px; margin-bottom: 16px;">
+                    <label for="id_no_surat" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Nomor Surat LOA <span style="font-size: 12px; font-weight: 400; color: #64748b;">(Otomatis dibuat jika dikosongkan)</span>
+                    </label>
+                    {{ form.no_surat }}
+                    {% if form.no_surat.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.no_surat.errors.0 }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 250px; margin-bottom: 16px;">
+                    <label for="id_nama_jurnal" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Nama Jurnal Ilmiah <span style="color: red;">*</span>
+                    </label>
+                    {{ form.nama_jurnal }}
+                    {% if form.nama_jurnal.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.nama_jurnal.errors.0 }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 16px;">
+                    <label for="id_id_naskah" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        ID Naskah / Submission ID <span style="color: red;">*</span>
+                    </label>
+                    {{ form.id_naskah }}
+                    {% if form.id_naskah.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.id_naskah.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- SECTION 2: PENULIS & ARTIKEL -->
+            <h4 style="font-size: 15px; font-weight: 600; color: #2c4cf4; margin-top: 20px; margin-bottom: 15px; border-left: 4px solid #2c4cf4; padding-left: 10px;">
+                2. Data Naskah Ilmiah
+            </h4>
+
+            <div class="form-row" style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <div class="form-group" style="flex: 1; min-width: 100%; margin-bottom: 16px;">
+                    <label for="id_penulis" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Nama-Nama Penulis (Authors) <span style="color: red;">*</span>
+                    </label>
+                    {{ form.penulis }}
+                    <small style="color: #64748b; display: block; margin-top: 4px;">Contoh: Dr. Andi Hermanto, S.Kom., M.T., Budi Santoso, Siti Aminah</small>
+                    {% if form.penulis.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.penulis.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row" style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <div class="form-group" style="flex: 1; min-width: 100%; margin-bottom: 16px;">
+                    <label for="id_judul_naskah" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Judul Lengkap Naskah / Paper <span style="color: red;">*</span>
+                    </label>
+                    {{ form.judul_naskah }}
+                    {% if form.judul_naskah.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.judul_naskah.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- SECTION 3: RENCANA PENERBITAN -->
+            <h4 style="font-size: 15px; font-weight: 600; color: #2c4cf4; margin-top: 20px; margin-bottom: 15px; border-left: 4px solid #2c4cf4; padding-left: 10px;">
+                3. Jadwal &amp; Status Penerbitan
+            </h4>
+
+            <div class="form-row" style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <div class="form-group" style="flex: 1; min-width: 140px; margin-bottom: 16px;">
+                    <label for="id_volume" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Volume (Vol.)
+                    </label>
+                    {{ form.volume }}
+                    {% if form.volume.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.volume.errors.0 }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 140px; margin-bottom: 16px;">
+                    <label for="id_nomor_jurnal" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Nomor (No.)
+                    </label>
+                    {{ form.nomor_jurnal }}
+                    {% if form.nomor_jurnal.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.nomor_jurnal.errors.0 }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 180px; margin-bottom: 16px;">
+                    <label for="id_periode_bulan" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Periode Bulan
+                    </label>
+                    {{ form.periode_bulan }}
+                    {% if form.periode_bulan.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.periode_bulan.errors.0 }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 140px; margin-bottom: 16px;">
+                    <label for="id_periode_tahun" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Tahun Terbit
+                    </label>
+                    {{ form.periode_tahun }}
+                    {% if form.periode_tahun.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.periode_tahun.errors.0 }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 180px; margin-bottom: 16px;">
+                    <label for="id_status" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Keputusan Status
+                    </label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.status.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- BUTTONS -->
+            <div style="display: flex; gap: 12px; margin-top: 30px; border-top: 1px solid #f0f0f0; padding-top: 20px;">
+                <button type="submit" class="btn primary" style="background: #2c4cf4; color: #fff; padding: 10px 24px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="ri-save-line"></i> {% if is_edit %}Simpan Perubahan LOA{% else %}Terbitkan LOA{% endif %}
+                </button>
+                <a href="{% url 'app:admin_loa_jurnal_list' %}" class="btn secondary" style="padding: 10px 20px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                    Batal
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content1 %}
+

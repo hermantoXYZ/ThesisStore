@@ -40,7 +40,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 14px;">
             <div>
                 <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
-                    <i class="ri-article-line" style="color: #1d84c6; margin-right: 6px;"></i>Daftar Artikel & Berita
+                    <i class="ri-article-line" style="color: #2c4cf4; margin-right: 6px;"></i>Daftar Artikel & Berita
                 </h3>
                 <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
                     Kelola artikel, berita, dan pengumuman untuk website.
@@ -124,7 +124,7 @@
                         </td>
                         <td style="vertical-align: middle;">
                             {% if item.category %}
-                                <span class="badge" style="display: inline-block; background: #e8f4fd; color: #1d84c6; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">
+                                <span class="badge" style="display: inline-block; background: #e8f4fd; color: #2c4cf4; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">
                                     {{ item.category.name }}
                                 </span>
                             {% else %}
@@ -159,7 +159,7 @@
                     <tr>
                         <td colspan="8" style="text-align: center; padding: 30px; color: #999;">
                             <i class="ri-article-line" style="font-size: 32px; display: block; margin-bottom: 8px; color: #ccc;"></i>
-                            Belum ada artikel ditemukan. <a href="{% url 'app:admin_article_create' %}" style="color: #1d84c6; text-decoration: underline;">Buat artikel baru sekarang</a>.
+                            Belum ada artikel ditemukan. <a href="{% url 'app:admin_article_create' %}" style="color: #2c4cf4; text-decoration: underline;">Buat artikel baru sekarang</a>.
                         </td>
                     </tr>
                     {% endfor %}

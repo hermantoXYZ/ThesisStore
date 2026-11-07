@@ -9,7 +9,7 @@
         <div style="margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <div>
                 <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
-                    <i class="{% if is_edit %}ri-edit-line{% else %}ri-add-circle-line{% endif %}" style="color: #1d84c6; margin-right: 6px;"></i>
+                    <i class="{% if is_edit %}ri-edit-line{% else %}ri-add-circle-line{% endif %}" style="color: #2c4cf4; margin-right: 6px;"></i>
                     {% if is_edit %}Edit Hero Slide: {{ slide.judul|truncatewords:5 }}{% else %}Tambah Hero Slide Baru{% endif %}
                 </h3>
                 <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
@@ -32,7 +32,7 @@
             {% csrf_token %}
 
             <!-- SECTION 1: KONTEN TEKS SLIDE -->
-            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+            <h4 style="font-size: 15px; font-weight: 600; color: #2c4cf4; margin-bottom: 15px; border-left: 4px solid #2c4cf4; padding-left: 10px;">
                 1. Teks & Judul Slide
             </h4>
 
@@ -102,7 +102,7 @@
             </div>
 
             <!-- SECTION 2: TOMBOL AKSI CTA -->
-            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-top: 24px; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+            <h4 style="font-size: 15px; font-weight: 600; color: #2c4cf4; margin-top: 24px; margin-bottom: 15px; border-left: 4px solid #2c4cf4; padding-left: 10px;">
                 2. Tombol Aksi (Call To Action)
             </h4>
 
@@ -133,13 +133,13 @@
             </div>
 
             <!-- SECTION 3: GAMBAR BANNER & URUTAN -->
-            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-top: 24px; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+            <h4 style="font-size: 15px; font-weight: 600; color: #2c4cf4; margin-top: 24px; margin-bottom: 15px; border-left: 4px solid #2c4cf4; padding-left: 10px;">
                 3. Banner Slide & Urutan
             </h4>
 
             <div style="padding: 18px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; margin-bottom: 20px;">
                 <p style="font-size: 14px; font-weight: 600; color: #334155; margin: 0 0 12px;">
-                    <i class="ri-image-line" style="color: #1d84c6;"></i> Banner Slide
+                    <i class="ri-image-line" style="color: #2c4cf4;"></i> Banner Slide
                     <span style="font-size: 12px; color: #7f8c8d; font-weight: 400;">(Pilih salah satu: Upload file atau masukkan URL eksternal)</span>
                 </p>
 

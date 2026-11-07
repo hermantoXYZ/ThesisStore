@@ -1,0 +1,97 @@
+{% extends "admin_super/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content">
+    <!-- STATS / HEADER INFO -->
+    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 2px solid #f0f0f0; padding-bottom: 14px;">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    Tata Kelola Nomor Surat Keluar
+                </h3>
+                <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                    Pencatatan penomoran surat resmi keluar (Surat Tugas, SK, LOA, Undangan) Thesis Edukasi Nusantara.
+                </p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <a href="{% url 'app:admin_kode_surat_list' %}" class="btn secondary" style="display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="ri-barcode-line"></i> Master Kode Surat
+                </a>
+                <a href="{% url 'app:admin_surat_tambah' %}" class="btn primary">
+                    <i class="ri-add-line"></i> Ambil Nomor Surat Baru
+                </a>
+            </div>
+        </div>
+        <div class="table-responsive" style="margin-top: 15px;">
+            <table id="layananTable" class="student-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center;">No</th>
+                        <th style="white-space: nowrap;">Nomor &amp; Kode Surat</th>
+                        <th style="white-space: nowrap;">Perihal Surat</th>
+                        <th style="white-space: nowrap;">Tujuan / Penerima</th>
+                        <th style="white-space: nowrap;">Tanggal Terbit</th>
+                        <th style="white-space: nowrap;">Admin Pencatat</th>
+                        <th style="width: 110px; text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in surat_list %}
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle;">{{ forloop.counter }}</td>
+                        <td style="vertical-align: middle;">
+                            <div style="font-family: monospace; font-size: 14px; font-weight: 700; color: #2c4cf4;">
+                                {{ s.nomor }}/{{ s.kode }}/{{ s.tahun }}
+                            </div>
+                            <div style="font-size: 11px; color: #8c54fc; margin-top: 2px;">
+                                Kode: <strong>{{ s.kode }}</strong> &bull; No: <strong>#{{ s.nomor }}</strong>
+                            </div>
+                        </td>
+                        <td style="vertical-align: middle; max-width: 300px; white-space: normal;">
+                            <div style="font-weight: 600; color: #1e293b; font-size: 13px; line-height: 1.4;">
+                                {{ s.perihal }}
+                            </div>
+                        </td>
+                        <td style="vertical-align: middle; font-size: 13px; color: #334155;">
+                          {{ s.tujuan }}
+                        </td>
+                        <td style="vertical-align: middle; font-size: 12px; color: #64748b;">
+                            <div>{{ s.date_in|date:"d M Y" }}</div>
+                            <div style="font-size: 11px; color: #94a3b8;">{{ s.date_in|date:"H:i" }} WIB</div>
+                        </td>
+                        <td style="vertical-align: middle; font-size: 12px; color: #475569;">
+                            {% if s.adminp %}
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <i class="ri-user-star-line" style="color: #2c4cf4;"></i>
+                                    <span>{{ s.adminp.first_name|default:s.adminp.username }}</span>
+                                </div>
+                            {% else %}
+                                <span style="color: #94a3b8;">-</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; vertical-align: middle;">
+                            <div style="display: flex; gap: 6px; justify-content: center;">
+                                <a href="{% url 'app:admin_surat_edit' s.id %}" class="btn info small" title="Edit Surat" >
+                                    <i class="ri-edit-line"></i>
+                                </a>
+                                <a href="{% url 'app:admin_surat_hapus' s.id %}" class="btn danger small" title="Hapus Surat" onclick="return confirm('Apakah Anda yakin ingin menghapus nomor surat &quot;{{ s.nomor }}/{{ s.kode }}/{{ s.tahun }}&quot;?');" >
+                                    <i class="ri-delete-bin-line"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">
+                            <i class="ri-mail-send-line" style="font-size: 48px; display: block; margin-bottom: 10px; color: #cbd5e1;"></i>
+                            Belum ada nomor surat keluar yang tercatat untuk tahun ini. Silakan klik tombol <strong>Ambil Nomor Surat Baru</strong>.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock content1 %}
+

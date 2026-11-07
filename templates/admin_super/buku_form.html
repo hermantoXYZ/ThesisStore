@@ -26,7 +26,7 @@
             {% csrf_token %}
 
             <!-- SECTION 1: INFORMASI UTAMA -->
-            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+            <h4 style="font-size: 15px; font-weight: 600; color: #2c4cf4; margin-bottom: 15px; border-left: 4px solid #2c4cf4; padding-left: 10px;">
                 1. Informasi Utama
             </h4>
 
@@ -88,7 +88,7 @@
             </div>
 
             <!-- SECTION 2: HARGA, STOK & STATUS -->
-            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-top: 20px; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+            <h4 style="font-size: 15px; font-weight: 600; color: #2c4cf4; margin-top: 20px; margin-bottom: 15px; border-left: 4px solid #2c4cf4; padding-left: 10px;">
                 2. Harga, Stok & Status
             </h4>
 
@@ -132,7 +132,7 @@
             </div>
 
             <!-- SECTION 3: SPESIFIKASI BUKU -->
-            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-top: 20px; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+            <h4 style="font-size: 15px; font-weight: 600; color: #2c4cf4; margin-top: 20px; margin-bottom: 15px; border-left: 4px solid #2c4cf4; padding-left: 10px;">
                 3. Spesifikasi Buku (Opsional)
             </h4>
 
@@ -170,7 +170,7 @@
             </div>
 
             <!-- SECTION 4: MEDIA & SAMPUL -->
-            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-top: 20px; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+            <h4 style="font-size: 15px; font-weight: 600; color: #2c4cf4; margin-top: 20px; margin-bottom: 15px; border-left: 4px solid #2c4cf4; padding-left: 10px;">
                 4. Foto / Sampul Buku
             </h4>
 
@@ -178,7 +178,7 @@
                 <label for="id_featured_image" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
                     <span>Gambar Sampul Depan (Featured Image)</span>
                     {% if book and book.featured_image %}
-                        <a href="{{ book.featured_image.url }}" target="_blank" style="color: #1d84c6; font-size: 13px; text-decoration: underline; font-weight: normal;">
+                        <a href="{{ book.featured_image.url }}" target="_blank" style="color: #2c4cf4; font-size: 13px; text-decoration: underline; font-weight: normal;">
                             <i class="ri-external-link-line"></i> Lihat Gambar Saat Ini
                         </a>
                     {% endif %}

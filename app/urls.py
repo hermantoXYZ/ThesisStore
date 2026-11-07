@@ -2,11 +2,14 @@ from django.urls import path
 from . import views
 from . import views_admin
 from . import views_pengguna
-
+from . import views_admin_set
+from .view_print import print_loa_jurnal
 
 urlpatterns = [
     ###### ADMIN KEANGGOTAAN INDIVIDU ######   
-    path('profile/admin', views_admin.profile_admin, name='profile_admin'),
+    path('profile/admin', views_admin_set.profile_admin, name='profile_admin'),
+    path('user/list', views_admin_set.user_list, name='user_list'),      
+    path('user/edit/<str:id>/<str:role>/', views_admin_set.user_edit, name='user_edit'),
 
     ###### KATEGORI BUKU ######
     path('buku/kategori/', views_admin.kategori_buku_list, name='kategori_buku_list'),
@@ -52,6 +55,40 @@ urlpatterns = [
 
     ###### PENGATURAN WEBSITE ######
     path('admin/web-setting', views_admin.web_setting_view, name='admin_web_setting'),
+
+    ###### KELOLA COURSE / PELATIHAN ######
+    path('admin/course', views_admin.course_list, name='admin_course_list'),
+    path('admin/course/create', views_admin.course_create, name='admin_course_create'),
+    path('admin/course/<uuid:uuid>/edit', views_admin.course_edit, name='admin_course_edit'),
+    path('admin/course/<uuid:uuid>/delete', views_admin.course_delete, name='admin_course_delete'),
+    path('admin/course/<uuid:course_uuid>/agenda/add', views_admin.course_agenda_add, name='admin_course_agenda_add'),
+    path('admin/course/agenda/<int:agenda_id>/edit', views_admin.course_agenda_edit, name='admin_course_agenda_edit'),
+    path('admin/course/agenda/<int:agenda_id>/delete', views_admin.course_agenda_delete, name='admin_course_agenda_delete'),
+
+    ###### MASTER JURNAL ILMIAH ######
+    path('admin/jurnal', views_admin.jurnal_list, name='admin_jurnal_list'),
+    path('admin/jurnal/tambah', views_admin.jurnal_tambah, name='admin_jurnal_tambah'),
+    path('admin/jurnal/<uuid:uuid>/edit', views_admin.jurnal_edit, name='admin_jurnal_edit'),
+    path('admin/jurnal/<uuid:uuid>/hapus', views_admin.jurnal_hapus, name='admin_jurnal_hapus'),
+
+    ###### LOA JURNAL (LETTER OF ACCEPTANCE) ######
+    path('admin/loa', views_admin.loa_jurnal_list, name='admin_loa_jurnal_list'),
+    path('admin/loa/tambah', views_admin.loa_jurnal_tambah, name='admin_loa_jurnal_tambah'),
+    path('admin/loa/<uuid:uuid>/edit', views_admin.loa_jurnal_edit, name='admin_loa_jurnal_edit'),
+    path('admin/loa/<uuid:uuid>/hapus', views_admin.loa_jurnal_hapus, name='admin_loa_jurnal_hapus'),
+    path('admin/loa/<uuid:uuid>/print', print_loa_jurnal.loa_jurnal_print, name='admin_loa_jurnal_print'),
+    path('loa/<uuid:uuid>/print', print_loa_jurnal.loa_jurnal_print),
+
+    ###### TATA USAHA & NOMOR SURAT THESIS ######
+    path('admin/surat', views_admin.surat_list, name='admin_surat_list'),
+    path('admin/surat/tambah', views_admin.surat_tambah, name='admin_surat_tambah'),
+    path('admin/surat/<uuid:uuid>/edit', views_admin.surat_edit, name='admin_surat_edit'),
+    path('admin/surat/<uuid:uuid>/hapus', views_admin.surat_hapus, name='admin_surat_hapus'),
+
+    ###### KODE KLASIFIKASI SURAT ######
+    path('admin/kode-surat', views_admin.kode_surat_list, name='admin_kode_surat_list'),
+    path('admin/kode-surat/<uuid:uuid>/edit', views_admin.kode_surat_edit, name='admin_kode_surat_edit'),
+    path('admin/kode-surat/<uuid:uuid>/hapus', views_admin.kode_surat_hapus, name='admin_kode_surat_hapus'),
     
     ###### PENGUNA/CLIENTS #######
     path('profile/pengguna', views_pengguna.profile_pengguna, name='profile_pengguna'),

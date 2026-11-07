@@ -329,10 +329,10 @@
   color: #0f172a;
 }
 .book-cat-btn.active {
-  background: #0284c7;
+  background: #2c4cf4;
   color: #ffffff;
-  border-color: #0284c7;
-  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+  border-color: #2c4cf4;
+  box-shadow: 0 2px 6px rgba(44, 76, 244, 0.3);
 }
 
 /* Books Grid */
@@ -508,7 +508,7 @@
   transition: color 0.2s ease;
 }
 .book-showcase-title a:hover {
-  color: #0284c7;
+  color: #2c4cf4;
 }
 
 .book-showcase-desc {
@@ -541,7 +541,7 @@
 .price-val {
   font-size: 1.15rem;
   font-weight: 800;
-  color: #0284c7;
+  color: #2c4cf4;
 }
 .price-slash {
   font-size: 0.78rem;
@@ -584,6 +584,402 @@ function filterBookCategory(catId, btn) {
   cards.forEach(function(card) {
     var cardCat = card.getAttribute('data-category');
     if (catId === 'all' || cardCat === catId) {
+      card.style.display = 'flex';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+</script>
+
+<!-- =========================================================================
+     4b. PROGRAM PELATIHAN & COURSE AKADEMIK
+     ========================================================================= -->
+<section class="apb-section" id="pelatihan" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 4.5rem 0;">
+  <div class="apb-container">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1.25rem;">
+      <div>
+        <div class="apb-badge-pill" style="background: rgba(44, 76, 244, 0.1); color: #2c4cf4; border: 1px solid rgba(44, 76, 244, 0.2);">
+          <i class="ri-graduation-cap-line"></i> Program Edukasi &amp; Pelatihan
+        </div>
+        <h2 class="apb-section-title" style="margin-bottom: 0.5rem;">Pelatihan &amp; Course Akademik</h2>
+        <p class="apb-section-subtitle">
+          Tingkatkan kompetensi riset, metodologi ilmiah, penulisan buku, dan publikasi bersama narasumber ahli.
+        </p>
+      </div>
+
+      <!-- Course Filter Buttons -->
+      <div>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;" id="courseTypeFilters">
+          <button type="button" onclick="filterCourseType('all', this)" class="course-filter-btn active">
+            Semua Kegiatan
+          </button>
+          <button type="button" onclick="filterCourseType('training', this)" class="course-filter-btn">
+            Pelatihan
+          </button>
+          <button type="button" onclick="filterCourseType('workshop', this)" class="course-filter-btn">
+            Workshop
+          </button>
+          <button type="button" onclick="filterCourseType('webinar', this)" class="course-filter-btn">
+            Webinar
+          </button>
+          <button type="button" onclick="filterCourseType('bootcamp', this)" class="course-filter-btn">
+            Bootcamp
+          </button>
+          <button type="button" onclick="filterCourseType('seminar', this)" class="course-filter-btn">
+            Seminar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Course Cards Grid -->
+    <div class="courses-showcase-grid" id="coursesGrid">
+      {% for c in courses %}
+        <article class="course-showcase-card" data-type="{{ c.course_type }}" style="display: flex; flex-direction: column;">
+          <!-- Thumbnail / Poster -->
+          <div class="course-showcase-thumb">
+            <a href="{{ c.get_absolute_url }}" class="course-thumb-link">
+              {% if c.thumbnail %}
+                <img src="{{ c.thumbnail.url }}" alt="{{ c.name }}" class="course-thumb-img" loading="lazy">
+              {% else %}
+                <div class="course-thumb-ph">
+                  <i class="ri-graduation-cap-line"></i>
+                  <span>{{ c.get_course_type_display }}</span>
+                </div>
+              {% endif %}
+            </a>
+
+            <!-- Badge Jenis Kegiatan -->
+            <span class="course-badge-type">
+              {{ c.get_course_type_display }}
+            </span>
+
+            <!-- Badge Format (Online/Offline/Hybrid) -->
+            <span class="course-badge-format">
+              {% if c.format == 'online' %}
+                <i class="ri-vidicon-line"></i> Online
+              {% elif c.format == 'offline' %}
+                <i class="ri-map-pin-2-line"></i> Offline
+              {% else %}
+                <i class="ri-shuffle-line"></i> Hybrid
+              {% endif %}
+            </span>
+
+            <!-- Badge Diskon jika ada -->
+            {% if c.harga_potongan %}
+              <span class="course-badge-discount">
+                HEMAT {{ c.persentase_diskon }}%
+              </span>
+            {% endif %}
+          </div>
+
+          <!-- Body Kartu Course -->
+          <div class="course-showcase-body">
+            <!-- Info Pelatih & Tanggal -->
+            <div class="course-showcase-meta">
+              <span class="meta-coaches" title="Pemateri">
+                <i class="ri-user-star-line"></i>
+                {% for coach in c.coaches.all %}
+                  {{ coach.user.first_name|default:coach.user.username }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                  Instruktur ThesisEdu
+                {% endfor %}
+              </span>
+              {% if c.start_date %}
+                <span class="meta-date">
+                  <i class="ri-calendar-line"></i> {{ c.start_date|date:"d M Y" }}
+                </span>
+              {% endif %}
+            </div>
+
+            <!-- Judul Course -->
+            <h3 class="course-showcase-title">
+              <a href="{{ c.get_absolute_url }}" title="{{ c.name }}">
+                {{ c.name }}
+              </a>
+            </h3>
+
+            <!-- Deskripsi Singkat -->
+            <p class="course-showcase-desc">
+              {{ c.description|striptags|truncatewords:14 }}
+            </p>
+
+            <!-- Footer: Harga & CTA Button -->
+            <div class="course-showcase-footer">
+              <div class="course-price-wrap">
+                {% if c.fee_type == 'free' or c.price == 0 %}
+                  <span class="course-price-free">Gratis</span>
+                {% else %}
+                  {% if c.harga_potongan %}
+                    <div style="display: flex; flex-direction: column;">
+                      <span class="price-val">Rp {{ c.harga_potongan|floatformat:0 }}</span>
+                      <span class="price-slash" style="font-size: 0.78rem; text-decoration: line-through; color: #94a3b8;">Rp {{ c.price|floatformat:0 }}</span>
+                    </div>
+                  {% else %}
+                    <span class="price-val">Rp {{ c.formatted_price }}</span>
+                  {% endif %}
+                {% endif %}
+              </div>
+              <a href="{{ c.get_absolute_url }}" class="apb-btn apb-btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem; border-radius: 8px;">
+                Detail <i class="ri-arrow-right-line"></i>
+              </a>
+            </div>
+          </div>
+        </article>
+      {% empty %}
+        <div class="apb-empty-state" style="grid-column: 1 / -1; padding: 4rem 1rem; text-align: center; background: #ffffff; border-radius: 12px; border: 1px dashed #cbd5e1;">
+          <i class="ri-graduation-cap-line" style="font-size: 3.5rem; color: #94a3b8; margin-bottom: 1rem; display: block;"></i>
+          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: #1e293b;">Belum Ada Jadwal Pelatihan</h3>
+          <p style="color: var(--apb-text-muted); font-size: 0.95rem; max-width: 500px; margin: 0 auto;">
+            Program pelatihan dan kursus akademik baru akan segera diumumkan. Pantau terus halaman ini!
+          </p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     CSS & SCRIPT UNTUK COURSE SECTION
+     ========================================================================= -->
+<style>
+/* Filter Buttons */
+.course-filter-btn {
+  background: #ffffff;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.course-filter-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+.course-filter-btn.active {
+  background: #2c4cf4;
+  color: #ffffff;
+  border-color: #2c4cf4;
+  box-shadow: 0 2px 6px rgba(44, 76, 244, 0.3);
+}
+
+/* Courses Grid */
+.courses-showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.75rem;
+}
+@media (max-width: 992px) {
+  .courses-showcase-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+}
+@media (max-width: 600px) {
+  .courses-showcase-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Card Container */
+.course-showcase-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.course-showcase-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+/* Thumbnail Container */
+.course-showcase-thumb {
+  background: #0f172a;
+  position: relative;
+  overflow: hidden;
+}
+.course-thumb-link {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.course-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+  display: block;
+}
+.course-showcase-card:hover .course-thumb-img {
+  transform: scale(1.05);
+}
+.course-thumb-ph {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #94a3b8;
+  height: 100%;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+.course-thumb-ph i {
+  font-size: 3rem;
+  color: #8c54fc;
+}
+.course-thumb-ph span {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+/* Badges */
+.course-badge-type {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  z-index: 2;
+  text-transform: uppercase;
+}
+.course-badge-format {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(44, 76, 244, 0.9);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.course-badge-discount {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 4px;
+  z-index: 2;
+}
+
+/* Body */
+.course-showcase-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+}
+.course-showcase-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 0.5rem;
+}
+.meta-coaches {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  font-weight: 500;
+}
+.meta-date {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+.course-showcase-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  line-height: 1.4;
+  font-weight: 700;
+  color: #0f172a;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.8em;
+}
+.course-showcase-title a {
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.2s ease;
+}
+.course-showcase-title a:hover {
+  color: #2c4cf4;
+}
+.course-showcase-desc {
+  margin: 0 0 1rem 0;
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.course-showcase-footer {
+  margin-top: auto;
+  padding-top: 0.85rem;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.course-price-wrap .price-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #2c4cf4;
+}
+.course-price-free {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #10b981;
+}
+</style>
+
+<script>
+function filterCourseType(type, btn) {
+  var allBtns = document.querySelectorAll('#courseTypeFilters .course-filter-btn');
+  allBtns.forEach(function(b) {
+    b.classList.remove('active');
+  });
+  if (btn) btn.classList.add('active');
+
+  var cards = document.querySelectorAll('#coursesGrid .course-showcase-card');
+  cards.forEach(function(card) {
+    var cardType = card.getAttribute('data-type');
+    if (type === 'all' || cardType === type) {
       card.style.display = 'flex';
     } else {
       card.style.display = 'none';
@@ -681,91 +1077,6 @@ function filterBookCategory(catId, btn) {
     </div>
   </div>
 </section>
-
-<!-- =========================================================================
-     6. AGENDA, WORKSHOP & CALL FOR BOOK CHAPTERS
-     ========================================================================= -->
-<section class="apb-section" id="aktivitas">
-  <div class="apb-container">
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem; flex-wrap: wrap; gap: 1rem;">
-      <div>
-        <div class="apb-badge-pill">
-          <i class="ri-calendar-event-line"></i> Agenda &amp; Program
-        </div>
-        <h2 class="apb-section-title" style="margin-bottom: 0.5rem;">Agenda, Workshop &amp; Call for Chapters</h2>
-        <p class="apb-section-subtitle">
-          Ikuti rangkaian program Call for Book Chapters, pelatihan penulisan monograf, webinar publikasi jurnal, dan workshop metodologi.
-        </p>
-      </div>
-      <div>
-        <a href="{% url 'aktivitas_list' %}" class="apb-btn apb-btn-outline">
-          Lihat Semua Aktivitas <i class="ri-arrow-right-line"></i>
-        </a>
-      </div>
-    </div>
-
-    <!-- Aktivitas Cards Grid -->
-    <div class="apb-akt-grid">
-      {% for item in aktivitas_list %}
-        <article class="apb-akt-card">
-          <!-- Thumbnail Poster -->
-          <div class="apb-akt-thumb-wrap">
-            <a href="{% url 'aktivitas_detail' item.slug %}">
-              {% if item.featured_image %}
-                <img src="{{ item.featured_image.url }}" alt="{{ item.title }}" class="apb-akt-thumb" loading="lazy">
-              {% else %}
-                <div class="apb-akt-thumb-placeholder">
-                  <i class="ri-calendar-event-line"></i>
-                  <span>{{ webname|default:"ThesisEdu" }} Event</span>
-                </div>
-              {% endif %}
-            </a>
-          </div>
-
-          <!-- Card Body -->
-          <div class="apb-akt-body">
-            <div class="apb-akt-meta-row">
-              {% if item.category %}
-                <span class="apb-akt-category-badge">{{ item.category.name }}</span>
-              {% else %}
-                <span class="apb-akt-category-badge">Agenda</span>
-              {% endif %}
-              <span class="apb-akt-date"><i class="ri-calendar-line"></i> {{ item.created_at|date:"d M Y" }}</span>
-            </div>
-
-            <h3 class="apb-akt-title">
-              <a href="{% url 'aktivitas_detail' item.slug %}">
-                {{ item.title }}
-              </a>
-            </h3>
-
-            <p class="apb-akt-excerpt">
-              {{ item.content|striptags|truncatewords:18 }}
-            </p>
-
-            <div class="apb-akt-footer">
-              <span style="font-size: 0.78rem; color: var(--apb-text-muted); display: inline-flex; align-items: center; gap: 4px;">
-                <i class="ri-user-3-line"></i> {{ item.author.first_name|default:item.author.username|default:"Redaksi" }}
-              </span>
-              <a href="{% url 'aktivitas_detail' item.slug %}" class="apb-akt-readmore">
-                Lihat Detail <i class="ri-arrow-right-line"></i>
-              </a>
-            </div>
-          </div>
-        </article>
-      {% empty %}
-        <div class="apb-empty-state" style="grid-column: 1 / -1;">
-          <i class="ri-calendar-close-line apb-empty-icon"></i>
-          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Belum Ada Agenda Dipublikasikan</h3>
-          <p style="color: var(--apb-text-muted); font-size: 0.95rem; max-width: 500px; margin: 0 auto 1.5rem auto;">
-            Agenda workshop penulisan, Call for Book Chapter, dan seminar publikasi akan segera diumumkan di sini.
-          </p>
-        </div>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-
 <!-- =========================================================================
      7. MITRA & EKOSISTEM PENDUKUNG
      ========================================================================= -->
@@ -802,6 +1113,24 @@ function filterBookCategory(catId, btn) {
           </div>
         {% endif %}
       {% empty %}
+        <div class="apb-partner-item" title="Perpustakaan Nasional RI">
+          <div class="apb-partner-badge"><i class="ri-government-line"></i> Perpustakaan Nasional RI</div>
+        </div>
+        <div class="apb-partner-item" title="Kemdiktisaintek RI">
+          <div class="apb-partner-badge"><i class="ri-book-read-line"></i> Kemdiktisaintek RI</div>
+        </div>
+        <div class="apb-partner-item" title="Ikatan Penerbit Indonesia (IKAPI)">
+          <div class="apb-partner-badge"><i class="ri-community-line"></i> Anggota IKAPI</div>
+        </div>
+        <div class="apb-partner-item" title="Crossref Official Registrant">
+          <div class="apb-partner-badge"><i class="ri-links-line"></i> Crossref DOI</div>
+        </div>
+        <div class="apb-partner-item" title="SINTA Science and Technology Index">
+          <div class="apb-partner-badge"><i class="ri-award-line"></i> SINTA Kemdikbud</div>
+        </div>
+        <div class="apb-partner-item" title="Google Scholar">
+          <div class="apb-partner-badge"><i class="ri-graduation-cap-line"></i> Google Scholar</div>
+        </div>
       {% endfor %}
     </div>
   </div>

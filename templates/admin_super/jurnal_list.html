@@ -1,0 +1,112 @@
+{% extends "admin_super/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content">
+    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; border-bottom: 2px solid #f0f0f0; padding-bottom: 14px;">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    Daftar Master Jurnal Ilmiah
+                </h3>
+                <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                    Kelola data penerbit jurnal ilmiah, ISSN, cover, pejabat penandatangan, dan indeksasi untuk penerbitan LOA.
+                </p>
+            </div>
+            <a href="{% url 'app:admin_jurnal_tambah' %}" class="btn primary">
+                <i class="ri-add-line"></i> Tambah Jurnal Baru
+            </a>
+        </div>
+
+        <div class="table-responsive" style="margin-top: 15px;">
+            <table id="layananTable" class="student-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="white-space: nowrap;">No</th>
+                        <th style="white-space: nowrap;">Jurnal &amp; Penerbit</th>
+                        <th style="white-space: nowrap;">ISSN / e-ISSN</th>
+                        <th style="white-space: nowrap;">File SK</th>
+                        <th style="width: 80px; text-align: center;">Status</th>
+                        <th style="width: 120px; text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for j in jurnal_list %}
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle;">{{ forloop.counter }}</td>
+                        <td style="vertical-align: middle;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                {% if j.cover %}
+                                    <img src="{{ j.cover.url }}" alt="{{ j.nama }}" style="width: 44px; height: 58px; object-fit: cover; border-radius: 4px; border: 1px solid #e0e0e0; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                {% else %}
+                                    <div style="width: 44px; height: 58px; background: #eef2ff; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #2c4cf4; font-size: 20px; flex-shrink: 0; border: 1px dashed #cbd5e1;">
+                                        <i class="ri-book-read-line"></i>
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <div style="font-weight: 600; color: #2c3e50; font-size: 14px;">
+                                        {{ j.nama }}
+                                        {% if j.singkatan %}
+                                            <span style="font-size: 12px; color: #8c54fc; font-weight: 500;">({{ j.singkatan }})</span>
+                                        {% endif %}
+                                    </div>
+                                    <div style="font-size: 12px; color: #7f8c8d; margin-top: 3px;">
+                                        <i class="ri-building-line" style="margin-right: 3px;"></i>{{ j.penerbit|default:"Penerbit belum diisi" }}
+                                    </div>
+                                    {% if j.url_jurnal %}
+                                        <a href="{{ j.url_jurnal }}" target="_blank" rel="noopener noreferrer" style="font-size: 11px; color: #2c4cf4; text-decoration: none; display: inline-flex; align-items: center; gap: 3px; margin-top: 2px;">
+                                            <i class="ri-external-link-line"></i> Kunjungi Website Jurnal
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td style="vertical-align: middle; font-size: 12px;">
+                            <div><strong>p-ISSN:</strong> {{ j.issn|default:"-" }}</div>
+                            <div style="margin-top: 3px;"><strong>e-ISSN:</strong> {{ j.e_issn|default:"-" }}</div>
+                        </td>
+                        <td style="vertical-align: middle;">
+                          {% if j.file_sk %}
+                                <div style="margin-top: 5px;">
+                                    <a href="{{ j.file_sk.url }}" target="_blank" class="badge" style="background: #eef2ff; color: #2c4cf4; text-decoration: none; padding: 2px 6px; border-radius: 4px; font-size: 11px;">
+                                        <i class="ri-file-pdf-line"></i> File SK
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; vertical-align: middle;">
+                            {% if j.is_active %}
+                                <span class="badge" style="background: #e6f7ed; color: #10b981; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block;">
+                                    Aktif
+                                </span>
+                            {% else %}
+                                <span class="badge" style="background: #fee2e2; color: #ef4444; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block;">
+                                    Nonaktif
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; vertical-align: middle;">
+                            <div style="display: flex; gap: 6px; justify-content: center;">
+                                <a href="{% url 'app:admin_jurnal_edit' j.id %}" class="btn success small" title="Edit Jurnal">
+                                    <i class="ri-edit-line"></i>
+                                </a>
+                                <a href="{% url 'app:admin_jurnal_hapus' j.id %}" class="btn danger small" title="Hapus Jurnal" onclick="return confirm('Apakah Anda yakin ingin menghapus jurnal &quot;{{ j.nama }}&quot;? Data LOA yang terkait mungkin akan terpengaruh.');">
+                                    <i class="ri-delete-bin-line"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">
+                            <i class="ri-book-open-line" style="font-size: 48px; display: block; margin-bottom: 10px; color: #cbd5e1;"></i>
+                            Belum ada master jurnal ilmiah yang ditambahkan. Silakan klik tombol <strong>Tambah Jurnal Baru</strong> di atas.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock content1 %}
+

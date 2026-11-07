@@ -1,0 +1,204 @@
+{% extends "admin_super/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content">
+    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+        <div style="margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    Edit Data {{ role }}: {{ usermaster.first_name|default:usermaster.username }}
+                </h3>
+                <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                    <strong style="color: #2c4cf4;">{{ usermaster.username }}</strong> &bull; Terdaftar sejak {{ usermaster.date_joined|date:"d M Y" }}
+                </p>
+            </div>
+            <a href="{% url 'app:user_list' %}?role={{ role }}" class="btn secondary">
+                <i class="ri-arrow-left-line"></i> Kembali ke Daftar {{ role }}
+            </a>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- SECTION 1: INFORMASI AKUN LOGIN -->
+            <h4 style="font-size: 15px; font-weight: 600; color: #2c4cf4; margin-bottom: 15px; border-left: 4px solid #2c4cf4; padding-left: 10px;">
+                1. Informasi Akun
+            </h4>
+
+            <div class="form-row">
+                <div class="form-group" style="flex: 1; min-width: 240px; margin-bottom: 16px;">
+                    <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Nama Lengkap <span style="color: red;">*</span>
+                    </label>
+                    {{ form_account.first_name }}
+                    {% if form_account.first_name.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form_account.first_name.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group" style="flex: 1; min-width: 240px; margin-bottom: 16px;">
+                    <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Alamat Email <span style="color: red;">*</span>
+                    </label>
+                    {{ form_account.email }}
+                    {% if form_account.email.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form_account.email.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 24px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    {{ form_account.is_active }}
+                    <label for="id_is_active" style="font-weight: 600; font-size: 14px; margin: 0; cursor: pointer;">
+                        Status Akun Aktif (Dapat Login ke Sistem)
+                    </label>
+                </div>
+            </div>
+
+            <!-- SECTION 2: DATA PROFIL -->
+            <h4 style="font-size: 15px; font-weight: 600; color: #2c4cf4; margin-top: 25px; margin-bottom: 15px; border-left: 4px solid #2c4cf4; padding-left: 10px;">
+                2. Data Profil {{ role }}
+            </h4>
+
+            <div class="form-row">
+                <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 16px;">
+                    <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Nomor Telepon / WhatsApp
+                    </label>
+                    {{ form_profile.telp }}
+                    {% if form_profile.telp.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form_profile.telp.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 16px;">
+                    <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Jenis Kelamin
+                    </label>
+                    {{ form_profile.gender }}
+                    {% if form_profile.gender.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form_profile.gender.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if role == 'Pengguna' %}
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 16px;">
+                        <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                            Nomor NUPTK
+                        </label>
+                        {{ form_profile.nuptk }}
+                    </div>
+
+                    <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 16px;">
+                        <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                            Jabatan Fungsional (Jafung)
+                        </label>
+                        {{ form_profile.jafung }}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1; min-width: 220px; margin-bottom: 16px;">
+                        <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                            Bidang Penelitian
+                        </label>
+                        {{ form_profile.bidang_penelitian }}
+                    </div>
+
+                    <div class="form-group" style="flex: 1; min-width: 220px; margin-bottom: 16px;">
+                        <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                            Provinsi Domisili Kampus
+                        </label>
+                        {{ form_profile.provinsi_anggota }}
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Alamat Lengkap
+                    </label>
+                    {{ form_profile.alamat }}
+                </div>
+
+                <!-- Tautan Akademik -->
+                <h5 style="font-size: 14px; font-weight: 600; color: #475569; margin: 20px 0 12px 0;">
+                    <i class="ri-links-line"></i> Tautan Profil Akademik (Sinta, Scopus, dll)
+                </h5>
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1; min-width: 220px; margin-bottom: 14px;">
+                        <label style="font-weight: 500; font-size: 13px; margin-bottom: 4px; display: block;">Link Sinta</label>
+                        {{ form_profile.link_sinta }}
+                    </div>
+                    <div class="form-group" style="flex: 1; min-width: 220px; margin-bottom: 14px;">
+                        <label style="font-weight: 500; font-size: 13px; margin-bottom: 4px; display: block;">Link Scopus</label>
+                        {{ form_profile.link_scopus }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1; min-width: 220px; margin-bottom: 14px;">
+                        <label style="font-weight: 500; font-size: 13px; margin-bottom: 4px; display: block;">Link Google Scholar</label>
+                        {{ form_profile.link_google_scholar }}
+                    </div>
+                    <div class="form-group" style="flex: 1; min-width: 220px; margin-bottom: 14px;">
+                        <label style="font-weight: 500; font-size: 13px; margin-bottom: 4px; display: block;">Link ORCID</label>
+                        {{ form_profile.link_orcid }}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Foto Profil -->
+            <div class="form-group" style="margin-top: 15px; margin-bottom: 24px;">
+                <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                    Foto Profil
+                </label>
+                <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                    <div style="flex-shrink: 0;">
+                        <img src="{% if userselect.photo %}{{ userselect.photo.url }}{% else %}https://ui-avatars.com/api/?name={{ usermaster.first_name|default:usermaster.username|urlencode }}&background=1d84c6&color=fff&size=80{% endif %}"
+                             alt="Avatar Preview"
+                             id="preview-user-photo"
+                             style="width: 72px; height: 72px; object-fit: cover; border-radius: 50%; border: 2px solid #cbd5e1;">
+                    </div>
+                    <div style="flex-grow: 1;">
+                        {{ form_profile.photo }}
+                        <small style="color: #7f8c8d; display: block; margin-top: 4px;">
+                            Pilih file gambar untuk mengganti foto profil (format JPG, PNG, WEBP).
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tombol Aksi -->
+            <div class="form-actions" style="display: flex; gap: 10px; margin-top: 30px; padding-top: 15px; border-top: 1px solid #eee;">
+                <button type="submit" class="btn primary">
+                    <i class="ri-save-line"></i> Simpan Perubahan
+                </button>
+                <a href="{% url 'app:user_list' %}?role={{ role }}" class="btn secondary">
+                    <i class="ri-arrow-left-line"></i> Batal
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const photoInput = document.querySelector('input[type="file"][name="photo"]');
+    if (photoInput) {
+        photoInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('preview-user-photo').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+});
+</script>
+{% endblock content1 %}
+

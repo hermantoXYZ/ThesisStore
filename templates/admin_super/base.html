@@ -14,7 +14,6 @@
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
         <div class="sidebar">
              <div class="logo">
                 
@@ -38,6 +37,27 @@
                         <a href="{% url "app:kategori_buku_list" %}"><i class="ri-price-tag-3-line"></i> Kategori Buku</a>
                     </li>
 
+                    <li class="nav-section-label"><span>Course & Pelatihan</span></li>
+                    <li class="{% if '/admin/course' in request.path %}active{% endif %}">
+                        <a href="{% url "app:admin_course_list" %}"><i class="ri-book-read-line"></i> Kelola Course</a>
+                    </li>
+
+                    <li class="nav-section-label"><span>Publikasi Jurnal</span></li>
+                    <li class="{% if '/admin/jurnal' in request.path %}active{% endif %}">
+                        <a href="{% url "app:admin_jurnal_list" %}"><i class="ri-book-read-line"></i> Master Jurnal</a>
+                    </li>
+                    <li class="{% if '/admin/loa' in request.path %}active{% endif %}">
+                        <a href="{% url "app:admin_loa_jurnal_list" %}"><i class="ri-file-shield-2-line"></i> LOA Jurnal</a>
+                    </li>
+
+                    <li class="nav-section-label"><span>Tata Kelola Surat</span></li>
+                    <li class="{% if '/admin/surat' in request.path %}active{% endif %}">
+                        <a href="{% url "app:admin_surat_list" %}"><i class="ri-mail-send-line"></i> Nomor Surat Keluar</a>
+                    </li>
+                    <li class="{% if '/admin/kode-surat' in request.path %}active{% endif %}">
+                        <a href="{% url "app:admin_kode_surat_list" %}"><i class="ri-barcode-line"></i> Kode Surat</a>
+                    </li>
+
                     <li class="nav-section-label"><span>Artikel & Halaman</span></li>
                     <li class="{% if '/admin/article' in request.path %}active{% endif %}">
                         <a href="{% url "app:admin_article_list" %}"><i class="ri-newspaper-line"></i> Kelola Artikel</a>
@@ -58,6 +78,9 @@
                     </li>
 
                     <li class="nav-section-label"><span>Pengaturan</span></li>
+                    <li class="{% if '/user/' in request.path or 'user_list' in request.resolver_match.url_name or 'user_edit' in request.resolver_match.url_name %}active{% endif %}">
+                        <a href="{% url "app:user_list" %}"><i class="ri-user-shared-line"></i> Kelola User</a>
+                    </li>
                     <li class="{% if '/admin/web-setting' in request.path %}active{% endif %}">
                         <a href="{% url "app:admin_web_setting" %}"><i class="ri-settings-3-line"></i> Pengaturan Website</a>
                     </li>

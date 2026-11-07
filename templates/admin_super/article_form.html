@@ -25,8 +25,8 @@
     }
     .note-btn:hover {
         background: #eef6fc !important;
-        border-color: #1d84c6 !important;
-        color: #1d84c6 !important;
+        border-color: #2c4cf4 !important;
+        color: #2c4cf4 !important;
     }
     .note-editable {
         min-height: 380px !important;
@@ -46,7 +46,7 @@
         <div style="margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <div>
                 <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
-                    <i class="{% if is_edit %}ri-edit-line{% else %}ri-add-circle-line{% endif %}" style="color: #1d84c6; margin-right: 6px;"></i>
+                    <i class="{% if is_edit %}ri-edit-line{% else %}ri-add-circle-line{% endif %}" style="color: #2c4cf4; margin-right: 6px;"></i>
                     {% if is_edit %}Edit Artikel: {{ article.title|truncatewords:5 }}{% else %}Tulis Artikel / Berita Baru{% endif %}
                 </h3>
                 <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
@@ -66,7 +66,7 @@
             {% csrf_token %}
 
             <!-- SECTION 1: INFORMASI UTAMA ARTIKEL -->
-            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+            <h4 style="font-size: 15px; font-weight: 600; color: #2c4cf4; margin-bottom: 15px; border-left: 4px solid #2c4cf4; padding-left: 10px;">
                 1. Informasi Artikel
             </h4>
 
@@ -84,7 +84,7 @@
                 <div class="form-group">
                     <label for="id_category" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
                         <span>Kategori Berita</span>
-                        <a href="{% url 'app:admin_category_list' %}" target="_blank" style="font-size: 11px; color: #1d84c6; text-decoration: underline; font-weight: normal;">
+                        <a href="{% url 'app:admin_category_list' %}" target="_blank" style="font-size: 11px; color: #2c4cf4; text-decoration: underline; font-weight: normal;">
                             + Tambah Kategori
                         </a>
                     </label>
@@ -117,7 +117,7 @@
             </div>
 
             <!-- SECTION 2: GAMBAR SAMPUL UTAMA -->
-            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-top: 24px; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+            <h4 style="font-size: 15px; font-weight: 600; color: #2c4cf4; margin-top: 24px; margin-bottom: 15px; border-left: 4px solid #2c4cf4; padding-left: 10px;">
                 2. Gambar Sampul Utama
             </h4>
 
@@ -143,7 +143,7 @@
             </div>
 
             <!-- SECTION 3: ISI KONTEN -->
-            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-top: 24px; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+            <h4 style="font-size: 15px; font-weight: 600; color: #2c4cf4; margin-top: 24px; margin-bottom: 15px; border-left: 4px solid #2c4cf4; padding-left: 10px;">
                 3. Isi Konten Artikel
             </h4>
 
@@ -158,13 +158,13 @@
             </div>
 
             <!-- SECTION 4: GALERI DOKUMENTASI TAMBAHAN -->
-            <h4 style="font-size: 15px; font-weight: 600; color: #1d84c6; margin-top: 24px; margin-bottom: 15px; border-left: 4px solid #1d84c6; padding-left: 10px;">
+            <h4 style="font-size: 15px; font-weight: 600; color: #2c4cf4; margin-top: 24px; margin-bottom: 15px; border-left: 4px solid #2c4cf4; padding-left: 10px;">
                 4. Galeri & Media Dokumentasi Foto Tambahan
             </h4>
 
             <div class="form-group" style="margin-bottom: 24px; background: #f8fafc; padding: 18px; border-radius: 8px; border: 1px dashed #cbd5e1;">
                 <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block; color: #1e293b;">
-                    <i class="ri-gallery-upload-line" style="color: #0284c7; margin-right: 4px;"></i> Upload Multiple Foto Dokumentasi (Opsional)
+                    <i class="ri-gallery-upload-line" style="color: #2c4cf4; margin-right: 4px;"></i> Upload Multiple Foto Dokumentasi (Opsional)
                 </label>
                 <p style="font-size: 12.5px; color: #64748b; margin-bottom: 12px;">
                     Unggah beberapa foto dokumentasi atau lampiran media pendukung artikel sekaligus. Anda dapat memilih lebih dari satu file foto.

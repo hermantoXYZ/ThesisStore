@@ -1,0 +1,138 @@
+{% extends "admin_super/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content">
+    <!-- STATS ROW -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+        <div style="background: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); display: flex; align-items: center; gap: 16px;">
+            <div style="width: 50px; height: 50px; border-radius: 10px; background: #eef2ff; color: #2c4cf4; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                <i class="ri-file-shield-2-line"></i>
+            </div>
+            <div>
+                <div style="font-size: 13px; color: #64748b;">Total LOA Diterbitkan</div>
+                <div style="font-size: 24px; font-weight: 700; color: #1e293b;">{{ total_loa }}</div>
+            </div>
+        </div>
+
+        <div style="background: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); display: flex; align-items: center; gap: 16px;">
+            <div style="width: 50px; height: 50px; border-radius: 10px; background: #e6f7ed; color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                <i class="ri-checkbox-circle-line"></i>
+            </div>
+            <div>
+                <div style="font-size: 13px; color: #64748b;">Naskah Diterima (Accepted)</div>
+                <div style="font-size: 24px; font-weight: 700; color: #10b981;">{{ accepted_count }}</div>
+            </div>
+        </div>
+
+        <div style="background: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); display: flex; align-items: center; gap: 16px;">
+            <div style="width: 50px; height: 50px; border-radius: 10px; background: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                <i class="ri-close-circle-line"></i>
+            </div>
+            <div>
+                <div style="font-size: 13px; color: #64748b;">Naskah Ditolak (Declined)</div>
+                <div style="font-size: 24px; font-weight: 700; color: #ef4444;">{{ declined_count }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN SECTION -->
+    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 2px solid #f0f0f0; padding-bottom: 14px;">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    Daftar Letter of Acceptance (LOA) Jurnal
+                </h3>
+                <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                    Kelola dan cetak surat penerimaan artikel publikasi jurnal ilmiah Thesis Store.
+                </p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <a href="{% url 'app:admin_loa_jurnal_tambah' %}" class="btn primary">
+                    <i class="ri-add-line"></i> Terbitkan LOA Baru
+                </a>
+            </div>
+        </div>
+        <div class="table-responsive" style="margin-top: 15px;">
+            <table id="layananTable" class="student-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center;">No</th>
+                        <th style="white-space: nowrap;">No. Surat &amp; ID Naskah</th>
+                        <th style="white-space: nowrap;">Judul Naskah &amp; Penulis</th>
+                        <th style="white-space: nowrap;">Jurnal</th>
+                        <th style="white-space: nowrap;">Rencana Terbit</th>
+                        <th style="width: 90px; text-align: center;">Status</th>
+                        <th style="width: 140px; text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for loa in loa_list %}
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle;">{{ forloop.counter }}</td>
+                        <td style="vertical-align: middle;">
+                            <strong style="color: #2c4cf4; font-size: 13px;">{{ loa.no_surat }}</strong>
+                            <div style="font-size: 12px; color: #64748b; margin-top: 3px;">
+                                <i class="ri-file-text-line"></i> ID: {{ loa.id_naskah }}
+                            </div>
+                            <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">
+                                {{ loa.created_at|date:"d M Y" }}
+                            </div>
+                        </td>
+                        <td style="vertical-align: middle; max-width: 280px; white-space: normal;">
+                            <div style="font-weight: 600; color: #1e293b; font-size: 13px; line-height: 1.4;">
+                                {{ loa.judul_naskah }}
+                            </div>
+                            <div style="font-size: 12px; color: #64748b; margin-top: 4px;">
+                                {{ loa.penulis }}
+                            </div>
+                        </td>
+                        <td style="vertical-align: middle; font-size: 13px;">
+                            <span style="font-weight: 600; color: #334155;">{{ loa.nama_jurnal.nama }}</span>
+                            {% if loa.nama_jurnal.singkatan %}
+                                <div style="font-size: 11px; color: #8c54fc;">({{ loa.nama_jurnal.singkatan }})</div>
+                            {% endif %}
+                        </td>
+                        <td style="vertical-align: middle; font-size: 12px;">
+                            <div><strong>Vol.</strong> {{ loa.volume|default:"-" }} <strong>No.</strong> {{ loa.nomor_jurnal|default:"-" }}</div>
+                            <div style="color: #64748b; margin-top: 2px;">{{ loa.get_periode_bulan_display }} {{ loa.periode_tahun }}</div>
+                        </td>
+                        <td style="text-align: center; vertical-align: middle;">
+                            {% if loa.status == 'accepted' %}
+                                <span class="badge" style="background: #e6f7ed; color: #10b981; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block;">
+                                    Accepted
+                                </span>
+                            {% else %}
+                                <span class="badge" style="background: #fee2e2; color: #ef4444; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block;">
+                                    Declined
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; vertical-align: middle;">
+                            <div style="display: flex; gap: 6px; justify-content: center;">
+                                <a href="{% url 'app:admin_loa_jurnal_print' loa.id %}" target="_blank" class="btn info small" title="Cetak / Unduh PDF LOA">
+                                    <i class="ri-printer-line"></i>
+                                </a>
+                                <a href="{% url 'app:admin_loa_jurnal_edit' loa.id %}" class="btn success small" title="Edit Data LOA">
+                                    <i class="ri-edit-line"></i>
+                                </a>
+                                <a href="{% url 'app:admin_loa_jurnal_hapus' loa.id %}" class="btn danger small" title="Hapus LOA" onclick="return confirm('Apakah Anda yakin ingin menghapus LOA No. &quot;{{ loa.no_surat }}&quot;?');">
+                                    <i class="ri-delete-bin-line"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">
+                            <i class="ri-file-shield-2-line" style="font-size: 48px; display: block; margin-bottom: 10px; color: #cbd5e1;"></i>
+                            Belum ada LOA jurnal yang diterbitkan. Silakan klik tombol <strong>Terbitkan LOA Baru</strong>.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock content1 %}
+
