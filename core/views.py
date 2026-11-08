@@ -267,11 +267,16 @@ def struktur_organisasi(request):
 
 
 def page_detail(request, slug):
-    return render(request, 'homepage/page_detail.html', {
-        'title': slug.replace('-', ' ').title(),
+    page = Page.objects.filter(slug=slug).prefetch_related('dokumentasi_foto').first() 
+    
+    context = {
+        'title': page.title,
         'webname': 'ThesisStore',
+        'web_name': 'Toko Buku & Publikasi Akademik',
+        'page': page,
         'slug': slug,
-    })
+    }
+    return render(request, 'homepage/page_detail.html', context)
 
 
 def public_dashboard_sebaran(request):
