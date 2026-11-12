@@ -1180,7 +1180,7 @@ def admin_order_list(request):
 @admin_required
 def admin_order_detail(request, order_number):
     order = get_object_or_404(
-        Order.objects.prefetch_related('items__book'),
+        Order.objects.prefetch_related('items__book', 'items__course'),
         order_number=order_number
     )
 

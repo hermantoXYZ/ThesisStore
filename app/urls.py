@@ -98,6 +98,7 @@ urlpatterns = [
     ###### E-COMMERCE KERANJANG & PESANAN PENGGUNA ######
     path('keranjang/', views_pengguna.cart_view, name='cart_view'),
     path('keranjang/tambah/<uuid:book_uuid>/', views_pengguna.cart_add, name='cart_add'),
+    path('keranjang/tambah-course/<uuid:course_uuid>/', views_pengguna.cart_add_course, name='cart_add_course'),
     path('keranjang/update/<uuid:item_id>/', views_pengguna.cart_update, name='cart_update'),
     path('keranjang/hapus/<uuid:item_id>/', views_pengguna.cart_remove, name='cart_remove'),
     path('checkout/', views_pengguna.checkout_view, name='checkout'),
@@ -108,6 +109,11 @@ urlpatterns = [
     path('pesanan/<str:order_number>/midtrans-token/', views_pengguna.get_order_snap_token, name='get_order_snap_token'),
     path('pesanan/<str:order_number>/sync-midtrans/', views_pengguna.sync_order_midtrans, name='sync_order_midtrans'),
     path('midtrans/notification/', views_pengguna.midtrans_notification, name='midtrans_notification'),
+
+    ###### PELATIHAN SAYA (COURSE ENROLLED) ######
+    path('pelatihan-saya/', views_pengguna.my_courses_list, name='my_courses'),
+    path('pelatihan-saya/<uuid:order_item_id>/', views_pengguna.my_course_detail, name='my_course_detail'),
+    path('pelatihan-saya/<uuid:order_item_id>/sertifikat/', views_pengguna.download_certificate, name='download_certificate'),
 
     ###### UMUM ######         
     path('dashboard', views.index, name='dashboard'),

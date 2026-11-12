@@ -40,12 +40,19 @@
             </div>
             <div class="step-item {% if order.status in 'processing shipped delivered' %}completed{% endif %}">
                 <div class="step-icon"><i class="ri-box-3-line"></i></div>
-                <div class="step-label">Diproses</div>
+                <div class="step-label">{% if has_physical_items %}Diproses{% else %}Terkonfirmasi{% endif %}</div>
             </div>
+            {% if has_physical_items %}
             <div class="step-item {% if order.status in 'shipped delivered' %}completed{% endif %}">
                 <div class="step-icon"><i class="ri-truck-line"></i></div>
                 <div class="step-label">Dikirim</div>
             </div>
+            {% else %}
+            <div class="step-item {% if order.status in 'processing delivered' %}completed{% endif %}">
+                <div class="step-icon"><i class="ri-vidicon-line"></i></div>
+                <div class="step-label">Akses Aktif</div>
+            </div>
+            {% endif %}
             <div class="step-item {% if order.status == 'delivered' %}completed{% endif %}">
                 <div class="step-icon"><i class="ri-checkbox-circle-line"></i></div>
                 <div class="step-label">Selesai</div>
@@ -58,11 +65,67 @@
         <!-- LEFT COLUMN: ITEMS & SHIPPING ADDRESS -->
         <div style="display: flex; flex-direction: column; gap: 1.5rem;">
             
+            {% if course_items and order.status in 'paid processing delivered' %}
+            <!-- AKSES SESI & LINK MEETING PELATIHAN -->
+            <div style="background: linear-gradient(135deg, #f8faff 0%, #f0fdf4 100%); border: 1.5px solid #86efac; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; border-bottom: 1px solid #bbf7d0; padding-bottom: 0.75rem; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="width: 32px; height: 32px; border-radius: 50%; background: #22c55e; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                            <i class="ri-broadcast-line"></i>
+                        </div>
+                        <h3 style="font-size: 1.05rem; font-weight: 700; color: #065f46; margin: 0;">
+                            Akses Sesi &amp; Ruang Pertemuan Pelatihan
+                        </h3>
+                    </div>
+                    <span style="background: #dcfce7; color: #15803d; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; border: 1px solid #86efac;">
+                        Peserta Aktif
+                    </span>
+                </div>
+
+                {% for c_item in course_items %}
+                <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 1.25rem; margin-bottom: 0.75rem;">
+                    <div style="font-size: 1rem; font-weight: 700; color: #1e293b; margin-bottom: 0.35rem;">
+                        {{ c_item.course.name }}
+                    </div>
+                    <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 1rem;">
+                        Format Pelaksanaan: <strong>{{ c_item.course.get_format_display }}</strong>
+                        {% if c_item.course.start_date %}
+                            | Tanggal: <strong>{{ c_item.course.start_date|date:"d F Y" }}{% if c_item.course.end_date %} s/d {{ c_item.course.end_date|date:"d F Y" }}{% endif %}</strong>
+                        {% endif %}
+                    </div>
+
+                    {% if c_item.course.meeting_url %}
+                        <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                            <div>
+                                <span style="display: block; font-size: 0.78rem; font-weight: 700; color: #1e40af; text-transform: uppercase;">Link Pertemuan Virtual (Zoom / Meet):</span>
+                                <span style="font-size: 0.88rem; color: #1e3a8a; word-break: break-all;">{{ c_item.course.meeting_url }}</span>
+                            </div>
+                            <a href="{{ c_item.course.meeting_url }}" target="_blank" rel="noopener noreferrer" class="btn primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; padding: 8px 16px; border-radius: 8px; white-space: nowrap;">
+                                <i class="ri-external-link-line"></i> Masuk Ruang Meeting
+                            </a>
+                        </div>
+                    {% else %}
+                        <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 0.85rem; font-size: 0.85rem; color: #64748b; display: flex; align-items: center; gap: 6px;">
+                            <i class="ri-time-line"></i>
+                            <span>Tautan link meeting virtual akan disematkan oleh pengajar/panitia sebelum sesi pertemuan dimulai.</span>
+                        </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
             <!-- ORDERED ITEMS -->
             <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                 <div style="padding: 1rem 1.25rem; background: #fafafa; border-bottom: 1px solid #f1f5f9;">
                     <h3 style="margin: 0; font-size: 1rem; font-weight: 700; color: #1e293b;">
-                        Produk Buku yang Dipesan
+                        {% if has_physical_items and has_course %}
+                            Daftar Buku &amp; Pelatihan yang Dipesan
+                        {% elif has_course %}
+                            Program Pelatihan yang Didaftarkan
+                        {% else %}
+                            Produk Buku yang Dipesan
+                        {% endif %}
                     </h3>
                 </div>
 
@@ -70,7 +133,13 @@
                     {% for item in order.items.all %}
                     <div style="display: flex; gap: 1rem; align-items: center; {% if not forloop.last %}margin-bottom: 1.25rem; padding-bottom: 1.25rem; border-bottom: 1px solid #f1f5f9;{% endif %}">
                         <div style="width: 58px; height: 80px; flex-shrink: 0; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                            {% if item.book and item.book.featured_image %}
+                            {% if item.course %}
+                                {% if item.course.thumbnail %}
+                                    <img src="{{ item.course.thumbnail.url }}" alt="{{ item.judul_buku }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    <i class="ri-graduation-cap-line" style="font-size: 2rem; color: #8c54fc;"></i>
+                                {% endif %}
+                            {% elif item.book and item.book.featured_image %}
                                 <img src="{{ item.book.featured_image.url }}" alt="{{ item.judul_buku }}" style="width: 100%; height: 100%; object-fit: cover;">
                             {% else %}
                                 <i class="ri-book-line" style="font-size: 1.75rem; color: #cbd5e1;"></i>
@@ -78,13 +147,21 @@
                         </div>
 
                         <div style="flex: 1; min-width: 0;">
-                            {% if item.book and item.book.kategori %}
+                            {% if item.course %}
+                                <span style="font-size: 0.72rem; color: #8c54fc; background: #f3e8ff; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+                                    Pelatihan: {{ item.course.get_course_type_display }} ({{ item.course.get_format_display }})
+                                </span>
+                            {% elif item.book and item.book.kategori %}
                                 <span style="font-size: 0.72rem; color: #2c4cf4; background: #eff6ff; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
                                     {{ item.book.kategori.nama_kategori }}
                                 </span>
                             {% endif %}
                             <h4 style="font-size: 0.98rem; font-weight: 600; color: #1e293b; margin: 0.25rem 0 0.35rem 0;">
-                                {% if item.book %}
+                                {% if item.course %}
+                                    <a href="{{ item.course.get_absolute_url }}" target="_blank" style="color: inherit; text-decoration: none;">
+                                        {{ item.judul_buku }}
+                                    </a>
+                                {% elif item.book %}
                                     <a href="{{ item.book.get_absolute_url }}" target="_blank" style="color: inherit; text-decoration: none;">
                                         {{ item.judul_buku }}
                                     </a>
@@ -93,12 +170,20 @@
                                 {% endif %}
                             </h4>
                             <div style="font-size: 0.85rem; color: #64748b;">
-                                {{ item.quantity }} eksemplar &times; Rp{{ item.harga_satuan|floatformat:0 }}
+                                {% if item.course %}
+                                    1 Peserta Terdaftar
+                                {% else %}
+                                    {{ item.quantity }} eksemplar &times; Rp{{ item.harga_satuan|floatformat:0 }}
+                                {% endif %}
                             </div>
                         </div>
 
                         <div style="font-size: 1.05rem; font-weight: 700; color: #0f172a; text-align: right;">
-                            Rp{{ item.subtotal|floatformat:0 }}
+                            {% if item.subtotal == 0 %}
+                                <span style="color: #10b981;">Gratis</span>
+                            {% else %}
+                                Rp{{ item.subtotal|floatformat:0 }}
+                            {% endif %}
                         </div>
                     </div>
                     {% endfor %}

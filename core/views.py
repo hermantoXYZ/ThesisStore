@@ -17,25 +17,38 @@ def _transfer_pending_cart(request, user):
         return None
 
     book_uuid = pending.get('book_uuid')
+    course_uuid = pending.get('course_uuid')
     quantity = pending.get('quantity', 1)
     buy_now = pending.get('buy_now', False)
 
     try:
-        book = Books.objects.filter(uuid=book_uuid).first()
-        if book:
-            cart, _ = Cart.objects.get_or_create(user=user)
-            cart_item, created = CartItem.objects.get_or_create(cart=cart, book=book)
-            current_qty = 0 if created else cart_item.quantity
-            new_qty = current_qty + quantity
-            if book.stok is not None and new_qty > book.stok:
-                new_qty = book.stok
-            cart_item.quantity = new_qty
-            cart_item.save()
+        if course_uuid:
+            course = Course.objects.filter(uuid=course_uuid, is_active=True).first()
+            if course:
+                cart, _ = Cart.objects.get_or_create(user=user)
+                cart_item, created = CartItem.objects.get_or_create(cart=cart, course=course)
+                cart_item.quantity = 1
+                cart_item.save()
+                if buy_now:
+                    return reverse('app:checkout')
+                else:
+                    return reverse('app:cart_view')
+        elif book_uuid:
+            book = Books.objects.filter(uuid=book_uuid).first()
+            if book:
+                cart, _ = Cart.objects.get_or_create(user=user)
+                cart_item, created = CartItem.objects.get_or_create(cart=cart, book=book)
+                current_qty = 0 if created else cart_item.quantity
+                new_qty = current_qty + quantity
+                if book.stok is not None and new_qty > book.stok:
+                    new_qty = book.stok
+                cart_item.quantity = new_qty
+                cart_item.save()
 
-            if buy_now:
-                return reverse('app:checkout')
-            else:
-                return reverse('app:cart_view')
+                if buy_now:
+                    return reverse('app:checkout')
+                else:
+                    return reverse('app:cart_view')
     except Exception:
         pass
 

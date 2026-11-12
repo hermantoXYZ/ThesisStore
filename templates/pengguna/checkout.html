@@ -1,6 +1,37 @@
 {% extends "pengguna/base.html" %}
 
 {% block content1 %}
+<style>
+.checkout-layout-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 1.5rem;
+    align-items: start;
+}
+.checkout-form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.checkout-form-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 120px;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+@media (max-width: 992px) {
+    .checkout-layout-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+@media (max-width: 640px) {
+    .checkout-form-grid-2,
+    .checkout-form-grid-3 {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
 <div class="dashboard-content">
 
     <!-- PAGE TITLE -->
@@ -23,21 +54,32 @@
             <!-- LEFT COLUMN: SHIPPING INFO & PAYMENT -->
             <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                 
-                <!-- 1. ALAMAT PENGIRIMAN -->
+                <!-- 1. ALAMAT PENGIRIMAN / PESERTA -->
                 <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                     <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem;">
                         <div style="width: 32px; height: 32px; border-radius: 50%; background: #eff6ff; color: #2c4cf4; display: flex; align-items: center; justify-content: center; font-weight: 700;">
                             1
                         </div>
                         <h2 style="font-size: 1.15rem; font-weight: 700; color: #1e293b; margin: 0;">
-                            Informasi Penerima &amp; Alamat Pengiriman
+                            {% if has_physical_book %}
+                                Informasi Penerima &amp; Alamat Pengiriman
+                            {% else %}
+                                Informasi Peserta &amp; Kontak Pelatihan
+                            {% endif %}
                         </h2>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    {% if not has_physical_book %}
+                    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 14px; margin-bottom: 1.25rem; font-size: 0.85rem; color: #1e3a8a; display: flex; align-items: center; gap: 8px;">
+                        <i class="ri-information-line" style="font-size: 1.2rem; color: #2c4cf4; flex-shrink: 0;"></i>
+                        <span>Pesanan Anda berupa <strong>Pelatihan Digital / Course</strong>. Akses link meeting, materi, dan jadwal akan langsung aktif pada detail pesanan (tidak memerlukan pengiriman fisik).</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="checkout-form-grid-2">
                         <div>
                             <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.4rem;">
-                                Nama Lengkap Penerima <span style="color: #ef4444;">*</span>
+                                Nama Lengkap {% if has_physical_book %}Penerima{% else %}Peserta{% endif %} <span style="color: #ef4444;">*</span>
                             </label>
                             <input type="text" name="nama_penerima" value="{{ default_nama }}" required
                                    style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;">
@@ -51,7 +93,7 @@
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 120px; gap: 1rem; margin-bottom: 1rem;">
+                    <div class="checkout-form-grid-3">
                         <div>
                             <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.4rem;">
                                 Provinsi
@@ -77,17 +119,21 @@
 
                     <div style="margin-bottom: 1rem;">
                         <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.4rem;">
-                            Alamat Lengkap Pengiriman <span style="color: #ef4444;">*</span>
+                            {% if has_physical_book %}
+                                Alamat Lengkap Pengiriman <span style="color: #ef4444;">*</span>
+                            {% else %}
+                                Alamat Domisili / Institusi (Opsional)
+                            {% endif %}
                         </label>
-                        <textarea name="alamat_pengiriman" rows="3" required placeholder="Nama jalan, nomor rumah, RT/RW, kelurahan, kecamatan..."
+                        <textarea name="alamat_pengiriman" rows="3" {% if has_physical_book %}required{% endif %} placeholder="{% if has_physical_book %}Nama jalan, nomor rumah, RT/RW, kelurahan, kecamatan...{% else %}Nama instansi / domisili peserta{% endif %}"
                                   style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;">{{ default_alamat }}</textarea>
                     </div>
 
                     <div>
                         <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.4rem;">
-                            Catatan untuk Penjual / Ekspedisi (Opsional)
+                            Catatan Tambahan (Opsional)
                         </label>
-                        <input type="text" name="catatan" placeholder="Contoh: Titipkan di pos satpam jika tidak ada orang"
+                        <input type="text" name="catatan" placeholder="Contoh: Harap dimasukkan ke grup WhatsApp peserta"
                                style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;">
                     </div>
                 </div>
@@ -104,46 +150,66 @@
                     </div>
 
                     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                        <!-- Opsi 1: Midtrans Payment Gateway (Otomatis) -->
-                        <label class="payment-method-card" style="border: 2px solid #2c4cf4; background: #f8faff; border-radius: 10px; padding: 1rem 1.25rem; display: flex; align-items: flex-start; gap: 1rem; cursor: pointer; transition: all 0.2s;">
-                            <input type="radio" name="metode_pembayaran" value="Midtrans" checked style="margin-top: 4px; accent-color: #2c4cf4;">
-                            <div style="flex: 1;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem; flex-wrap: wrap; gap: 6px;">
-                                    <span style="font-weight: 700; color: #0f172a; font-size: 0.95rem;">
-                                        Midtrans Payment Gateway (Instan &amp; Otomatis)
-                                    </span>
-                                    <span style="background: #ecfdf5; color: #059669; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; border: 1px solid #a7f3d0;">
-                                        Verifikasi Otomatis
-                                    </span>
+                        {% if total_tagihan == 0 %}
+                            <!-- Pendaftaran Gratis -->
+                            <label class="payment-method-card" style="border: 2px solid #10b981; background: #f0fdf4; border-radius: 10px; padding: 1.15rem 1.25rem; display: flex; align-items: flex-start; gap: 1rem; cursor: pointer;">
+                                <input type="radio" name="metode_pembayaran" value="Gratis" checked style="margin-top: 4px; accent-color: #10b981;">
+                                <div style="flex: 1;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                                        <span style="font-weight: 700; color: #065f46; font-size: 0.95rem;">
+                                            Pendaftaran Bebas Biaya (Gratis)
+                                        </span>
+                                        <span style="background: #ecfdf5; color: #059669; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; border: 1px solid #a7f3d0;">
+                                            100% Free
+                                        </span>
+                                    </div>
+                                    <p style="margin: 0; font-size: 0.85rem; color: #047857;">
+                                        Kegiatan ini tidak dipungut biaya. Anda dapat langsung mengonfirmasi pendaftaran dan mendapatkan akses materi serta link kegiatan.
+                                    </p>
                                 </div>
-                                <p style="margin: 0 0 0.6rem 0; font-size: 0.85rem; color: #64748b; line-height: 1.4;">
-                                    Bayar praktis melalui <strong>QRIS (BCA, Mandiri, Dana, OVO, GoPay)</strong>, <strong>Virtual Account (BCA, BRI, BNI, Mandiri, Permata)</strong>, atau <strong>Kartu Kredit</strong>. Terverifikasi langsung tanpa kirim bukti.
-                                </p>
-                                <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-                                    <span style="font-size: 0.75rem; background: #ffffff; padding: 3px 8px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: 700; color: #1e293b;">QRIS</span>
-                                    <span style="font-size: 0.75rem; background: #ffffff; padding: 3px 8px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: 700; color: #1e293b;">BCA VA</span>
-                                    <span style="font-size: 0.75rem; background: #ffffff; padding: 3px 8px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: 700; color: #1e293b;">Mandiri VA</span>
-                                    <span style="font-size: 0.75rem; background: #ffffff; padding: 3px 8px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: 700; color: #1e293b;">BRI / BNI</span>
-                                    <span style="font-size: 0.75rem; background: #ffffff; padding: 3px 8px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: 700; color: #1e293b;">GoPay / ShopeePay</span>
+                            </label>
+                        {% else %}
+                            <!-- Opsi 1: Midtrans Payment Gateway (Otomatis) -->
+                            <label class="payment-method-card" style="border: 2px solid #2c4cf4; background: #f8faff; border-radius: 10px; padding: 1rem 1.25rem; display: flex; align-items: flex-start; gap: 1rem; cursor: pointer; transition: all 0.2s;">
+                                <input type="radio" name="metode_pembayaran" value="Midtrans" checked style="margin-top: 4px; accent-color: #2c4cf4;">
+                                <div style="flex: 1;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem; flex-wrap: wrap; gap: 6px;">
+                                        <span style="font-weight: 700; color: #0f172a; font-size: 0.95rem;">
+                                            Midtrans Payment Gateway (Instan &amp; Otomatis)
+                                        </span>
+                                        <span style="background: #ecfdf5; color: #059669; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; border: 1px solid #a7f3d0;">
+                                            Verifikasi Otomatis
+                                        </span>
+                                    </div>
+                                    <p style="margin: 0 0 0.6rem 0; font-size: 0.85rem; color: #64748b; line-height: 1.4;">
+                                        Bayar praktis melalui <strong>QRIS (BCA, Mandiri, Dana, OVO, GoPay)</strong>, <strong>Virtual Account (BCA, BRI, BNI, Mandiri, Permata)</strong>, atau <strong>Kartu Kredit</strong>. Terverifikasi langsung tanpa kirim bukti.
+                                    </p>
+                                    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                                        <span style="font-size: 0.75rem; background: #ffffff; padding: 3px 8px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: 700; color: #1e293b;">QRIS</span>
+                                        <span style="font-size: 0.75rem; background: #ffffff; padding: 3px 8px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: 700; color: #1e293b;">BCA VA</span>
+                                        <span style="font-size: 0.75rem; background: #ffffff; padding: 3px 8px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: 700; color: #1e293b;">Mandiri VA</span>
+                                        <span style="font-size: 0.75rem; background: #ffffff; padding: 3px 8px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: 700; color: #1e293b;">BRI / BNI</span>
+                                        <span style="font-size: 0.75rem; background: #ffffff; padding: 3px 8px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: 700; color: #1e293b;">GoPay / ShopeePay</span>
+                                    </div>
                                 </div>
-                            </div>
-                        </label>
+                            </label>
 
-                        <!-- Opsi 2: Transfer Bank Manual -->
-                        <label class="payment-method-card" style="border: 1px solid #cbd5e1; background: #ffffff; border-radius: 10px; padding: 1rem 1.25rem; display: flex; align-items: flex-start; gap: 1rem; cursor: pointer; transition: all 0.2s;">
-                            <input type="radio" name="metode_pembayaran" value="Transfer Bank" style="margin-top: 4px; accent-color: #2c4cf4;">
-                            <div style="flex: 1;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-                                    <span style="font-weight: 700; color: #0f172a; font-size: 0.95rem;">Transfer Manual Bank (Konfirmasi Admin)</span>
+                            <!-- Opsi 2: Transfer Bank Manual -->
+                            <label class="payment-method-card" style="border: 1px solid #cbd5e1; background: #ffffff; border-radius: 10px; padding: 1rem 1.25rem; display: flex; align-items: flex-start; gap: 1rem; cursor: pointer; transition: all 0.2s;">
+                                <input type="radio" name="metode_pembayaran" value="Transfer Bank" style="margin-top: 4px; accent-color: #2c4cf4;">
+                                <div style="flex: 1;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                                        <span style="font-weight: 700; color: #0f172a; font-size: 0.95rem;">Transfer Manual Bank (Konfirmasi Admin)</span>
+                                    </div>
+                                    <p style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: #64748b;">
+                                        Transfer langsung ke rekening resmi yayasan / penerbit. Anda perlu mengunggah bukti transfer setelah checkout.
+                                    </p>
+                                    <div style="font-size: 0.82rem; color: #334155; background: #f8fafc; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0; display: inline-block;">
+                                        <strong>Bank Mandiri:</strong> 123-00-9876543-2 a.n. <em>PT Thesis Edukasi Nusantara</em>
+                                    </div>
                                 </div>
-                                <p style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: #64748b;">
-                                    Transfer langsung ke rekening resmi yayasan / penerbit. Anda perlu mengunggah bukti transfer setelah checkout.
-                                </p>
-                                <div style="font-size: 0.82rem; color: #334155; background: #f8fafc; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0; display: inline-block;">
-                                    <strong>Bank Mandiri:</strong> 123-00-9876543-2 a.n. <em>PT Thesis Edukasi Nusantara</em>
-                                </div>
-                            </div>
-                        </label>
+                            </label>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -160,22 +226,42 @@
                     {% for item in items %}
                     <div style="display: flex; gap: 0.75rem; align-items: center;">
                         <div style="width: 44px; height: 60px; flex-shrink: 0; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                            {% if item.book.featured_image %}
-                                <img src="{{ item.book.featured_image.url }}" alt="{{ item.book.judul }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% if item.course %}
+                                {% if item.course.thumbnail %}
+                                    <img src="{{ item.course.thumbnail.url }}" alt="{{ item.course.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    <i class="ri-graduation-cap-line" style="font-size: 1.35rem; color: #8c54fc;"></i>
+                                {% endif %}
                             {% else %}
-                                <i class="ri-book-line" style="font-size: 1.25rem; color: #cbd5e1;"></i>
+                                {% if item.book and item.book.featured_image %}
+                                    <img src="{{ item.book.featured_image.url }}" alt="{{ item.book.judul }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    <i class="ri-book-line" style="font-size: 1.25rem; color: #cbd5e1;"></i>
+                                {% endif %}
                             {% endif %}
                         </div>
                         <div style="flex: 1; min-width: 0;">
                             <div style="font-size: 0.85rem; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                {{ item.book.judul }}
+                                {% if item.course %}
+                                    {{ item.course.name }}
+                                {% else %}
+                                    {{ item.book.judul }}
+                                {% endif %}
                             </div>
                             <div style="font-size: 0.78rem; color: #64748b;">
-                                {{ item.quantity }}x @ Rp{{ item.get_price|floatformat:0 }}
+                                {% if item.course %}
+                                    1 Peserta (Pelatihan {{ item.course.get_format_display }})
+                                {% else %}
+                                    {{ item.quantity }}x @ Rp{{ item.get_price|floatformat:0 }}
+                                {% endif %}
                             </div>
                         </div>
                         <div style="font-size: 0.85rem; font-weight: 700; color: #0f172a; text-align: right;">
-                            Rp{{ item.get_subtotal|floatformat:0 }}
+                            {% if item.get_subtotal == 0 %}
+                                <span style="color: #10b981;">Gratis</span>
+                            {% else %}
+                                Rp{{ item.get_subtotal|floatformat:0 }}
+                            {% endif %}
                         </div>
                     </div>
                     {% endfor %}
@@ -183,11 +269,11 @@
 
                 <div style="border-top: 1px solid #f1f5f9; padding-top: 1rem; margin-bottom: 0.75rem;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.88rem; color: #475569;">
-                        <span>Subtotal ({{ cart.get_total_items }} buku)</span>
+                        <span>Subtotal ({{ cart.get_total_items }} item)</span>
                         <span style="font-weight: 600; color: #0f172a;">Rp{{ subtotal|floatformat:0 }}</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.88rem; color: #475569;">
-                        <span>Biaya Pengiriman</span>
+                        <span>{% if has_physical_book %}Biaya Pengiriman{% else %}Biaya Akses Digital{% endif %}</span>
                         <span style="font-weight: 600; color: #10b981;">Gratis Promo</span>
                     </div>
                 </div>
@@ -205,10 +291,8 @@
                     Dengan mengklik tombol di atas, Anda menyetujui ketentuan pemesanan dan pengiriman buku di ThesisStore.
                 </p>
             </div>
-
         </div>
     </form>
-
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {

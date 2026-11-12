@@ -1,0 +1,375 @@
+{% extends "pengguna/base.html" %}
+
+{% block content1 %}
+<style>
+.course-detail-layout {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 1.5rem;
+    align-items: start;
+}
+@media (max-width: 992px) {
+    .course-detail-layout {
+        grid-template-columns: 1fr;
+    }
+}
+.agenda-timeline-card {
+    border-left: 3px solid #2c4cf4;
+    padding: 0.85rem 1.25rem;
+    background: #f8fafc;
+    border-radius: 0 10px 10px 0;
+    margin-bottom: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    transition: background 0.15s;
+}
+.agenda-timeline-card:hover {
+    background: #f1f5f9;
+}
+.cert-card-box {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2c4cf4 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(44, 76, 244, 0.25);
+    position: relative;
+    overflow: hidden;
+}
+.cert-card-box::after {
+    content: '';
+    position: absolute;
+    right: -20px;
+    bottom: -20px;
+    width: 120px;
+    height: 120px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    pointer-events: none;
+}
+</style>
+
+<div class="dashboard-content">
+
+    <!-- BREADCRUMB & HEADER -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: #64748b; margin-bottom: 0.35rem;">
+                <a href="{% url 'app:my_courses' %}" style="color: inherit; text-decoration: none;">Pelatihan Saya</a>
+                <i class="ri-arrow-right-s-line"></i>
+                <span style="color: #0f172a; font-weight: 600;">{{ course.name|truncatewords:5 }}</span>
+            </div>
+            <h1 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0 0 0.35rem 0;">
+                {{ course.name }}
+            </h1>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span style="background: #eff6ff; color: #2c4cf4; font-size: 0.75rem; font-weight: 700; padding: 3px 9px; border-radius: 4px;">
+                    {{ course.get_course_type_display }}
+                </span>
+                <span style="background: #f3e8ff; color: #8c54fc; font-size: 0.75rem; font-weight: 700; padding: 3px 9px; border-radius: 4px;">
+                    <i class="ri-vidicon-line"></i> {{ course.get_format_display }}
+                </span>
+                {% if is_active %}
+                    <span style="background: #ecfdf5; color: #059669; font-size: 0.75rem; font-weight: 700; padding: 3px 9px; border-radius: 4px; border: 1px solid #a7f3d0;">
+                        <i class="ri-checkbox-circle-fill"></i> Peserta Terdaftar
+                    </span>
+                {% else %}
+                    <span style="background: #fffbeb; color: #d97706; font-size: 0.75rem; font-weight: 700; padding: 3px 9px; border-radius: 4px; border: 1px solid #fde68a;">
+                        <i class="ri-time-line"></i> Menunggu Pembayaran
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="{% url 'app:my_courses' %}" class="btn secondary" style="display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none; padding: 8px 14px; font-weight: 600; font-size: 0.88rem; border-radius: 8px;">
+                <i class="ri-arrow-left-line"></i> Daftar Pelatihan
+            </a>
+            {% if course.meeting_url and is_active %}
+                <a href="{{ course.meeting_url }}" target="_blank" rel="noopener noreferrer" class="btn primary" style="display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none; padding: 8px 16px; font-weight: 700; font-size: 0.88rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(44, 76, 244, 0.25);">
+                    <i class="ri-video-chat-line"></i> Masuk Ruang Virtual
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- MAIN TWO COLUMN LAYOUT -->
+    <div class="course-detail-layout">
+
+        <!-- LEFT COLUMN: SESSIONS, AGENDAS, DESCRIPTION -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+            <!-- 1. RUANG PERTEMUAN VIRTUAL (MEETING BOX) -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 36px; height: 36px; border-radius: 8px; background: #eff6ff; color: #2c4cf4; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                            <i class="ri-broadcast-line"></i>
+                        </div>
+                        <h2 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">
+                            Akses Sesi &amp; Link Pertemuan Virtual
+                        </h2>
+                    </div>
+                    {% if is_active %}
+                        <span style="font-size: 0.78rem; font-weight: 700; color: #059669; background: #ecfdf5; padding: 3px 10px; border-radius: 999px; border: 1px solid #a7f3d0;">
+                            Live Akses Siap
+                        </span>
+                    {% endif %}
+                </div>
+
+                {% if is_active %}
+                    {% if course.meeting_url %}
+                        <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 240px;">
+                                <span style="display: block; font-size: 0.75rem; font-weight: 700; color: #166534; text-transform: uppercase; margin-bottom: 4px;">
+                                    Tautan Zoom / Google Meet Resmi:
+                                </span>
+                                <div style="font-size: 0.92rem; font-weight: 600; color: #14532d; word-break: break-all;">
+                                    {{ course.meeting_url }}
+                                </div>
+                                <span style="display: block; font-size: 0.8rem; color: #15803d; margin-top: 4px;">
+                                    Silakan bergabung 10-15 menit sebelum sesi pelatihan dimulai.
+                                </span>
+                            </div>
+
+                            <a href="{{ course.meeting_url }}" target="_blank" rel="noopener noreferrer" class="btn primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; padding: 10px 20px; border-radius: 8px; font-size: 0.95rem; white-space: nowrap; box-shadow: 0 4px 12px rgba(44, 76, 244, 0.28);">
+                                <i class="ri-external-link-line"></i> Masuk Ruang Virtual
+                            </a>
+                        </div>
+                    {% else %}
+                        <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 1.25rem; color: #64748b; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;">
+                            <i class="ri-time-line" style="font-size: 1.5rem; color: #94a3b8; flex-shrink: 0;"></i>
+                            <div>
+                                <strong style="color: #334155; display: block;">Tautan Pertemuan Virtual Sedang Disiapkan</strong>
+                                Link Zoom / Google Meet akan dibagikan oleh instruktur sebelum jadwal sesi dimulai.
+                            </div>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 10px; padding: 1.25rem; color: #92400e; font-size: 0.9rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="ri-alert-line" style="font-size: 1.5rem; color: #d97706; flex-shrink: 0;"></i>
+                            <div>
+                                <strong style="display: block;">Pembayaran Belum Terverifikasi</strong>
+                                Selesaikan pembayaran pesanan #{% if order %}{{ order.order_number }}{% endif %} untuk membuka akses ruang sesi virtual dan sertifikat.
+                            </div>
+                        </div>
+                        <a href="{% url 'app:pesanan_detail' order.order_number %}" class="btn primary small" style="text-decoration: none; padding: 8px 14px; font-weight: 700;">
+                            Bayar Sekarang
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- 2. JADWAL & AGENDA SESI PEMBELAJARAN -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 36px; height: 36px; border-radius: 8px; background: #eff6ff; color: #2c4cf4; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                            <i class="ri-calendar-todo-line"></i>
+                        </div>
+                        <h2 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">
+                            Jadwal &amp; Rincian Sesi Pembelajaran
+                        </h2>
+                    </div>
+                    <span style="font-size: 0.82rem; color: #64748b; font-weight: 600;">
+                        {{ agendas|length }} Sesi Terjadwal
+                    </span>
+                </div>
+
+                {% if agendas %}
+                    <div>
+                        {% for ag in agendas %}
+                        <div class="agenda-timeline-card">
+                            <div style="flex: 1; min-width: 220px;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                    <span style="font-size: 0.75rem; font-weight: 700; color: #2c4cf4; background: #eff6ff; padding: 2px 8px; border-radius: 4px;">
+                                        Sesi #{{ ag.session_number|default:forloop.counter }}
+                                    </span>
+                                    {% if ag.jp_count %}
+                                        <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">
+                                            <i class="ri-time-line"></i> {{ ag.jp_count }} JP
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <h4 style="margin: 0 0 4px 0; font-size: 0.98rem; font-weight: 700; color: #0f172a;">
+                                    {{ ag.title }}
+                                </h4>
+                                {% if ag.pengajar %}
+                                    <span style="font-size: 0.8rem; color: #64748b;">
+                                        Pengajar: <strong>{{ ag.pengajar.user.first_name|default:ag.pengajar.user.username }}</strong>
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <div style="text-align: right; font-size: 0.85rem; color: #334155; flex-shrink: 0;">
+                                {% if ag.agenda_date %}
+                                    <div style="font-weight: 700; color: #0f172a;">
+                                        {{ ag.agenda_date|date:"l, d M Y" }}
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: #64748b;">
+                                        Pukul {{ ag.agenda_date|time:"H:i" }} WIB
+                                    </div>
+                                {% else %}
+                                    <span style="color: #94a3b8; font-style: italic;">Jadwal menyusul</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div style="text-align: center; color: #94a3b8; padding: 2rem 1rem;">
+                        <i class="ri-calendar-line" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 0.5rem; display: block;"></i>
+                        <p style="margin: 0; font-size: 0.9rem;">Rincian jadwal sesi akan dibagikan oleh instruktur sebelum kegiatan berlangsung.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- 3. DESKRIPSI & SILABUS KEGIATAN -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem;">
+                    <div style="width: 36px; height: 36px; border-radius: 8px; background: #eff6ff; color: #2c4cf4; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                        <i class="ri-file-text-line"></i>
+                    </div>
+                    <h2 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">
+                        Tentang Program Pelatihan Ini
+                    </h2>
+                </div>
+                <div style="font-size: 0.92rem; color: #334155; line-height: 1.7; white-space: pre-line;">
+                    {{ course.description|default:"Tidak ada deskripsi tambahan untuk program ini." }}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: CERTIFICATE, COACHES, INVOICE INFO -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+            <!-- 1. KARTU SERTIFIKAT PELATIHAN -->
+            <div class="cert-card-box">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 0.85rem;">
+                    <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center; font-size: 1.35rem; color: #fde047;">
+                        <i class="ri-award-fill"></i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0; color: #ffffff;">
+                            E-Sertifikat Resmi
+                        </h3>
+                        <span style="font-size: 0.78rem; opacity: 0.85;">Bernomor Seri Resmi ThesisEdu</span>
+                    </div>
+                </div>
+
+                <p style="font-size: 0.85rem; line-height: 1.45; margin: 0 0 1.25rem 0; opacity: 0.92;">
+                    {% if is_active %}
+                        Sertifikat Anda telah siap! Klik tombol di bawah untuk melihat, mencetak, atau menyimpan dokumen PDF sertifikat Anda.
+                    {% else %}
+                        Sertifikat akan diterbitkan dan dapat diunduh segera setelah pendaftaran diverifikasi.
+                    {% endif %}
+                </p>
+
+                {% if is_active %}
+                    <a href="{% url 'app:download_certificate' order_item.id %}" target="_blank" class="btn" style="width: 100%; background: #ffffff; color: #1e3a8a; font-weight: 800; font-size: 0.92rem; padding: 11px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); box-sizing: border-box; transition: background 0.15s;">
+                        <i class="ri-download-2-line" style="font-size: 1.1rem; color: #2c4cf4;"></i>
+                        Lihat &amp; Unduh Sertifikat
+                    </a>
+                {% else %}
+                    <button disabled style="width: 100%; background: rgba(255, 255, 255, 0.2); color: rgba(255, 255, 255, 0.7); font-weight: 700; font-size: 0.88rem; padding: 10px; border-radius: 8px; border: none; cursor: not-allowed; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <i class="ri-lock-line"></i> Sertifikat Terkunci
+                    </button>
+                {% endif %}
+            </div>
+
+            <!-- 2. INSTRUKTUR / PEMATERI -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <h3 style="font-size: 0.98rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.65rem; display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-user-star-line" style="color: #f59e0b;"></i> Instruktur &amp; Pemateri
+                </h3>
+
+                {% if course.coaches.exists %}
+                    <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+                        {% for coach in course.coaches.all %}
+                        <div style="display: flex; gap: 0.75rem; align-items: center;">
+                            <div style="width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: #eff6ff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1.5px solid #bfdbfe;">
+                                {% if coach.photo %}
+                                    <img src="{{ coach.photo.url }}" alt="{{ coach.user.first_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    <i class="ri-user-3-line" style="font-size: 1.25rem; color: #2c4cf4;"></i>
+                                {% endif %}
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <strong style="font-size: 0.88rem; color: #0f172a; display: block; line-height: 1.3;">
+                                    {{ coach.user.first_name|default:coach.user.username }}
+                                </strong>
+                                {% if coach.bidang_keahlian %}
+                                    <span style="font-size: 0.78rem; color: #64748b; display: block;">
+                                        {{ coach.bidang_keahlian.nama_bidang }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">Tim Instruktur Spesialis ThesisEdu</p>
+                {% endif %}
+            </div>
+
+            <!-- 3. INFORMASI PENDAFTARAN & PESANAN -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <h3 style="font-size: 0.98rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.65rem;">
+                    Informasi Pendaftaran
+                </h3>
+
+                <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.6rem;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #64748b;">No. Pesanan:</span>
+                        <a href="{% url 'app:pesanan_detail' order.order_number %}" style="font-weight: 700; color: #2c4cf4; text-decoration: none;">
+                            #{{ order.order_number }}
+                        </a>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #64748b;">Biaya Pendaftaran:</span>
+                        <strong style="color: #0f172a;">
+                            {% if order_item.harga_satuan == 0 %}
+                                <span style="color: #059669;">Gratis</span>
+                            {% else %}
+                                Rp{{ order_item.harga_satuan|floatformat:0 }}
+                            {% endif %}
+                        </strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #64748b;">Metode Bayar:</span>
+                        <span style="color: #334155;">{{ order.metode_pembayaran }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #64748b;">Tanggal Daftar:</span>
+                        <span style="color: #334155;">{{ order.created_at|date:"d M Y" }}</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid #f1f5f9;">
+                    <a href="{% url 'app:pesanan_detail' order.order_number %}" style="font-size: 0.82rem; color: #2c4cf4; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                        <i class="ri-file-list-line"></i> Lihat Rincian Invoice Pesanan
+                    </a>
+                </div>
+            </div>
+
+            <!-- 4. BUTUH BANTUAN -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; text-align: center;">
+                <i class="ri-customer-service-2-line" style="font-size: 1.75rem; color: #2c4cf4; margin-bottom: 0.25rem; display: block;"></i>
+                <strong style="font-size: 0.9rem; color: #1e293b; display: block; margin-bottom: 0.25rem;">Butuh Bantuan Pelatihan?</strong>
+                <p style="font-size: 0.8rem; color: #64748b; margin: 0 0 0.75rem 0;">Hubungi helpdesk kami jika mengalami kendala akses atau sertifikat.</p>
+                <a href="https://wa.me/6281234567890?text=Halo%20Admin%20ThesisEdu,%20saya%20memerlukan%20bantuan%20terkait%20pelatihan%20*{{ course.name|urlencode }}*%20(Pesanan%20%23{{ order.order_number }})." target="_blank" rel="noopener noreferrer" style="font-size: 0.82rem; color: #16a34a; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                    <i class="ri-whatsapp-line"></i> Hubungi via WhatsApp
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock content1 %}
+

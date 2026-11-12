@@ -60,13 +60,19 @@
                             {% endif %}
                         </a>
                     </li>
-                    <li class="{% if title == 'Pesanan Saya' or 'Pesanan' in title %}active{% endif %}">
+                    <li class="{% if title == 'Pesanan Saya' %}active{% endif %}">
                         <a href="{% url 'app:pesanan_list' %}"><i class="ri-shopping-bag-3-line"></i> Pesanan Saya</a>
+                    </li>
+                    <li class="{% if 'Pelatihan' in title or 'Course' in title or 'Sertifikat' in title %}active{% endif %}">
+                        <a href="{% url 'app:my_courses' %}"><i class="ri-video-line"></i> Pelatihan & Course</a>
                     </li>
                     <li class="{% if title == 'Profil Pengguna' or title == 'Edit Profile' %}active{% endif %}">
                         <a href="{% url 'app:profile_pengguna' %}"><i class="ri-user-settings-line"></i> Profil Pengguna</a>
                     </li>
-                    <li style="margin: 0.5rem 0; border-top: 1px solid rgba(255,255,255,0.08);"></li>
+                    <li class="nav-section-label"><span>Shortcuts Menu</span></li>
+                    <li>
+                        <a href="{% url 'katalog_pelatihan' %}" target="_blank"><i class="ri-video-line"></i> Katalog Pelatihan <i class="ri-external-link-line" style="font-size: 0.75rem; margin-left: auto; opacity: 0.6;"></i></a>
+                    </li>
                     <li>
                         <a href="{% url 'buku_list' %}" target="_blank"><i class="ri-book-2-line"></i> Katalog Buku <i class="ri-external-link-line" style="font-size: 0.75rem; margin-left: auto; opacity: 0.6;"></i></a>
                     </li>

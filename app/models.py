@@ -341,19 +341,25 @@ class Cart(models.Model):
 class CartItem(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
-    book = models.ForeignKey(Books, on_delete=models.CASCADE, related_name='cart_items')
+    book = models.ForeignKey(Books, on_delete=models.CASCADE, null=True, blank=True, related_name='cart_items')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True, related_name='cart_items')
     quantity = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('cart', 'book')
+        ordering = ['created_at']
 
     def __str__(self):
-        return f"{self.quantity}x {self.book.judul}"
+        title = self.course.name if self.course else (self.book.judul if self.book else 'Item')
+        return f"{self.quantity}x {title}"
 
     def get_price(self):
-        return self.book.harga_efektif
+        if self.course:
+            return self.course.harga_efektif
+        if self.book:
+            return self.book.harga_efektif
+        return 0
 
     def get_subtotal(self):
         return (self.get_price() or 0) * self.quantity
@@ -414,6 +420,7 @@ class OrderItem(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     book = models.ForeignKey(Books, on_delete=models.SET_NULL, null=True, blank=True, related_name='order_items')
+    course = models.ForeignKey(Course, on_delete=models.SET_NULL, null=True, blank=True, related_name='order_items')
     judul_buku = models.CharField(max_length=255)
     harga_satuan = models.DecimalField(max_digits=12, decimal_places=2)
     quantity = models.PositiveIntegerField(default=1)

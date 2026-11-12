@@ -11,7 +11,7 @@ from django.http import JsonResponse, HttpResponse
 from django.conf import settings
 from django.db import transaction
 from .form_pengguna import formProfile
-from .models import UserPengguna, Books, Cart, CartItem, Order, OrderItem
+from .models import UserPengguna, Books, Course, CourseAgenda, Cart, CartItem, Order, OrderItem
 from .midtrans import create_snap_transaction, get_snap_js_url, verify_signature, sync_order_status_from_midtrans
 from django.urls import reverse
 from app.decorators_pengguna import pengguna_required, check_userpengguna
@@ -46,7 +46,7 @@ def profile_pengguna(request):
 @check_userpengguna
 def cart_view(request):
     cart, _ = Cart.objects.get_or_create(user=request.user)
-    items = cart.items.select_related('book', 'book__kategori').order_by('created_at')
+    items = cart.items.select_related('book', 'book__kategori', 'course').order_by('created_at')
     userpengguna = UserPengguna.objects.filter(user=request.user).first()
 
     total_price = cart.get_total_price()
@@ -111,11 +111,71 @@ def cart_add(request, book_uuid):
     return redirect('app:cart_view')
 
 
+def cart_add_course(request, course_uuid):
+    course = get_object_or_404(Course, uuid=course_uuid)
+
+    if not course.is_active:
+        messages.error(request, f'Maaf, pelatihan/course "{course.name}" saat ini tidak aktif.')
+        return redirect('course_detail', slug=course.slug or str(course.uuid))
+
+    # Cek kuota peserta jika ada batas
+    if course.max_participants is not None:
+        registered_count = OrderItem.objects.filter(
+            course=course,
+            order__status__in=['paid', 'processing', 'shipped', 'delivered']
+        ).count()
+        if registered_count >= course.max_participants:
+            messages.error(request, f'Maaf, kuota peserta untuk "{course.name}" telah penuh.')
+            return redirect('course_detail', slug=course.slug or str(course.uuid))
+
+    # Cek batas pendaftaran jika ada
+    if course.registration_deadline and timezone.now() > course.registration_deadline:
+        messages.error(request, f'Maaf, batas akhir pendaftaran untuk "{course.name}" telah ditutup.')
+        return redirect('course_detail', slug=course.slug or str(course.uuid))
+
+    buy_now = request.POST.get('buy_now') == '1'
+
+    if not request.user.is_authenticated:
+        request.session['pending_cart_item'] = {
+            'course_uuid': str(course.uuid),
+            'quantity': 1,
+            'buy_now': buy_now,
+        }
+        action_text = "mendaftar langsung" if buy_now else "menambahkan ke keranjang"
+        messages.info(
+            request,
+            f'Silakan daftar atau login untuk {action_text} "{course.name}". '
+            f'Pilihan pelatihan Anda telah tersimpan otomatis.'
+        )
+        target_after_auth = reverse('app:checkout') if buy_now else reverse('app:cart_view')
+        return redirect(f"{reverse('register')}?next={target_after_auth}")
+
+    cart, _ = Cart.objects.get_or_create(user=request.user)
+    cart_item, created = CartItem.objects.get_or_create(cart=cart, course=course)
+    cart_item.quantity = 1  # 1 kuota per pendaftaran akun
+    cart_item.save()
+
+    if buy_now:
+        return redirect('app:checkout')
+
+    messages.success(request, f'Pelatihan "{course.name}" berhasil ditambahkan ke keranjang belanja!')
+    return redirect('app:cart_view')
+
+
 @pengguna_required
 @check_userpengguna
 def cart_update(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
     action = request.POST.get('action') or request.GET.get('action')
+    item_title = cart_item.course.name if cart_item.course else (cart_item.book.judul if cart_item.book else 'Item')
+
+    if cart_item.course:
+        if action in ('decrease', 'remove') or (action == 'set' and str(request.POST.get('quantity')) in ('0', '')):
+            cart_item.delete()
+            messages.info(request, f'Pelatihan "{item_title}" dihapus dari keranjang.')
+        else:
+            messages.info(request, f'Pendaftaran pelatihan dibatasi 1 kuota per akun pengguna.')
+        return redirect('app:cart_view')
 
     if action == 'increase':
         if cart_item.book.stok is None or cart_item.quantity < cart_item.book.stok:
@@ -149,25 +209,30 @@ def cart_update(request, item_id):
 
     return redirect('app:cart_view')
 
+
 @pengguna_required
 @check_userpengguna
 def cart_remove(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
-    title = cart_item.book.judul
+    title = cart_item.course.name if cart_item.course else (cart_item.book.judul if cart_item.book else 'Item')
     cart_item.delete()
-    messages.success(request, f'Buku "{title}" berhasil dihapus dari keranjang.')
+    messages.success(request, f'"{title}" berhasil dihapus dari keranjang.')
     return redirect('app:cart_view')
+
 
 @pengguna_required
 @check_userpengguna
 def checkout_view(request):
     cart, _ = Cart.objects.get_or_create(user=request.user)
-    items = cart.items.select_related('book').all()
+    items = cart.items.select_related('book', 'course').all()
     userpengguna = UserPengguna.objects.filter(user=request.user).first()
 
     if not items.exists():
-        messages.warning(request, 'Keranjang belanja Anda masih kosong. Silakan pilih buku terlebih dahulu.')
+        messages.warning(request, 'Keranjang belanja Anda masih kosong. Silakan pilih buku atau pelatihan terlebih dahulu.')
         return redirect('app:cart_view')
+
+    has_physical_book = any(item.book is not None for item in items)
+    has_course = any(item.course is not None for item in items)
 
     total_subtotal = cart.get_total_price()
     ongkir = 0 
@@ -183,13 +248,17 @@ def checkout_view(request):
         catatan = request.POST.get('catatan', '').strip()
         metode_pembayaran = request.POST.get('metode_pembayaran', 'Transfer Bank')
 
+        # Jika hanya pelatihan digital (tidak ada buku fisik), alamat pengiriman otomatis
+        if not has_physical_book and not alamat_pengiriman:
+            alamat_pengiriman = "Akses Digital / Pelatihan Online (Tidak memerlukan pengiriman fisik)"
+
         if not nama_penerima or not no_hp or not alamat_pengiriman:
-            messages.error(request, 'Nama penerima, No. Handphone, dan Alamat Lengkap wajib diisi.')
+            messages.error(request, 'Nama penerima, No. Handphone/WhatsApp, dan Alamat wajib diisi.')
             return redirect('app:checkout')
 
         with transaction.atomic():
             for item in items:
-                if item.book.stok is not None and item.quantity > item.book.stok:
+                if item.book and item.book.stok is not None and item.quantity > item.book.stok:
                     messages.error(
                         request,
                         f'Stok buku "{item.book.judul}" tidak mencukupi (sisa: {item.book.stok} eks). '
@@ -219,21 +288,41 @@ def checkout_view(request):
             )
 
             for item in items:
-                OrderItem.objects.create(
-                    order=order,
-                    book=item.book,
-                    judul_buku=item.book.judul,
-                    harga_satuan=item.get_price(),
-                    quantity=item.quantity,
-                    subtotal=item.get_subtotal(),
-                )
-                # Kurangi stok buku
-                if item.book.stok is not None:
-                    item.book.stok = max(0, item.book.stok - item.quantity)
-                    if item.book.stok == 0:
-                        item.book.status = 'Habis'
-                    item.book.save()
+                if item.course:
+                    OrderItem.objects.create(
+                        order=order,
+                        course=item.course,
+                        judul_buku=f"[Pelatihan] {item.course.name}",
+                        harga_satuan=item.get_price(),
+                        quantity=item.quantity,
+                        subtotal=item.get_subtotal(),
+                    )
+                else:
+                    OrderItem.objects.create(
+                        order=order,
+                        book=item.book,
+                        judul_buku=item.book.judul if item.book else 'Buku',
+                        harga_satuan=item.get_price(),
+                        quantity=item.quantity,
+                        subtotal=item.get_subtotal(),
+                    )
+                    # Kurangi stok buku
+                    if item.book and item.book.stok is not None:
+                        item.book.stok = max(0, item.book.stok - item.quantity)
+                        if item.book.stok == 0:
+                            item.book.status = 'Habis'
+                        item.book.save()
+
             items.delete()
+
+            # Jika pesanan gratis (misalnya course gratis / total_tagihan == 0)
+            if total_tagihan == 0:
+                order.status = 'delivered'  # Langsung aktif/selesai
+                order.paid_at = timezone.now()
+                order.metode_pembayaran = 'Gratis'
+                order.save()
+                messages.success(request, f'Pendaftaran pelatihan #{order.order_number} berhasil! Anda dapat langsung mengakses sesi pelatihan.')
+                return redirect('app:pesanan_detail', order_number=order.order_number)
 
             if metode_pembayaran in ('Midtrans', 'Payment Gateway', 'Otomatis'):
                 try:
@@ -254,6 +343,8 @@ def checkout_view(request):
         'heading': 'Konfirmasi & Checkout',
         'items': items,
         'cart': cart,
+        'has_physical_book': has_physical_book,
+        'has_course': has_course,
         'subtotal': total_subtotal,
         'ongkir': ongkir,
         'total_tagihan': total_tagihan,
@@ -307,7 +398,7 @@ def pesanan_list(request):
 def pesanan_detail(request, order_number):
     userpengguna = UserPengguna.objects.filter(user=request.user).first()
     order = get_object_or_404(
-        Order.objects.prefetch_related('items__book'),
+        Order.objects.prefetch_related('items__book', 'items__course', 'items__course__agendas'),
         order_number=order_number,
         user=request.user
     )
@@ -316,24 +407,30 @@ def pesanan_detail(request, order_number):
     if order.status == 'pending':
         try:
             is_updated, msg = sync_order_status_from_midtrans(order)
-            if is_updated and order.status in ('processing', 'paid'):
+            if is_updated and order.status in ('processing', 'paid', 'delivered'):
                 messages.success(request, f'Pembayaran pesanan #{order.order_number} berhasil diverifikasi!')
         except Exception:
             pass
 
     # Buat atau ambil snap token jika metode pembayaran Midtrans (atau jika ingin bayar otomatis)
     snap_token = order.snap_token
-    if order.status == 'pending':
+    if order.status == 'pending' and order.total_harga > 0:
         if not snap_token and order.metode_pembayaran in ('Midtrans', 'Payment Gateway', 'Otomatis'):
             try:
                 snap_token = create_snap_transaction(order)
             except Exception:
                 snap_token = None
 
+    course_items = [it for it in order.items.all() if it.course]
+    has_physical_items = any(it.book is not None for it in order.items.all())
+
     context = {
         'title': f'Detail Pesanan {order.order_number}',
         'heading': f'Pesanan #{order.order_number}',
         'order': order,
+        'course_items': course_items,
+        'has_course': bool(course_items),
+        'has_physical_items': has_physical_items,
         'snap_token': snap_token,
         'midtrans_client_key': getattr(settings, 'MIDTRANS_CLIENT_KEY', ''),
         'midtrans_snap_js_url': get_snap_js_url(),
@@ -348,13 +445,13 @@ def pesanan_detail(request, order_number):
 @require_POST
 def batalkan_pesanan(request, order_number):
     with transaction.atomic():
-        order = get_object_or_404(Order.objects.select_for_update(),order_number=order_number, user=request.user)
+        order = get_object_or_404(Order.objects.select_for_update(), order_number=order_number, user=request.user)
         if order.status != 'pending':
             messages.error(request, 'Pesanan tidak dapat dibatalkan karena sudah diproses atau dibayar.')
             return redirect('app:pesanan_detail', order_number=order.order_number)
 
-        for item in order.items.select_related('book'):
-            if item.book.stok is not None:
+        for item in order.items.select_related('book', 'course'):
+            if item.book and item.book.stok is not None:
                 item.book.stok += item.quantity
                 item.book.status = 'Tersedia'
                 item.book.save()
@@ -365,7 +462,7 @@ def batalkan_pesanan(request, order_number):
 
     messages.success(
         request,
-        f'Pesanan #{order.order_number} berhasil dibatalkan. Stok buku telah dikembalikan.'
+        f'Pesanan #{order.order_number} berhasil dibatalkan.'
     )
 
     return redirect('app:pesanan_detail', order_number=order.order_number)
@@ -465,3 +562,112 @@ def midtrans_notification(request):
         order.save()
 
     return JsonResponse({'status': 'OK', 'order_status': order.status})
+
+
+@pengguna_required
+@check_userpengguna
+def my_courses_list(request):
+    """Menampilkan daftar seluruh pelatihan/course yang pernah diikuti/didaftarkan oleh user pengguna."""
+    userpengguna = UserPengguna.objects.filter(user=request.user).first()
+
+    status_filter = request.GET.get('status', 'all')
+    base_qs = OrderItem.objects.filter(
+        order__user=request.user,
+        course__isnull=False
+    ).select_related('order', 'course').prefetch_related('course__agendas', 'course__coaches__user').order_by('-order__created_at')
+
+    if status_filter == 'active':
+        course_items = base_qs.filter(order__status__in=['paid', 'processing', 'shipped', 'delivered'])
+    elif status_filter == 'pending':
+        course_items = base_qs.filter(order__status='pending')
+    elif status_filter == 'delivered':
+        course_items = base_qs.filter(order__status='delivered')
+    else:
+        course_items = base_qs
+
+    count_all = base_qs.count()
+    count_active = base_qs.filter(order__status__in=['paid', 'processing', 'shipped', 'delivered']).count()
+    count_pending = base_qs.filter(order__status='pending').count()
+    count_delivered = base_qs.filter(order__status='delivered').count()
+
+    context = {
+        'title': 'Pelatihan Saya',
+        'heading': 'Pelatihan & Kegiatan Saya',
+        'course_items': course_items,
+        'status_filter': status_filter,
+        'count_all': count_all,
+        'count_active': count_active,
+        'count_pending': count_pending,
+        'count_delivered': count_delivered,
+        'userpengguna': userpengguna,
+        'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
+    }
+    return render(request, 'pengguna/my_courses_list.html', context)
+
+
+@pengguna_required
+@check_userpengguna
+def my_course_detail(request, order_item_id):
+    """Menampilkan detail ruang belajar/sesi pelatihan yang diikuti oleh user, lengkap dengan link pertemuan & agenda."""
+    userpengguna = UserPengguna.objects.filter(user=request.user).first()
+    order_item = get_object_or_404(
+        OrderItem.objects.select_related('order', 'course').prefetch_related('course__agendas', 'course__coaches__user', 'course__coaches__bidang_keahlian'),
+        id=order_item_id,
+        order__user=request.user,
+        course__isnull=False
+    )
+    course = order_item.course
+    order = order_item.order
+    agendas = course.agendas.all().order_by('session_number', 'agenda_date')
+    is_active = order.status in ('paid', 'processing', 'shipped', 'delivered')
+
+    context = {
+        'title': f'Pelatihan: {course.name}',
+        'heading': f'Pelatihan: {course.name}',
+        'order_item': order_item,
+        'course': course,
+        'order': order,
+        'agendas': agendas,
+        'is_active': is_active,
+        'userpengguna': userpengguna,
+        'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
+    }
+    return render(request, 'pengguna/my_course_detail.html', context)
+
+
+@pengguna_required
+@check_userpengguna
+def download_certificate(request, order_item_id):
+    """Halaman tampilan dan cetak/unduh E-Sertifikat resmi pelatihan yang telah diselesaikan."""
+    userpengguna = UserPengguna.objects.filter(user=request.user).first()
+    order_item = get_object_or_404(
+        OrderItem.objects.select_related('order', 'course').prefetch_related('course__coaches__user'),
+        id=order_item_id,
+        order__user=request.user,
+        course__isnull=False
+    )
+    course = order_item.course
+    order = order_item.order
+
+    if order.status not in ('paid', 'processing', 'shipped', 'delivered'):
+        messages.warning(request, 'Sertifikat baru dapat diakses setelah pembayaran Anda terverifikasi.')
+        return redirect('app:my_course_detail', order_item_id=order_item.id)
+
+    cert_number = f"CERT/THESIS/{order.created_at.strftime('%Y%m')}/{str(order_item.id)[:8].upper()}"
+    participant_name = (
+        userpengguna.nama_lengkap
+        if (userpengguna and userpengguna.nama_lengkap)
+        else (request.user.get_full_name() or request.user.username)
+    )
+
+    context = {
+        'title': f'E-Sertifikat - {course.name}',
+        'heading': 'Sertifikat Resmi Pelatihan',
+        'order_item': order_item,
+        'course': course,
+        'order': order,
+        'cert_number': cert_number,
+        'participant_name': participant_name,
+        'userpengguna': userpengguna,
+    }
+    return render(request, 'pengguna/sertifikat_view.html', context)
