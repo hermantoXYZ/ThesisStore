@@ -65,101 +65,93 @@
         <div class="book-title-header">
           <h1 class="book-title">{{ book.judul }}</h1>
           <div class="book-header-actions">
-            <button type="button" class="action-btn" id="btnWishlist" onclick="toggleWishlist()">
+            <button type="button" class="action-btn" id="btnWishlist" onclick="toggleWishlist()" title="Tambah ke Favorit">
               <i class="ri-heart-line" id="wishlistIcon"></i>
-              <span>Favorit</span>
+              <span class="action-label">Favorit</span>
             </button>
-            <button type="button" class="action-btn" onclick="shareBook()">
+            <button type="button" class="action-btn" onclick="shareBook()" title="Bagikan Buku">
               <i class="ri-share-line"></i>
-              <span>Bagikan</span>
+              <span class="action-label">Bagikan</span>
             </button>
           </div>
         </div>
         <div class="purchase-options-section">
           <h2 class="sub-heading">Opsi Pembelian</h2>
-          <div class="purchase-box-row" style="align-items: flex-start;">
-            <div class="purchase-card selected">
-              <span class="purchase-card-label">Harga Satuan</span>
-              <div class="purchase-card-price">
-                {% if book.harga_potongan %}
-                  <span class="price-main">Rp{{ book.harga_potongan|floatformat:0 }}</span>
-                  <span class="price-strike">Rp{{ book.harga|floatformat:0 }}</span>
-                {% else %}
-                  <span class="price-main">Rp{{ book.harga|floatformat:0 }}</span>
-                {% endif %}
-              </div>
-            </div>
 
-            <div class="purchase-cta-wrap" style="flex: 1; flex-direction: column; align-items: flex-start; gap: 0.75rem;">
-              
-              {% if not user.is_authenticated %}
-                <!-- GUEST NOTICE BANNER -->
-                <div class="guest-purchase-banner" style="width: 100%; background: #f0f7ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="ri-user-add-line" style="color: #2c4cf4; font-size: 1.2rem; flex-shrink: 0;"></i>
-                    <span style="font-size: 0.83rem; color: #1e3a8a; line-height: 1.4;">
-                      Belum masuk akun? Klik <strong>+ Keranjang</strong> atau <strong>Beli Sekarang</strong> untuk daftar akun baru &amp; pesanan tersimpan otomatis.
-                    </span>
-                  </div>
-                  <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}" style="font-size: 0.78rem; font-weight: 700; color: #2c4cf4; text-decoration: none; white-space: nowrap; padding: 4px 10px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px;">
-                    Login
-                  </a>
-                </div>
-              {% endif %}
-
-              {% if book.status == 'Tersedia' and book.stok > 0 %}
-                <form action="{% url 'app:cart_add' book.uuid %}" method="POST" style="width: 100%; display: flex; flex-direction: column; gap: 0.75rem; margin: 0;">
-                  {% csrf_token %}
-                  
-                  <!-- Quantity Selector & Stock Info -->
-                  <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                    <div style="display: flex; align-items: center; border: 1.5px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff;">
-                      <button type="button" onclick="decrementBookQty()" style="border: none; background: #f8fafc; color: #1e293b; width: 36px; height: 36px; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700;">-</button>
-                      <input type="number" id="bookQtyInput" name="quantity" value="1" min="1" max="{{ book.stok|default:999 }}" style="width: 50px; height: 36px; text-align: center; border: none; font-weight: 700; font-size: 0.95rem; color: #0f172a;" readonly>
-                      <button type="button" onclick="incrementBookQty({{ book.stok|default:999 }})" style="border: none; background: #f8fafc; color: #1e293b; width: 36px; height: 36px; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700;">+</button>
-                    </div>
-
-                    <span class="stock-info in-stock">
-                      <i class="ri-checkbox-circle-fill"></i> Stok Tersedia ({{ book.stok }})
-                    </span>
-                  </div>
-
-                  <!-- Action Buttons -->
-                  <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; width: 100%;">
-                    <button type="submit" name="buy_now" value="0" class="btn-add-to-cart" style="flex: 1; min-width: 170px; padding: 12px 18px; border-radius: 8px; font-weight: 700; font-size: 0.95rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; background: #eff6ff; color: #2c4cf4; border: 1.5px solid #2c4cf4; cursor: pointer; transition: all 0.2s;">
-                      <i class="ri-shopping-cart-2-line" style="font-size: 1.1rem;"></i>
-                      <span>+ Keranjang</span>
-                    </button>
-
-                    <button type="submit" name="buy_now" value="1" class="btn-buy-now" style="flex: 1; min-width: 160px; padding: 12px 18px; border-radius: 8px; font-weight: 700; font-size: 0.95rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; background: #2c4cf4; color: #ffffff; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(44, 76, 244, 0.3); transition: all 0.2s;">
-                      <i class="ri-flashlight-line" style="font-size: 1.1rem;"></i>
-                      <span>Beli Sekarang</span>
-                    </button>
-                  </div>
-                </form>
+          <!-- Harga Row -->
+          <div class="price-row">
+            <div class="price-badge-wrap">
+              {% if book.harga_potongan %}
+                <span class="price-main">Rp{{ book.harga_potongan|floatformat:0 }}</span>
+                <span class="price-strike">Rp{{ book.harga|floatformat:0 }}</span>
+                <span class="price-discount-tag">HEMAT {{ book.persentase_diskon }}%</span>
               {% else %}
-                <span class="stock-info out-of-stock">
-                  <i class="ri-close-circle-fill"></i> {{ book.status|default:"Stok Habis" }}
-                </span>
+                <span class="price-main">Rp{{ book.harga|floatformat:0 }}</span>
               {% endif %}
-
-              <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.25rem;">
-                <a href="https://wa.me/6281234567890?text=Halo%20Admin%20ThesisStore,%20saya%20tertarik%20dan%20ingin%20berkonsultasi%20mengenai%20buku:%0A%0A*Judul:*%20{{ book.judul|urlencode }}%0A*Harga:*%20Rp%20{% if book.harga_potongan %}{{ book.harga_potongan|floatformat:0 }}{% else %}{{ book.harga|floatformat:0 }}{% endif %}%0A*Link:*%20{{ request.build_absolute_uri|urlencode }}"
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   style="font-size: 0.85rem; color: #16a34a; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem;">
-                  <i class="ri-whatsapp-line" style="font-size: 1rem;"></i> Pesan / Konsultasi via WhatsApp
-                </a>
-
-                {% if not user.is_authenticated %}
-                  <span style="font-size: 0.8rem; color: #64748b;">
-                    Sudah punya akun? <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}" style="color: #2c4cf4; font-weight: 600; text-decoration: none;">Masuk di sini</a>
-                  </span>
-                {% endif %}
-              </div>
-
             </div>
           </div>
+
+          <!-- Divider -->
+          <div class="purchase-divider"></div>
+
+          <!-- Guest Banner -->
+          {% if not user.is_authenticated %}
+            <div class="guest-banner">
+              <div class="guest-banner-left">
+                <span>Belum punya akun? Klik <strong>+ Keranjang</strong> atau <strong>Beli Sekarang</strong> — akun &amp; pesanan tersimpan otomatis.</span>
+              </div>
+              <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}" class="guest-login-btn">Login</a>
+            </div>
+          {% endif %}
+
+          <!-- Qty + Stock + CTA -->
+          {% if book.status == 'Tersedia' and book.stok > 0 %}
+            <form action="{% url 'app:cart_add' book.uuid %}" method="POST" class="buy-form">
+              {% csrf_token %}
+
+              <!-- Row: Qty + Stock -->
+              <div class="qty-stock-row">
+                <div class="qty-control">
+                  <button type="button" onclick="decrementBookQty()" class="qty-btn">−</button>
+                  <input type="number" id="bookQtyInput" name="quantity" value="1"
+                         min="1" max="{{ book.stok|default:999 }}"
+                         class="qty-input" readonly>
+                  <button type="button" onclick="incrementBookQty({{ book.stok|default:999 }})" class="qty-btn">+</button>
+                </div>
+                <span class="stock-info in-stock">
+                  <i class="ri-checkbox-circle-fill"></i> Stok Tersedia ({{ book.stok }})
+                </span>
+              </div>
+
+              <!-- Row: Action Buttons -->
+              <div class="cta-row">
+                <button type="submit" name="buy_now" value="0" class="btn-add-to-cart">
+                  <i class="ri-shopping-cart-2-line"></i>
+                  <span>+ Keranjang</span>
+                </button>
+                <button type="submit" name="buy_now" value="1" class="btn-buy-now">
+                  <i class="ri-flashlight-line"></i>
+                  <span>Beli Sekarang</span>
+                </button>
+              </div>
+            </form>
+          {% else %}
+            <span class="stock-info out-of-stock" style="margin-top: 0.5rem;">
+              <i class="ri-close-circle-fill"></i> {{ book.status|default:"Stok Habis" }}
+            </span>
+          {% endif %}
+
+          <!-- Footer row: WA + login link -->
+          <div class="purchase-footer-row">
+            <a href="https://wa.me/6281234567890?text=Halo%20Admin%20ThesisStore,%20saya%20tertarik%20dengan%20buku:%0A%0A*Judul:*%20{{ book.judul|urlencode }}%0A*Harga:*%20Rp%20{% if book.harga_potongan %}{{ book.harga_potongan|floatformat:0 }}{% else %}{{ book.harga|floatformat:0 }}{% endif %}%0A*Link:*%20{{ request.build_absolute_uri|urlencode }}"
+               target="_blank" rel="noopener noreferrer" class="wa-link">
+              <i class="ri-whatsapp-line"></i> Pesan / Konsultasi via WhatsApp
+            </a>
+            {% if not user.is_authenticated %}
+              <span class="login-hint">Sudah punya akun? <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}">Masuk di sini</a></span>
+            {% endif %}
+          </div>
+
         </div>
         <div class="info-callout-banner">
           <div class="info-callout-content">
@@ -513,7 +505,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 .book-title {
   font-size: 1.75rem;
@@ -523,16 +515,17 @@
   margin: 0;
   font-family: inherit;
   flex: 1;
+  min-width: 0; /* prevent overflow */
 }
 .book-header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 4px;
   flex-shrink: 0;
 }
 .action-btn {
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -541,15 +534,20 @@
   color: #1e293b;
   cursor: pointer;
   padding: 6px 10px;
-  border-radius: 6px;
+  border-radius: 8px;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 .action-btn:hover {
   background: #f1f5f9;
+  border-color: #e2e8f0;
   color: #2c4cf4;
 }
 .action-btn i {
   font-size: 1.15rem;
+}
+.action-btn .action-label {
+  display: inline; /* hidden on mobile via media query */
 }
 .action-btn.active i {
   color: #ef4444;
@@ -563,78 +561,232 @@
   margin: 0 0 0.85rem 0;
 }
 
-/* Opsi Pembelian */
+/* Opsi Pembelian - redesigned */
 .purchase-options-section {
   display: flex;
   flex-direction: column;
+  gap: 1rem;
 }
-.purchase-box-row {
+.price-row {
   display: flex;
   align-items: center;
+  gap: 0.75rem;
   flex-wrap: wrap;
-  gap: 1.25rem;
 }
-.purchase-card {
-  border: 1.5px solid #e2e8f0;
-  background: #ffffff;
-  border-radius: 8px;
-  padding: 10px 18px;
-  min-width: 150px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.purchase-card.selected {
-  border-color: #0f172a;
-  background: #f8fafc;
-}
-.purchase-card-label {
-  font-size: 0.8rem;
-  color: #64748b;
-  font-weight: 500;
-  display: block;
-  margin-bottom: 2px;
-}
-.purchase-card-price {
+.price-badge-wrap {
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: 0.6rem;
+  flex-wrap: wrap;
 }
 .price-main {
-  font-size: 1.3rem;
+  font-size: 2rem;
   font-weight: 800;
   color: #0f172a;
+  letter-spacing: -0.5px;
 }
 .price-strike {
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: #94a3b8;
   text-decoration: line-through;
+  font-weight: 500;
+}
+.price-discount-tag {
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+  align-self: center;
+}
+.purchase-divider {
+  height: 1px;
+  background: #f1f5f9;
+  margin: 0;
 }
 
-.purchase-cta-wrap {
+/* Guest banner */
+.guest-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.guest-banner-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.83rem;
+  color: #1e3a8a;
+  line-height: 1.4;
+  flex: 1;
+}
+.guest-banner-left i {
+  color: #2c4cf4;
+  font-size: 1.1rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.guest-login-btn {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #2c4cf4;
+  background: #ffffff;
+  border: 1px solid #bfdbfe;
+  border-radius: 7px;
+  padding: 5px 14px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.guest-login-btn:hover {
+  background: #dbeafe;
+}
+
+/* Buy form */
+.buy-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin: 0;
+}
+.qty-stock-row {
   display: flex;
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
 }
-.btn-buy-wa {
-  display: inline-flex;
+.qty-control {
+  display: flex;
   align-items: center;
-  gap: 8px;
-  background: #10b981;
-  color: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.qty-btn {
+  border: none;
+  background: #f8fafc;
+  color: #1e293b;
+  width: 40px;
+  height: 40px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  transition: background 0.15s;
+}
+.qty-btn:hover {
+  background: #e2e8f0;
+}
+.qty-input {
+  width: 52px;
+  height: 40px;
+  text-align: center;
+  border: none;
+  border-left: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #0f172a;
+  background: #fff;
+}
+.cta-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.btn-add-to-cart {
+  flex: 1;
+  min-width: 160px;
+  padding: 13px 18px;
+  border-radius: 10px;
   font-weight: 700;
   font-size: 0.95rem;
-  padding: 12px 22px;
-  border-radius: 8px;
-  text-decoration: none;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
-  transition: background 0.2s ease, transform 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  background: #eff6ff;
+  color: #2c4cf4;
+  border: 1.5px solid #2c4cf4;
+  cursor: pointer;
+  transition: all 0.2s;
 }
-.btn-buy-wa:hover {
-  background: #059669;
+.btn-add-to-cart:hover {
+  background: #dbeafe;
+}
+.btn-buy-now {
+  flex: 1;
+  min-width: 160px;
+  padding: 13px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  background: linear-gradient(135deg, #2c4cf4, #8c54fc);
   color: #ffffff;
-  transform: translateY(-1px);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(44, 76, 244, 0.35);
+  transition: all 0.2s;
 }
+.btn-buy-now:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(44, 76, 244, 0.4);
+}
+
+/* Purchase footer */
+.purchase-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-top: 0.25rem;
+}
+.wa-link {
+  font-size: 0.85rem;
+  color: #16a34a;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: color 0.15s;
+}
+.wa-link:hover {
+  color: #15803d;
+}
+.wa-link i {
+  font-size: 1.05rem;
+}
+.login-hint {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+.login-hint a {
+  color: #2c4cf4;
+  font-weight: 600;
+  text-decoration: none;
+}
+.login-hint a:hover {
+  text-decoration: underline;
+}
+
 .stock-info {
   display: inline-flex;
   align-items: center;
@@ -815,6 +967,84 @@
   }
   .book-title {
     font-size: 1.45rem;
+  }
+}
+
+/* Mobile: title header */
+@media (max-width: 600px) {
+  /* Title row: judul full width, action buttons ikon-only di kanan */
+  .book-title-header {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .book-title {
+    font-size: 1.2rem;
+    line-height: 1.4;
+  }
+  .book-header-actions {
+    gap: 2px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  /* Tombol Favorit & Bagikan: icon only, hapus teks label */
+  .action-btn {
+    padding: 7px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    gap: 0;
+  }
+  .action-btn .action-label {
+    display: none;
+  }
+  .action-btn i {
+    font-size: 1.2rem;
+  }
+
+  /* Purchase section mobile */
+  .price-main {
+    font-size: 1.6rem;
+  }
+  .guest-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .guest-login-btn {
+    align-self: flex-end;
+  }
+  .qty-stock-row {
+    gap: 0.75rem;
+  }
+  .cta-row {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .btn-add-to-cart,
+  .btn-buy-now {
+    min-width: unset;
+    width: 100%;
+    padding: 13px 16px;
+    font-size: 0.95rem;
+  }
+  .purchase-footer-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  /* Info callout banner */
+  .info-callout-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  /* Spec table single col */
+  .spec-table-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
   }
 }
 </style>
