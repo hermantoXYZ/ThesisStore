@@ -6,33 +6,78 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from app.models import (
     UserAdmin, UserPengguna, Books, CategoryBooks, Course, CourseAgenda,
-    Article, Category, KerjaSama, HeroSlide, Page, JurnalMaster
+    Article, Category, KerjaSama, HeroSlide, Page, JurnalMaster, Cart, CartItem
 )
+from django.urls import reverse
 
+
+def _transfer_pending_cart(request, user):
+    pending = request.session.pop('pending_cart_item', None)
+    if not pending:
+        return None
+
+    book_uuid = pending.get('book_uuid')
+    quantity = pending.get('quantity', 1)
+    buy_now = pending.get('buy_now', False)
+
+    try:
+        book = Books.objects.filter(uuid=book_uuid).first()
+        if book:
+            cart, _ = Cart.objects.get_or_create(user=user)
+            cart_item, created = CartItem.objects.get_or_create(cart=cart, book=book)
+            current_qty = 0 if created else cart_item.quantity
+            new_qty = current_qty + quantity
+            if book.stok is not None and new_qty > book.stok:
+                new_qty = book.stok
+            cart_item.quantity = new_qty
+            cart_item.save()
+
+            if buy_now:
+                return reverse('app:checkout')
+            else:
+                return reverse('app:cart_view')
+    except Exception:
+        pass
+
+    return None
 
 
 def loginView(request):
     if request.user.is_authenticated:
         return redirect('app:index')
 
+    next_url = request.GET.get('next', '')
+
     if request.method == 'POST':
         email = request.POST['email'].strip()
         password = request.POST['password']
+        post_next = request.POST.get('next', '').strip()
 
         user = User.objects.filter(email=email).first()
         user = authenticate(request, username=user.username, password=password) if user else None
 
         if user:
             login(request, user)
-            messages.success(request, 'Selamat Datang!')
+            messages.success(request, f'Selamat Datang kembali, {user.first_name or user.username}!')
+
+            # Pindahkan keranjang tertunda jika ada
+            pending_url = _transfer_pending_cart(request, user)
+            if pending_url:
+                return redirect(pending_url)
+
+            target = post_next or next_url
+            if target and target.startswith('/'):
+                return redirect(target)
             return redirect('app:dashboard')
 
         messages.warning(request, 'Email atau password salah.')
-        return redirect('login')
+        redirect_to = f"{reverse('login')}?next={post_next}" if post_next else 'login'
+        return redirect(redirect_to)
 
     return render(request, 'login.html', {
         'title': 'Login',
         'heading': 'Login',
+        'next': next_url,
     })
 
 
@@ -40,30 +85,45 @@ def registerView(request):
     if request.user.is_authenticated:
         return redirect('app:index')
 
+    next_url = request.GET.get('next', '')
+
     if request.method == 'POST':
         name = request.POST.get('first_name', '').strip()
         email = request.POST.get('email', '').strip().lower()
         password = request.POST.get('password', '')
         confirm = request.POST.get('confirm_password', '')
+        post_next = request.POST.get('next', '').strip()
 
         if confirm != password:
             messages.warning(request, 'Password dan konfirmasi password tidak cocok.')
         elif User.objects.filter(email=email).exists() or User.objects.filter(username=email).exists():
             messages.warning(request, 'Email sudah terdaftar.')
         else:
-            User.objects.create_user(
+            user = User.objects.create_user(
                 username=email,
                 email=email,
                 password=password,
                 first_name=name,
                 last_name='Pengguna',
             )
-            messages.success(request, 'Registrasi berhasil, silakan login.')
-            return redirect('login')
+            UserPengguna.objects.get_or_create(user=user)
+            login(request, user)
+            messages.success(request, f'Pendaftaran berhasil! Selamat datang, {name}.')
+
+            # Pindahkan keranjang tertunda jika ada
+            pending_url = _transfer_pending_cart(request, user)
+            if pending_url:
+                return redirect(pending_url)
+
+            target = post_next or next_url
+            if target and target.startswith('/'):
+                return redirect(target)
+            return redirect('app:dashboard')
 
     return render(request, 'register.html', {
         'title': 'Daftar Akun',
         'heading': 'Pendaftaran Akun',
+        'next': next_url,
     })
 
 
@@ -79,11 +139,7 @@ def homepage(request):
     categories = CategoryBooks.objects.filter(aktif=True)
     total_penulis = UserPengguna.objects.count()
     courses = Course.objects.filter(is_active=True).prefetch_related('coaches__user').order_by('-created_at')
-
-    # Hero Slides
     hero_slides = HeroSlide.objects.filter(is_active=True).order_by('urutan', 'created_at')
-
-    # Artikel: ambil artikel yang published (fallback ke semua artikel jika belum ada yang diset published)
     articles = Article.objects.filter(status='published').select_related('author', 'category').order_by('-created_at')[:6]
     if not articles.exists():
         articles = Article.objects.select_related('author', 'category').order_by('-created_at')[:6]
@@ -214,7 +270,6 @@ def article_detail(request, slug):
     if not article:
         article = get_object_or_404(Article, slug=slug)
 
-    # Increment counter views
     Article.objects.filter(pk=article.pk).update(views_count=(article.views_count or 0) + 1)
     article.refresh_from_db(fields=['views_count'])
 

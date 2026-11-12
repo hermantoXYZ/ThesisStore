@@ -9,6 +9,19 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}?v={{ STATIC_VERSION }}"> 
     <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <style>
+        .badge-count {
+            margin-left: auto;
+            background: #ef4444;
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 999px;
+            line-height: 1.2;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -25,8 +38,27 @@
                     <li class="{% if title == 'Dashboard' %}active{% endif %}">
                         <a href="{% url 'app:dashboard' %}"><i class="ri-dashboard-line"></i> Dashboard</a>
                     </li>
+                    <li class="{% if title == 'Keranjang Belanja' or title == 'Checkout Pesanan' %}active{% endif %}">
+                        <a href="{% url 'app:cart_view' %}" style="display: flex; align-items: center;">
+                            <i class="ri-shopping-cart-2-line"></i> 
+                            <span style="flex: 1;">Keranjang</span>
+                            {% if request.user.cart.get_total_items %}
+                                <span class="badge-count">{{ request.user.cart.get_total_items }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="{% if title == 'Pesanan Saya' or 'Pesanan' in title %}active{% endif %}">
+                        <a href="{% url 'app:pesanan_list' %}"><i class="ri-shopping-bag-3-line"></i> Pesanan Saya</a>
+                    </li>
                     <li class="{% if title == 'Profil Pengguna' or title == 'Edit Profile' %}active{% endif %}">
                         <a href="{% url 'app:profile_pengguna' %}"><i class="ri-user-settings-line"></i> Profil Pengguna</a>
+                    </li>
+                    <li style="margin: 0.5rem 0; border-top: 1px solid rgba(255,255,255,0.08);"></li>
+                    <li>
+                        <a href="{% url 'buku_list' %}" target="_blank"><i class="ri-book-2-line"></i> Katalog Buku <i class="ri-external-link-line" style="font-size: 0.75rem; margin-left: auto; opacity: 0.6;"></i></a>
+                    </li>
+                    <li>
+                        <a href="{% url 'home' %}" target="_blank"><i class="ri-home-4-line"></i> Ke Beranda <i class="ri-external-link-line" style="font-size: 0.75rem; margin-left: auto; opacity: 0.6;"></i></a>
                     </li>
                 </ul>
             </nav>
@@ -52,7 +84,15 @@
                     <h2>{{ heading }}</h2>
                 </div>
                 <div class="header-right">
-                    <div class="user-menu">
+                    <div class="user-menu" style="display: flex; align-items: center; gap: 1rem;">
+                        <a href="{% url 'app:cart_view' %}" title="Keranjang Belanja" style="position: relative; color: inherit; text-decoration: none; display: flex; align-items: center;">
+                            <i class="ri-shopping-cart-2-line" style="font-size: 1.35rem;"></i>
+                            {% if request.user.cart.get_total_items %}
+                                <span style="position: absolute; top: -7px; right: -9px; background: #ef4444; color: #fff; border-radius: 999px; font-size: 0.68rem; font-weight: 700; min-width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; padding: 0 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                    {{ request.user.cart.get_total_items }}
+                                </span>
+                            {% endif %}
+                        </a>
                         <i class="ri-contrast-2-fill" title="Dark Mode Toggle"></i>
                         <i class="ri-notification-3-line" title="Notifikasi"></i>
                         <img src="{% if photo %}/media/{{ photo }}{% else %}https://ui-avatars.com/api/?name={{ request.user.first_name|default:request.user.username|urlencode }}&background=1d84c6&color=fff&size=40{% endif %}" alt="User Avatar" class="avatar">

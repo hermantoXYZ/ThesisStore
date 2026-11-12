@@ -1,0 +1,310 @@
+{% extends "pengguna/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content">
+
+    <!-- PAGE TITLE -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <h1 style="font-size: 1.4rem; font-weight: 700; color: #1e293b; margin: 0;">
+                    Pesanan #{{ order.order_number }}
+                </h1>
+                {% with badge=order.get_status_badge %}
+                <span style="display: inline-flex; align-items: center; font-size: 0.78rem; font-weight: 700; color: {{ badge.1 }}; background: {{ badge.2 }}; border: 1px solid {{ badge.1 }}; padding: 3px 10px; border-radius: 999px;">
+                    {{ badge.0 }}
+                </span>
+                {% endwith %}
+            </div>
+            <p style="color: #64748b; font-size: 0.88rem; margin: 0.35rem 0 0 0;">
+                Waktu Pemesanan: {{ order.created_at|date:"d F Y, H:i" }} WIB
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="{% url 'app:pesanan_list' %}" class="btn secondary" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+                <i class="ri-arrow-left-line"></i> Kembali ke Daftar Pesanan
+            </a>
+        </div>
+    </div>
+
+    <!-- ORDER PROGRESS TRACKER -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div class="order-stepper" style="display: flex; justify-content: space-between; position: relative;">
+            <div class="step-item {% if order.status != 'cancelled' %}completed{% endif %}">
+                <div class="step-icon"><i class="ri-file-text-line"></i></div>
+                <div class="step-label">Dibuat</div>
+            </div>
+            <div class="step-item {% if order.status in 'paid processing shipped delivered' %}completed{% endif %}">
+                <div class="step-icon"><i class="ri-bank-card-line"></i></div>
+                <div class="step-label">Dibayar</div>
+            </div>
+            <div class="step-item {% if order.status in 'processing shipped delivered' %}completed{% endif %}">
+                <div class="step-icon"><i class="ri-box-3-line"></i></div>
+                <div class="step-label">Diproses</div>
+            </div>
+            <div class="step-item {% if order.status in 'shipped delivered' %}completed{% endif %}">
+                <div class="step-icon"><i class="ri-truck-line"></i></div>
+                <div class="step-label">Dikirim</div>
+            </div>
+            <div class="step-item {% if order.status == 'delivered' %}completed{% endif %}">
+                <div class="step-icon"><i class="ri-checkbox-circle-line"></i></div>
+                <div class="step-label">Selesai</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="order-detail-grid" style="display: grid; grid-template-columns: 1fr 380px; gap: 1.5rem; align-items: start;">
+        
+        <!-- LEFT COLUMN: ITEMS & SHIPPING ADDRESS -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            
+            <!-- ORDERED ITEMS -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <div style="padding: 1rem 1.25rem; background: #fafafa; border-bottom: 1px solid #f1f5f9;">
+                    <h3 style="margin: 0; font-size: 1rem; font-weight: 700; color: #1e293b;">
+                        Produk Buku yang Dipesan
+                    </h3>
+                </div>
+
+                <div style="padding: 1.25rem;">
+                    {% for item in order.items.all %}
+                    <div style="display: flex; gap: 1rem; align-items: center; {% if not forloop.last %}margin-bottom: 1.25rem; padding-bottom: 1.25rem; border-bottom: 1px solid #f1f5f9;{% endif %}">
+                        <div style="width: 58px; height: 80px; flex-shrink: 0; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                            {% if item.book and item.book.featured_image %}
+                                <img src="{{ item.book.featured_image.url }}" alt="{{ item.judul_buku }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                <i class="ri-book-line" style="font-size: 1.75rem; color: #cbd5e1;"></i>
+                            {% endif %}
+                        </div>
+
+                        <div style="flex: 1; min-width: 0;">
+                            {% if item.book and item.book.kategori %}
+                                <span style="font-size: 0.72rem; color: #2c4cf4; background: #eff6ff; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+                                    {{ item.book.kategori.nama_kategori }}
+                                </span>
+                            {% endif %}
+                            <h4 style="font-size: 0.98rem; font-weight: 600; color: #1e293b; margin: 0.25rem 0 0.35rem 0;">
+                                {% if item.book %}
+                                    <a href="{{ item.book.get_absolute_url }}" target="_blank" style="color: inherit; text-decoration: none;">
+                                        {{ item.judul_buku }}
+                                    </a>
+                                {% else %}
+                                    {{ item.judul_buku }}
+                                {% endif %}
+                            </h4>
+                            <div style="font-size: 0.85rem; color: #64748b;">
+                                {{ item.quantity }} eksemplar &times; Rp{{ item.harga_satuan|floatformat:0 }}
+                            </div>
+                        </div>
+
+                        <div style="font-size: 1.05rem; font-weight: 700; color: #0f172a; text-align: right;">
+                            Rp{{ item.subtotal|floatformat:0 }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- SHIPPING ADDRESS & DETAILS -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <h3 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem;">
+                    Informasi Pengiriman
+                </h3>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; font-size: 0.9rem;">
+                    <div>
+                        <span style="display: block; color: #64748b; font-size: 0.8rem; margin-bottom: 0.25rem;">Nama Penerima:</span>
+                        <strong style="color: #1e293b;">{{ order.nama_penerima }}</strong>
+                    </div>
+                    <div>
+                        <span style="display: block; color: #64748b; font-size: 0.8rem; margin-bottom: 0.25rem;">No. Handphone / WA:</span>
+                        <strong style="color: #1e293b;">{{ order.no_hp }}</strong>
+                    </div>
+                    <div style="grid-column: span 2;">
+                        <span style="display: block; color: #64748b; font-size: 0.8rem; margin-bottom: 0.25rem;">Alamat Tujuan:</span>
+                        <p style="margin: 0; color: #334155; line-height: 1.5;">
+                            {{ order.alamat_pengiriman }}
+                            {% if order.kota or order.provinsi %}
+                                <br>{{ order.kota }}{% if order.kota and order.provinsi %}, {% endif %}{{ order.provinsi }} {{ order.kode_pos|default:'' }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% if order.catatan %}
+                    <div style="grid-column: span 2; background: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <span style="display: block; color: #64748b; font-size: 0.78rem;">Catatan Pesanan:</span>
+                        <span style="color: #334155;">{{ order.catatan }}</span>
+                    </div>
+                    {% endif %}
+
+                    {% if order.nomor_resi %}
+                    <div style="grid-column: span 2; background: #eff6ff; padding: 1rem; border-radius: 8px; border: 1px solid #bfdbfe;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <span style="display: block; color: #1e40af; font-size: 0.8rem; font-weight: 600;">Ekspedisi &amp; Nomor Resi Pengiriman:</span>
+                                <strong style="font-size: 1.1rem; color: #1e3a8a; font-family: monospace;">{{ order.kurir|default:"JNE / J&T / Pos" }}: {{ order.nomor_resi }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: BILLING & PAYMENT CONFIRMATION -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            
+            <!-- BILLING SUMMARY -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <h3 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem;">
+                    Rincian Pembayaran
+                </h3>
+
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.88rem; color: #475569;">
+                    <span>Subtotal Produk</span>
+                    <span style="font-weight: 600; color: #0f172a;">Rp{{ order.subtotal|floatformat:0 }}</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-size: 0.88rem; color: #475569;">
+                    <span>Ongkos Kirim</span>
+                    <span style="font-weight: 600; color: #10b981;">Gratis Promo</span>
+                </div>
+
+                <div style="border-top: 1px dashed #cbd5e1; padding-top: 0.75rem; display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1rem;">
+                    <span style="font-size: 0.95rem; font-weight: 700; color: #1e293b;">Total Tagihan</span>
+                    <span style="font-size: 1.3rem; font-weight: 800; color: #2c4cf4;">Rp{{ order.total_harga|floatformat:0 }}</span>
+                </div>
+
+                <div style="font-size: 0.82rem; color: #64748b; background: #f8fafc; padding: 8px 12px; border-radius: 6px;">
+                    Metode: <strong>{{ order.metode_pembayaran }}</strong>
+                </div>
+            </div>
+
+            <!-- PAYMENT STATUS & UPLOAD BOX -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <h3 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem;">
+                    Konfirmasi Pembayaran
+                </h3>
+
+                {% if order.status == 'pending' %}
+                    <!-- INSTRUCTION & UPLOAD FORM -->
+                    <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem;">
+                        <span style="display: block; font-size: 0.85rem; font-weight: 700; color: #b45309; margin-bottom: 0.5rem;">
+                            <i class="ri-alert-line"></i> Menunggu Transfer Pembayaran
+                        </span>
+                        <p style="font-size: 0.82rem; color: #78350f; margin: 0 0 0.75rem 0; line-height: 1.4;">
+                            Silakan transfer sejumlah <strong>Rp{{ order.total_harga|floatformat:0 }}</strong> ke nomor rekening resmi berikut:
+                        </p>
+                        <div style="background: #ffffff; padding: 0.75rem; border-radius: 6px; border: 1px solid #fcd34d; font-size: 0.85rem; color: #1e293b;">
+                            <div><strong>Bank Mandiri</strong></div>
+                            <div style="font-family: monospace; font-size: 1.05rem; font-weight: 700; color: #2c4cf4; margin: 2px 0;">123-00-9876543-2</div>
+                            <div style="font-size: 0.78rem; color: #64748b;">a.n. PT Thesis Edukasi Nusantara</div>
+                        </div>
+                    </div>
+
+                    <form action="{% url 'app:upload_bukti_transfer' order.order_number %}" method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.4rem;">
+                            Unggah Bukti Transfer / Resi Pembayaran:
+                        </label>
+                        <input type="file" name="bukti_transfer" required accept="image/*,.pdf"
+                               style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem;">
+                        <button type="submit" class="btn primary" style="width: 100%; padding: 0.75rem; font-size: 0.95rem; font-weight: 700; border-radius: 8px; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                            <i class="ri-upload-cloud-line"></i> Kirim Bukti Transfer
+                        </button>
+                    </form>
+                {% elif order.bukti_transfer %}
+                    <!-- ALREADY UPLOADED -->
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 1rem; text-align: center;">
+                        <i class="ri-checkbox-circle-fill" style="font-size: 2rem; color: #16a34a;"></i>
+                        <h4 style="font-size: 0.95rem; font-weight: 700; color: #166534; margin: 0.5rem 0 0.25rem 0;">
+                            Bukti Transfer Telah Diterima
+                        </h4>
+                        <p style="font-size: 0.82rem; color: #15803d; margin: 0 0 0.75rem 0;">
+                            Admin sedang memverifikasi pembayaran Anda.
+                        </p>
+                        <a href="{{ order.bukti_transfer.url }}" target="_blank" class="btn secondary small" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem;">
+                            <i class="ri-file-line"></i> Lihat File Bukti
+                        </a>
+                    </div>
+                {% else %}
+                    <p style="font-size: 0.85rem; color: #64748b; margin: 0;">
+                        Pesanan ini berstatus <strong>{{ order.get_status_display }}</strong>.
+                    </p>
+                {% endif %}
+
+                <!-- WHATSAPP CS ASSISTANCE -->
+                <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #f1f5f9; text-align: center;">
+                    <a href="https://wa.me/6281234567890?text=Halo%20Admin%20ThesisStore,%20saya%20ingin%20konfirmasi%20pesanan%20nomor:%20{{ order.order_number }}%20atas%20nama%20{{ order.nama_penerima|urlencode }}." 
+                       target="_blank" rel="noopener noreferrer"
+                       style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 600; color: #16a34a; text-decoration: none;">
+                        <i class="ri-whatsapp-line" style="font-size: 1.1rem;"></i> Butuh Bantuan? Hubungi WhatsApp CS
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+.order-stepper {
+    position: relative;
+    padding: 0 1rem;
+}
+.order-stepper::before {
+    content: '';
+    position: absolute;
+    top: 18px;
+    left: 2rem;
+    right: 2rem;
+    height: 3px;
+    background: #e2e8f0;
+    z-index: 1;
+}
+.step-item {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+}
+.step-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid #cbd5e1;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: all 0.25s ease;
+}
+.step-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #64748b;
+}
+.step-item.completed .step-icon {
+    background: #2c4cf4;
+    border-color: #2c4cf4;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(44, 76, 244, 0.35);
+}
+.step-item.completed .step-label {
+    color: #1e293b;
+    font-weight: 700;
+}
+@media (max-width: 900px) {
+    .order-detail-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+{% endblock content1 %}
+

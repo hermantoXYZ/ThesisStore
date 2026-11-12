@@ -1,0 +1,166 @@
+{% extends "pengguna/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content">
+
+    <!-- PAGE TITLE -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0 0 0.25rem 0;">Pesanan Saya</h1>
+            <p style="color: #64748b; font-size: 0.9rem; margin: 0;">Pantau status pemrosesan dan pengiriman buku yang telah Anda pesan.</p>
+        </div>
+        <div>
+            <a href="{% url 'buku_list' %}" class="btn primary" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+                <i class="ri-book-read-line"></i> Belanja Buku Lagi
+            </a>
+        </div>
+    </div>
+
+    <!-- STATUS TABS -->
+    <div class="orders-tab-wrapper" style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0;">
+        <a href="?status=all" class="order-tab-link {% if status_filter == 'all' %}active{% endif %}">
+            Semua ({{ count_all }})
+        </a>
+        <a href="?status=pending" class="order-tab-link {% if status_filter == 'pending' %}active{% endif %}">
+            Menunggu Pembayaran ({{ count_pending }})
+        </a>
+        <a href="?status=paid" class="order-tab-link {% if status_filter == 'paid' %}active{% endif %}">
+            Menunggu Konfirmasi ({{ count_paid }})
+        </a>
+        <a href="?status=processing" class="order-tab-link {% if status_filter == 'processing' %}active{% endif %}">
+            Diproses ({{ count_processing }})
+        </a>
+        <a href="?status=shipped" class="order-tab-link {% if status_filter == 'shipped' %}active{% endif %}">
+            Dikirim ({{ count_shipped }})
+        </a>
+        <a href="?status=delivered" class="order-tab-link {% if status_filter == 'delivered' %}active{% endif %}">
+            Selesai ({{ count_delivered }})
+        </a>
+    </div>
+
+    <!-- ORDERS LIST -->
+    {% if orders %}
+        <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+            {% for order in orders %}
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;">
+                
+                <!-- Card Header -->
+                <div style="padding: 1rem 1.25rem; background: #fafafa; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                        <span style="font-weight: 700; color: #1e293b; font-size: 0.95rem;">
+                            #{{ order.order_number }}
+                        </span>
+                        <span style="font-size: 0.82rem; color: #64748b;">
+                            <i class="ri-calendar-line"></i> {{ order.created_at|date:"d M Y, H:i" }} WIB
+                        </span>
+                    </div>
+                    <div>
+                        {% with badge=order.get_status_badge %}
+                        <span style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; font-weight: 700; color: {{ badge.1 }}; background: {{ badge.2 }}; border: 1px solid {{ badge.1 }}; padding: 3px 10px; border-radius: 999px;">
+                            {{ badge.0 }}
+                        </span>
+                        {% endwith %}
+                    </div>
+                </div>
+
+                <!-- Items Preview -->
+                <div style="padding: 1.25rem;">
+                    {% for item in order.items.all %}
+                    <div style="display: flex; gap: 1rem; align-items: center; {% if not forloop.last %}margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px dashed #f1f5f9;{% endif %}">
+                        <div style="width: 52px; height: 72px; flex-shrink: 0; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                            {% if item.book and item.book.featured_image %}
+                                <img src="{{ item.book.featured_image.url }}" alt="{{ item.judul_buku }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                <i class="ri-book-line" style="font-size: 1.5rem; color: #cbd5e1;"></i>
+                            {% endif %}
+                        </div>
+
+                        <div style="flex: 1; min-width: 0;">
+                            <h4 style="font-size: 0.95rem; font-weight: 600; color: #1e293b; margin: 0 0 0.3rem 0;">
+                                {{ item.judul_buku }}
+                            </h4>
+                            <div style="font-size: 0.82rem; color: #64748b;">
+                                {{ item.quantity }} barang x Rp{{ item.harga_satuan|floatformat:0 }}
+                            </div>
+                        </div>
+
+                        <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; text-align: right;">
+                            Rp{{ item.subtotal|floatformat:0 }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Card Footer -->
+                <div style="padding: 1rem 1.25rem; background: #ffffff; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <span style="font-size: 0.85rem; color: #64748b; margin-right: 0.5rem;">Total Belanja:</span>
+                        <span style="font-size: 1.15rem; font-weight: 800; color: #2c4cf4;">Rp{{ order.total_harga|floatformat:0 }}</span>
+                    </div>
+
+                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                        <a href="{% url 'app:pesanan_detail' order.order_number %}" class="btn secondary small" style="text-decoration: none;">
+                            Lihat Detail Pesanan
+                        </a>
+
+                        {% if order.status == 'pending' %}
+                            <a href="{% url 'app:pesanan_detail' order.order_number %}" class="btn primary small" style="text-decoration: none;">
+                                <i class="ri-upload-cloud-line"></i> Upload Bukti Transfer
+                            </a>
+                        {% elif order.status == 'shipped' and order.nomor_resi %}
+                            <span style="font-size: 0.82rem; background: #f1f5f9; color: #334155; padding: 4px 8px; border-radius: 6px; font-family: monospace;">
+                                Resi: {{ order.nomor_resi }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- EMPTY STATE -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 4rem 2rem; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin: 2rem auto;">
+            <div style="width: 72px; height: 72px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto; color: #94a3b8; font-size: 2.25rem;">
+                <i class="ri-shopping-bag-line"></i>
+            </div>
+            <h3 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0 0 0.5rem 0;">Belum Ada Pesanan</h3>
+            <p style="color: #64748b; font-size: 0.9rem; margin: 0 0 1.5rem 0;">
+                {% if status_filter != 'all' %}
+                    Tidak ada pesanan dengan status yang dipilih.
+                {% else %}
+                    Anda belum melakukan pemesanan buku apa pun di ThesisStore.
+                {% endif %}
+            </p>
+            <a href="{% url 'buku_list' %}" class="btn primary medium" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+                <i class="ri-book-read-line"></i> Buka Katalog Buku
+            </a>
+        </div>
+    {% endif %}
+
+</div>
+
+<style>
+.order-tab-link {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #64748b;
+    text-decoration: none;
+    border-radius: 8px;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+.order-tab-link:hover {
+    color: #1e293b;
+    background: #f1f5f9;
+}
+.order-tab-link.active {
+    color: #2c4cf4;
+    background: #eff6ff;
+    font-weight: 700;
+}
+</style>
+{% endblock content1 %}
+

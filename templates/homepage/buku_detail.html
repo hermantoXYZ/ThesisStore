@@ -77,9 +77,9 @@
         </div>
         <div class="purchase-options-section">
           <h2 class="sub-heading">Opsi Pembelian</h2>
-          <div class="purchase-box-row">
+          <div class="purchase-box-row" style="align-items: flex-start;">
             <div class="purchase-card selected">
-              <span class="purchase-card-label">Satuan</span>
+              <span class="purchase-card-label">Harga Satuan</span>
               <div class="purchase-card-price">
                 {% if book.harga_potongan %}
                   <span class="price-main">Rp{{ book.harga_potongan|floatformat:0 }}</span>
@@ -89,24 +89,75 @@
                 {% endif %}
               </div>
             </div>
-            <div class="purchase-cta-wrap">
-              <a href="https://wa.me/6281234567890?text=Halo%20Admin%20ThesisStore,%20saya%20tertarik%20dan%20ingin%20memesan%20buku:%0A%0A*Judul:*%20{{ book.judul|urlencode }}%0A*Harga:*%20Rp%20{% if book.harga_potongan %}{{ book.harga_potongan|floatformat:0 }}{% else %}{{ book.harga|floatformat:0 }}{% endif %}%0A*Link:*%20{{ request.build_absolute_uri|urlencode }}%0A%0AMohon%20informasi%20cara%20pemesanan%20dan%20pengiriman.%20Terima%20kasih!"
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 class="btn-buy-wa">
-                <i class="ri-whatsapp-line"></i>
-                <span>Pesan Sekarang via WhatsApp</span>
-              </a>
 
-              {% if book.status == 'Tersedia' %}
-                <span class="stock-info in-stock">
-                  <i class="ri-checkbox-circle-fill"></i> Stok Tersedia ({{ book.stok }})
-                </span>
+            <div class="purchase-cta-wrap" style="flex: 1; flex-direction: column; align-items: flex-start; gap: 0.75rem;">
+              
+              {% if not user.is_authenticated %}
+                <!-- GUEST NOTICE BANNER -->
+                <div class="guest-purchase-banner" style="width: 100%; background: #f0f7ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-user-add-line" style="color: #2c4cf4; font-size: 1.2rem; flex-shrink: 0;"></i>
+                    <span style="font-size: 0.83rem; color: #1e3a8a; line-height: 1.4;">
+                      Belum masuk akun? Klik <strong>+ Keranjang</strong> atau <strong>Beli Sekarang</strong> untuk daftar akun baru &amp; pesanan tersimpan otomatis.
+                    </span>
+                  </div>
+                  <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}" style="font-size: 0.78rem; font-weight: 700; color: #2c4cf4; text-decoration: none; white-space: nowrap; padding: 4px 10px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    Login
+                  </a>
+                </div>
+              {% endif %}
+
+              {% if book.status == 'Tersedia' and book.stok > 0 %}
+                <form action="{% url 'app:cart_add' book.uuid %}" method="POST" style="width: 100%; display: flex; flex-direction: column; gap: 0.75rem; margin: 0;">
+                  {% csrf_token %}
+                  
+                  <!-- Quantity Selector & Stock Info -->
+                  <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; border: 1.5px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff;">
+                      <button type="button" onclick="decrementBookQty()" style="border: none; background: #f8fafc; color: #1e293b; width: 36px; height: 36px; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700;">-</button>
+                      <input type="number" id="bookQtyInput" name="quantity" value="1" min="1" max="{{ book.stok|default:999 }}" style="width: 50px; height: 36px; text-align: center; border: none; font-weight: 700; font-size: 0.95rem; color: #0f172a;" readonly>
+                      <button type="button" onclick="incrementBookQty({{ book.stok|default:999 }})" style="border: none; background: #f8fafc; color: #1e293b; width: 36px; height: 36px; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700;">+</button>
+                    </div>
+
+                    <span class="stock-info in-stock">
+                      <i class="ri-checkbox-circle-fill"></i> Stok Tersedia ({{ book.stok }})
+                    </span>
+                  </div>
+
+                  <!-- Action Buttons -->
+                  <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; width: 100%;">
+                    <button type="submit" name="buy_now" value="0" class="btn-add-to-cart" style="flex: 1; min-width: 170px; padding: 12px 18px; border-radius: 8px; font-weight: 700; font-size: 0.95rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; background: #eff6ff; color: #2c4cf4; border: 1.5px solid #2c4cf4; cursor: pointer; transition: all 0.2s;">
+                      <i class="ri-shopping-cart-2-line" style="font-size: 1.1rem;"></i>
+                      <span>+ Keranjang</span>
+                    </button>
+
+                    <button type="submit" name="buy_now" value="1" class="btn-buy-now" style="flex: 1; min-width: 160px; padding: 12px 18px; border-radius: 8px; font-weight: 700; font-size: 0.95rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; background: #2c4cf4; color: #ffffff; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(44, 76, 244, 0.3); transition: all 0.2s;">
+                      <i class="ri-flashlight-line" style="font-size: 1.1rem;"></i>
+                      <span>Beli Sekarang</span>
+                    </button>
+                  </div>
+                </form>
               {% else %}
                 <span class="stock-info out-of-stock">
-                  <i class="ri-close-circle-fill"></i> {{ book.status }}
+                  <i class="ri-close-circle-fill"></i> {{ book.status|default:"Stok Habis" }}
                 </span>
               {% endif %}
+
+              <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.25rem;">
+                <a href="https://wa.me/6281234567890?text=Halo%20Admin%20ThesisStore,%20saya%20tertarik%20dan%20ingin%20berkonsultasi%20mengenai%20buku:%0A%0A*Judul:*%20{{ book.judul|urlencode }}%0A*Harga:*%20Rp%20{% if book.harga_potongan %}{{ book.harga_potongan|floatformat:0 }}{% else %}{{ book.harga|floatformat:0 }}{% endif %}%0A*Link:*%20{{ request.build_absolute_uri|urlencode }}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   style="font-size: 0.85rem; color: #16a34a; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem;">
+                  <i class="ri-whatsapp-line" style="font-size: 1rem;"></i> Pesan / Konsultasi via WhatsApp
+                </a>
+
+                {% if not user.is_authenticated %}
+                  <span style="font-size: 0.8rem; color: #64748b;">
+                    Sudah punya akun? <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}" style="color: #2c4cf4; font-weight: 600; text-decoration: none;">Masuk di sini</a>
+                  </span>
+                {% endif %}
+              </div>
+
             </div>
           </div>
         </div>
@@ -861,6 +912,25 @@ function shareBook() {
     }).catch(function() {
       prompt("Salin tautan buku berikut:", window.location.href);
     });
+  }
+}
+
+// Quantity Counter Handlers
+function incrementBookQty(maxStock) {
+  var input = document.getElementById('bookQtyInput');
+  if (!input) return;
+  var current = parseInt(input.value) || 1;
+  if (current < maxStock) {
+    input.value = current + 1;
+  }
+}
+
+function decrementBookQty() {
+  var input = document.getElementById('bookQtyInput');
+  if (!input) return;
+  var current = parseInt(input.value) || 1;
+  if (current > 1) {
+    input.value = current - 1;
   }
 }
 </script>

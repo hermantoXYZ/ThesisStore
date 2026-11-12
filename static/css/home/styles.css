@@ -1,19 +1,10 @@
-/* ==========================================================================
-   APBISDI PUBLIC PORTAL STYLESHEET
-   Design System inspired by fintech.id
-   Prefix: apb-*
-   ========================================================================== */
-
-/* --------------------------------------------------------------------------
-   1. CSS VARIABLES & RESET
-   -------------------------------------------------------------------------- */
 :root {
   /* Brand Palette */
   --apb-primary: #0088cc;
   --apb-primary-dark: #006699;
   --apb-primary-light: #e6f4fa;
-  --apb-secondary: #005a7a;
-  --apb-accent: #00b4d8;
+  --apb-secondary: #a4a4a4;
+  --apb-accent: #2a4ff6;
   --apb-accent-alt: #f59e0b;
   --apb-dark-navy: #00435c;
   --apb-deep-blue: #022b3a;
@@ -433,7 +424,7 @@ textarea {
 
 .apb-slider-wrapper {
   position: relative;
-  border-radius: 20px;
+  border-radius: 3px;
   overflow: hidden;
   box-shadow: 0 16px 36px rgba(0, 43, 58, 0.15);
   background-color: #022b3a;
@@ -702,7 +693,7 @@ textarea {
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  background: rgba(0, 180, 216, 0.85);
+  background: rgb(42 79 246);
   backdrop-filter: blur(8px);
   color: #ffffff;
   display: flex;
@@ -712,14 +703,12 @@ textarea {
   cursor: pointer;
   z-index: 10;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  border: 2px solid rgba(255, 255, 255, 0.4);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .apb-slider-arrow:hover {
-  background: #00b4d8;
+  background: #2a4ff6;
   transform: translateY(-50%) scale(1.1);
-  box-shadow: 0 6px 20px rgba(0, 180, 216, 0.5);
 }
 
 .apb-slider-prev {
@@ -1488,7 +1477,7 @@ textarea {
    9. CTA BANNER
    -------------------------------------------------------------------------- */
 .apb-cta-banner {
-  background: linear-gradient(135deg, #00435c 0%, #005a7a 100%);
+  background: linear-gradient(135deg, #000000 0%, #000000 100%);
   color: #ffffff;
   border-radius: var(--apb-radius-lg);
   padding: 3.5rem 3rem;
@@ -1531,7 +1520,7 @@ textarea {
 
 /* Upper Dark-Teal Strip */
 .apb-footer-top {
-  background-color: #005a7a;
+  background-color: #2a4ff6;
   color: #ffffff;
   padding: 3.5rem 0 3rem 0;
 }
@@ -1737,7 +1726,7 @@ textarea {
    11. ARTICLE LIST & DETAIL PAGES
    -------------------------------------------------------------------------- */
 .apb-page-header {
-  background: linear-gradient(135deg, #005a7a 0%, #0088cc 100%);
+  background: #2a4ff6;
   color: #ffffff;
   padding: 4rem 0 3.5rem 0;
   text-align: center;
@@ -3745,7 +3734,7 @@ textarea {
    ========================================================================= */
 .apb-benefit-section {
   padding: 5.5rem 0 5rem;
-  background: linear-gradient(145deg, #0a1628 0%, #0d1f3c 40%, #102040 70%, #0a1628 100%);
+  background: linear-gradient(145deg, #000000 0%, #000000 40%, #102040 70%, #0a1628 100%);
   position: relative;
   overflow: hidden;
 }

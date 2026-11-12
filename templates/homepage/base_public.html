@@ -77,6 +77,14 @@
           </a>
 
           {% if user.is_authenticated %}
+            <a href="{% url 'app:cart_view' %}" class="apb-cart-btn" title="Keranjang Belanja" style="position: relative; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 8px; background: #f1f5f9; color: #1e293b; text-decoration: none; margin-right: 0.25rem;">
+              <i class="ri-shopping-cart-2-line" style="font-size: 1.25rem;"></i>
+              {% if user.cart.get_total_items %}
+                <span style="position: absolute; top: -5px; right: -5px; background: #ef4444; color: #fff; border-radius: 999px; font-size: 0.68rem; font-weight: 700; min-width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; padding: 0 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                  {{ user.cart.get_total_items }}
+                </span>
+              {% endif %}
+            </a>
             <a href="{% url 'app:dashboard' %}" class="apb-btn apb-btn-primary">
               <i class="ri-dashboard-line"></i> Dashboard
             </a>

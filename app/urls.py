@@ -17,7 +17,9 @@ urlpatterns = [
     path('buku/kategori/edit/<uuid:uuid>/', views_admin.kategori_buku_edit, name='kategori_buku_edit'),
     path('buku/kategori/hapus/<uuid:uuid>/', views_admin.kategori_buku_hapus, name='kategori_buku_hapus'),
 
-    ###### KELOLA BUKU ###### 
+    ###### KELOLA BUKU & PESANAN TOKO ###### 
+    path('admin/pesanan/', views_admin.admin_order_list, name='admin_order_list'),
+    path('admin/pesanan/<str:order_number>/', views_admin.admin_order_detail, name='admin_order_detail'),
     path('buku/', views_admin.buku_list, name='buku_list'),
     path('buku/tambah/', views_admin.buku_tambah, name='buku_tambah'),
     path('buku/edit/<uuid:uuid>/', views_admin.buku_edit, name='buku_edit'),
@@ -92,6 +94,16 @@ urlpatterns = [
     
     ###### PENGUNA/CLIENTS #######
     path('profile/pengguna', views_pengguna.profile_pengguna, name='profile_pengguna'),
+
+    ###### E-COMMERCE KERANJANG & PESANAN PENGGUNA ######
+    path('keranjang/', views_pengguna.cart_view, name='cart_view'),
+    path('keranjang/tambah/<uuid:book_uuid>/', views_pengguna.cart_add, name='cart_add'),
+    path('keranjang/update/<uuid:item_id>/', views_pengguna.cart_update, name='cart_update'),
+    path('keranjang/hapus/<uuid:item_id>/', views_pengguna.cart_remove, name='cart_remove'),
+    path('checkout/', views_pengguna.checkout_view, name='checkout'),
+    path('pesanan/', views_pengguna.pesanan_list, name='pesanan_list'),
+    path('pesanan/<str:order_number>/', views_pengguna.pesanan_detail, name='pesanan_detail'),
+    path('pesanan/<str:order_number>/upload-bukti/', views_pengguna.upload_bukti_transfer, name='upload_bukti_transfer'),
 
     ###### UMUM ######         
     path('dashboard', views.index, name='dashboard'),

@@ -3,7 +3,8 @@ from django.contrib import messages
 from app.models import (
     UserAdmin, Books, CategoryBooks, MediaBooks, Article, Page, Category,
     KerjaSama, WebSetting, HeroSlide, DokumentasiArticle, DokumentasiPage,
-    Course, CourseAgenda, JurnalMaster, LoaJurnal, NoSuratThesis, KodeSurat
+    Course, CourseAgenda, JurnalMaster, LoaJurnal, NoSuratThesis, KodeSurat,
+    Order, OrderItem
 )
 from .form_admin import (
     formProfile, CategoryBooksForm, BooksForm, ArticleForm, PageForm, CategoryForm,
@@ -1135,4 +1136,83 @@ def kode_surat_hapus(request, uuid):
     ks.delete()
     messages.warning(request, f'Kode surat "{jenis}" berhasil dihapus.')
     return redirect('app:admin_kode_surat_list')
+
+
+# =========================================================================
+# KELOLA PESANAN BUKU / E-COMMERCE (ADMIN)
+# =========================================================================
+
+@admin_required
+def admin_order_list(request):
+    status_filter = request.GET.get('status', 'all')
+    search_q = request.GET.get('q', '').strip()
+
+    orders_qs = Order.objects.select_related('user').prefetch_related('items').order_by('-created_at')
+
+    if status_filter != 'all' and status_filter in dict(Order.STATUS_CHOICES):
+        orders_qs = orders_qs.filter(status=status_filter)
+
+    if search_q:
+        orders_qs = orders_qs.filter(
+            Q(order_number__icontains=search_q) |
+            Q(nama_penerima__icontains=search_q) |
+            Q(no_hp__icontains=search_q)
+        )
+
+    all_orders = Order.objects.all()
+    count_all = all_orders.count()
+    count_pending = all_orders.filter(status='pending').count()
+    count_paid = all_orders.filter(status='paid').count()
+    count_processing = all_orders.filter(status='processing').count()
+    count_shipped = all_orders.filter(status='shipped').count()
+    count_delivered = all_orders.filter(status='delivered').count()
+
+    context = {
+        'title': 'Pesanan Toko Buku',
+        'heading': 'Kelola Pesanan & Pengiriman Buku',
+        'orders': orders_qs,
+        'status_filter': status_filter,
+        'search_q': search_q,
+        'count_all': count_all,
+        'count_pending': count_pending,
+        'count_paid': count_paid,
+        'count_processing': count_processing,
+        'count_shipped': count_shipped,
+        'count_delivered': count_delivered,
+        'photo': _get_admin_photo(request),
+    }
+    return render(request, 'admin_super/order_list.html', context)
+
+
+@admin_required
+def admin_order_detail(request, order_number):
+    order = get_object_or_404(
+        Order.objects.prefetch_related('items__book'),
+        order_number=order_number
+    )
+
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        nomor_resi = request.POST.get('nomor_resi', '').strip()
+        kurir = request.POST.get('kurir', '').strip()
+
+        if new_status in dict(Order.STATUS_CHOICES):
+            order.status = new_status
+        if nomor_resi:
+            order.nomor_resi = nomor_resi
+        if kurir:
+            order.kurir = kurir
+
+        order.save()
+        messages.success(request, f'Status pesanan #{order.order_number} berhasil diperbarui menjadi "{order.get_status_display()}".')
+        return redirect('app:admin_order_detail', order_number=order.order_number)
+
+    context = {
+        'title': f'Detail Pesanan #{order.order_number}',
+        'heading': f'Kelola Pesanan #{order.order_number}',
+        'order': order,
+        'status_choices': Order.STATUS_CHOICES,
+        'photo': _get_admin_photo(request),
+    }
+    return render(request, 'admin_super/order_detail.html', context)
 

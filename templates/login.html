@@ -53,6 +53,9 @@
 
             <form method="POST" class="login-form">
                 {% csrf_token %}
+                {% if next or request.GET.next %}
+                    <input type="hidden" name="next" value="{{ next|default:request.GET.next }}">
+                {% endif %}
 
                 <!-- Email -->
                 <div class="form-group">
@@ -99,7 +102,7 @@
                 <div style="text-align:center; margin-top:15px;">
                     <p style="font-size:13px; color:#666;">
                         Belum punya akun?
-                        <a href="{% url 'register' %}"
+                        <a href="{% url 'register' %}{% if next or request.GET.next %}?next={{ next|default:request.GET.next|urlencode }}{% endif %}"
                            style="color:#0d6efd; font-weight:500; text-decoration:none;">
                             Daftar di sini
                         </a>

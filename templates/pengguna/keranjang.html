@@ -1,0 +1,208 @@
+{% extends "pengguna/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content">
+
+    <!-- PAGE TITLE -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0 0 0.25rem 0;">Keranjang Belanja</h1>
+            <p style="color: #64748b; font-size: 0.9rem; margin: 0;">Kelola daftar buku yang ingin Anda pesan sebelum melakukan checkout.</p>
+        </div>
+        <div>
+            <a href="{% url 'buku_list' %}" class="btn secondary" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+                <i class="ri-arrow-left-line"></i> Tambah Buku Lain
+            </a>
+        </div>
+    </div>
+
+    {% if items %}
+    <div class="cart-layout-grid" style="display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start;">
+        
+        <!-- ITEM LIST CARD -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div style="padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #fafafa;">
+                <span style="font-weight: 600; color: #334155; font-size: 0.95rem;">
+                    Daftar Produk ({{ total_items }} item)
+                </span>
+                <span style="font-size: 0.82rem; color: #64748b;">
+                    Harga Satuan &amp; Subtotal
+                </span>
+            </div>
+
+            <div class="cart-items-wrapper">
+                {% for item in items %}
+                <div class="cart-item-row" style="padding: 1.25rem; border-bottom: 1px solid #f1f5f9; display: flex; gap: 1.25rem; align-items: center;">
+                    <!-- Cover Thumbnail -->
+                    <div style="width: 72px; height: 100px; flex-shrink: 0; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                        {% if item.book.featured_image %}
+                            <img src="{{ item.book.featured_image.url }}" alt="{{ item.book.judul }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                            <i class="ri-book-line" style="font-size: 2rem; color: #cbd5e1;"></i>
+                        {% endif %}
+                    </div>
+
+                    <!-- Book Details -->
+                    <div style="flex: 1; min-width: 0;">
+                        {% if item.book.kategori %}
+                            <span style="display: inline-block; font-size: 0.75rem; font-weight: 600; color: #2c4cf4; background: #eff6ff; padding: 2px 8px; border-radius: 4px; margin-bottom: 0.35rem;">
+                                {{ item.book.kategori.nama_kategori }}
+                            </span>
+                        {% endif %}
+                        <h3 style="font-size: 1rem; font-weight: 600; margin: 0 0 0.35rem 0; line-height: 1.35;">
+                            <a href="{{ item.book.get_absolute_url }}" target="_blank" style="color: #1e293b; text-decoration: none;">
+                                {{ item.book.judul }}
+                            </a>
+                        </h3>
+                        <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.5rem;">
+                            Penulis: 
+                            {% for p in item.book.penulis.all %}
+                                {{ p.user.first_name|default:p.user.username }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                                Anonim
+                            {% endfor %}
+                        </div>
+
+                        <!-- Price display -->
+                        <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+                            <span style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">
+                                Rp{{ item.get_price|floatformat:0 }}
+                            </span>
+                            {% if item.book.harga_potongan and item.book.harga_potongan > 0 and item.book.harga %}
+                                <span style="font-size: 0.8rem; text-decoration: line-through; color: #94a3b8;">
+                                    Rp{{ item.book.harga|floatformat:0 }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Quantity Counter & Subtotal -->
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.75rem; flex-shrink: 0;">
+                        <!-- Subtotal -->
+                        <div style="font-size: 1.05rem; font-weight: 700; color: #2c4cf4;">
+                            Rp{{ item.get_subtotal|floatformat:0 }}
+                        </div>
+
+                        <!-- Qty Controls -->
+                        <div style="display: flex; align-items: center; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #ffffff;">
+                            <form action="{% url 'app:cart_update' item.id %}" method="POST" style="margin: 0; display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="decrease">
+                                <button type="submit" style="border: none; background: #f8fafc; color: #334155; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: background 0.15s;" title="Kurangi">
+                                    <i class="ri-subtract-line"></i>
+                                </button>
+                            </form>
+                            <span style="min-width: 34px; text-align: center; font-size: 0.85rem; font-weight: 600; color: #0f172a;">
+                                {{ item.quantity }}
+                            </span>
+                            <form action="{% url 'app:cart_update' item.id %}" method="POST" style="margin: 0; display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="increase">
+                                <button type="submit" style="border: none; background: #f8fafc; color: #334155; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: background 0.15s;" title="Tambah">
+                                    <i class="ri-add-line"></i>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Remove Button -->
+                        <form action="{% url 'app:cart_remove' item.id %}" method="POST" onsubmit="return confirm('Hapus buku ini dari keranjang?');" style="margin: 0;">
+                            {% csrf_token %}
+                            <button type="submit" style="background: none; border: none; color: #ef4444; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; padding: 2px 4px;">
+                                <i class="ri-delete-bin-line"></i> Hapus
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div style="padding: 1rem 1.25rem; background: #fafafa; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.85rem; color: #64748b;">
+                    <i class="ri-information-line"></i> Pastikan jumlah pesanan telah sesuai dengan kebutuhan Anda.
+                </span>
+                <a href="{% url 'buku_list' %}" style="font-size: 0.85rem; font-weight: 600; color: #2c4cf4; text-decoration: none;">
+                    + Lanjut Belanja
+                </a>
+            </div>
+        </div>
+
+        <!-- SUMMARY CARD -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: sticky; top: 1rem;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem;">
+                Ringkasan Belanja
+            </h3>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-size: 0.9rem; color: #475569;">
+                <span>Total Item</span>
+                <span style="font-weight: 600; color: #0f172a;">{{ total_items }} buku</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-size: 0.9rem; color: #475569;">
+                <span>Subtotal Produk</span>
+                <span style="font-weight: 600; color: #0f172a;">Rp{{ total_price|floatformat:0 }}</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; font-size: 0.9rem; color: #475569;">
+                <span>Biaya Pengiriman</span>
+                <span style="font-weight: 600; color: #10b981;">Gratis / Dihitung</span>
+            </div>
+
+            <div style="border-top: 1px dashed #cbd5e1; margin-top: 1rem; padding-top: 1rem; display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.5rem;">
+                <span style="font-size: 1rem; font-weight: 700; color: #1e293b;">Total Tagihan</span>
+                <span style="font-size: 1.35rem; font-weight: 800; color: #2c4cf4;">Rp{{ total_price|floatformat:0 }}</span>
+            </div>
+
+            <a href="{% url 'app:checkout' %}" class="btn primary" style="display: block; width: 100%; text-align: center; padding: 0.85rem; font-size: 1rem; font-weight: 700; text-decoration: none; border-radius: 8px; box-shadow: 0 4px 12px rgba(44, 76, 244, 0.25);">
+                Checkout Sekarang <i class="ri-arrow-right-line"></i>
+            </a>
+
+            <!-- Assurance Perks -->
+            <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 0.65rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #64748b;">
+                    <i class="ri-shield-check-fill" style="color: #10b981; font-size: 1rem;"></i>
+                    <span>100% Produk Buku Original Ber-ISBN</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #64748b;">
+                    <i class="ri-truck-fill" style="color: #2c4cf4; font-size: 1rem;"></i>
+                    <span>Pengiriman Ekspedisi ke Seluruh Indonesia</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #64748b;">
+                    <i class="ri-secure-payment-fill" style="color: #8c54fc; font-size: 1rem;"></i>
+                    <span>Pembayaran Aman &amp; Verifikasi Langsung</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    {% else %}
+    <!-- EMPTY CART STATE -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 4rem 2rem; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin: 2rem auto;">
+        <div style="width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; color: #94a3b8; font-size: 2.75rem;">
+            <i class="ri-shopping-cart-line"></i>
+        </div>
+        <h2 style="font-size: 1.35rem; font-weight: 700; color: #1e293b; margin: 0 0 0.5rem 0;">Keranjang Belanja Anda Kosong</h2>
+        <p style="color: #64748b; font-size: 0.95rem; max-width: 440px; margin: 0 auto 2rem auto;">
+            Anda belum menambahkan buku apa pun ke dalam keranjang. Temukan buku referensi akademik, monograf, dan ajar pilihan Anda sekarang!
+        </p>
+        <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+            <a href="{% url 'buku_list' %}" class="btn primary medium" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+                <i class="ri-book-read-line"></i> Jelajahi Katalog Buku
+            </a>
+            <a href="{% url 'app:pesanan_list' %}" class="btn secondary medium" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+                <i class="ri-file-list-3-line"></i> Riwayat Pesanan Saya
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<style>
+@media (max-width: 900px) {
+    .cart-layout-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+{% endblock content1 %}
+

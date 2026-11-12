@@ -29,7 +29,10 @@
                         <a href="{% url "app:dashboard" %}"><i class="ri-dashboard-line"></i> Dashboard</a>
                     </li>
 
-                    <li class="nav-section-label"><span>Katalog Buku</span></li>
+                    <li class="nav-section-label"><span>Katalog Buku &amp; Pesanan</span></li>
+                    <li class="{% if '/admin/pesanan' in request.path %}active{% endif %}">
+                        <a href="{% url "app:admin_order_list" %}"><i class="ri-shopping-bag-3-line"></i> Pesanan Toko</a>
+                    </li>
                     <li class="{% if '/buku/' in request.path and '/kategori/' not in request.path %}active{% endif %}">
                         <a href="{% url "app:buku_list" %}"><i class="ri-book-2-line"></i> Kelola Buku</a>
                     </li>

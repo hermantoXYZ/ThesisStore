@@ -1,0 +1,202 @@
+{% extends "admin_super/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content">
+    
+    <!-- STATS CARDS -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+            <div style="width: 44px; height: 44px; border-radius: 8px; background: #eff6ff; color: #2c4cf4; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                <i class="ri-shopping-bag-3-line"></i>
+            </div>
+            <div>
+                <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Total Pesanan</span>
+                <h3 style="margin: 0; font-size: 1.35rem; font-weight: 700; color: #1e293b;">{{ count_all }}</h3>
+            </div>
+        </div>
+
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+            <div style="width: 44px; height: 44px; border-radius: 8px; background: #fffbeb; color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                <i class="ri-time-line"></i>
+            </div>
+            <div>
+                <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Menunggu Bayar</span>
+                <h3 style="margin: 0; font-size: 1.35rem; font-weight: 700; color: #1e293b;">{{ count_pending }}</h3>
+            </div>
+        </div>
+
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+            <div style="width: 44px; height: 44px; border-radius: 8px; background: #f0f9ff; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                <i class="ri-upload-cloud-line"></i>
+            </div>
+            <div>
+                <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Konfirmasi Bayar</span>
+                <h3 style="margin: 0; font-size: 1.35rem; font-weight: 700; color: #1e293b;">{{ count_paid }}</h3>
+            </div>
+        </div>
+
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+            <div style="width: 44px; height: 44px; border-radius: 8px; background: #f5f3ff; color: #7c3aed; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                <i class="ri-truck-line"></i>
+            </div>
+            <div>
+                <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Dikirim / Proses</span>
+                <h3 style="margin: 0; font-size: 1.35rem; font-weight: 700; color: #1e293b;">{{ count_processing|add:count_shipped }}</h3>
+            </div>
+        </div>
+
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+            <div style="width: 44px; height: 44px; border-radius: 8px; background: #ecfdf5; color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                <i class="ri-checkbox-circle-line"></i>
+            </div>
+            <div>
+                <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Selesai</span>
+                <h3 style="margin: 0; font-size: 1.35rem; font-weight: 700; color: #1e293b;">{{ count_delivered }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN TABLE SECTION -->
+    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; border-bottom: 2px solid #f0f0f0; padding-bottom: 14px;">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    Daftar Pesanan Toko Buku
+                </h3>
+                <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                    Kelola data transaksi belanja buku pelanggan, konfirmasi bukti transfer, dan input resi ekspedisi.
+                </p>
+            </div>
+
+            <!-- Search Form -->
+            <form method="GET" style="display: flex; gap: 0.5rem; align-items: center; margin: 0;">
+                <input type="text" name="q" value="{{ search_q }}" placeholder="Cari No. Order / Pembeli..."
+                       style="padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88rem; width: 220px;">
+                <button type="submit" class="btn primary small" style="margin: 0;">
+                    <i class="ri-search-line"></i> Cari
+                </button>
+                {% if search_q %}
+                    <a href="{% url 'app:admin_order_list' %}" class="btn secondary small" style="text-decoration: none;">Reset</a>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Filter Status Pills -->
+        <div style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.75rem; margin-bottom: 1rem;">
+            <a href="?status=all{% if search_q %}&q={{ search_q }}{% endif %}" class="status-pill {% if status_filter == 'all' %}active{% endif %}">Semua</a>
+            <a href="?status=pending{% if search_q %}&q={{ search_q }}{% endif %}" class="status-pill {% if status_filter == 'pending' %}active{% endif %}">Menunggu Bayar</a>
+            <a href="?status=paid{% if search_q %}&q={{ search_q }}{% endif %}" class="status-pill {% if status_filter == 'paid' %}active{% endif %}">Menunggu Konfirmasi</a>
+            <a href="?status=processing{% if search_q %}&q={{ search_q }}{% endif %}" class="status-pill {% if status_filter == 'processing' %}active{% endif %}">Diproses</a>
+            <a href="?status=shipped{% if search_q %}&q={{ search_q }}{% endif %}" class="status-pill {% if status_filter == 'shipped' %}active{% endif %}">Dikirim</a>
+            <a href="?status=delivered{% if search_q %}&q={{ search_q }}{% endif %}" class="status-pill {% if status_filter == 'delivered' %}active{% endif %}">Selesai</a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="student-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center;">No</th>
+                        <th style="white-space: nowrap;">No. Pesanan &amp; Tanggal</th>
+                        <th style="white-space: nowrap;">Pelanggan / Penerima</th>
+                        <th style="white-space: nowrap;">Ringkasan Buku</th>
+                        <th style="white-space: nowrap;">Total Tagihan</th>
+                        <th style="width: 110px; text-align: center;">Status</th>
+                        <th style="width: 110px; text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ord in orders %}
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle;">{{ forloop.counter }}</td>
+                        <td style="vertical-align: middle;">
+                            <strong style="color: #1e293b; font-size: 0.92rem; font-family: monospace;">#{{ ord.order_number }}</strong>
+                            <div style="font-size: 0.8rem; color: #64748b; margin-top: 3px;">
+                                <i class="ri-calendar-line"></i> {{ ord.created_at|date:"d M Y, H:i" }}
+                            </div>
+                        </td>
+                        <td style="vertical-align: middle;">
+                            <div style="font-weight: 600; color: #1e293b; font-size: 0.9rem;">
+                                {{ ord.nama_penerima }}
+                            </div>
+                            <div style="font-size: 0.8rem; color: #64748b;">
+                                <i class="ri-phone-line"></i> {{ ord.no_hp }}
+                            </div>
+                            <div style="font-size: 0.78rem; color: #94a3b8;">
+                                Akun: {{ ord.user.username }}
+                            </div>
+                        </td>
+                        <td style="vertical-align: middle;">
+                            <div style="font-size: 0.88rem; color: #334155; line-height: 1.4;">
+                                {% for item in ord.items.all|slice:":2" %}
+                                    &bull; {{ item.quantity }}x {{ item.judul_buku|truncatewords:5 }}<br>
+                                {% endfor %}
+                                {% if ord.items.count > 2 %}
+                                    <span style="font-size: 0.75rem; color: #2c4cf4;">+{{ ord.items.count|add:"-2" }} produk lainnya</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td style="vertical-align: middle;">
+                            <strong style="color: #2c4cf4; font-size: 0.95rem;">
+                                Rp{{ ord.total_harga|floatformat:0 }}
+                            </strong>
+                            {% if ord.bukti_transfer %}
+                                <div style="margin-top: 4px;">
+                                    <span style="font-size: 0.72rem; background: #ecfdf5; color: #059669; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+                                        <i class="ri-attachment-line"></i> Ada Bukti Transfer
+                                    </span>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; vertical-align: middle;">
+                            {% with badge=ord.get_status_badge %}
+                            <span style="font-size: 0.78rem; font-weight: 700; color: {{ badge.1 }}; background: {{ badge.2 }}; border: 1px solid {{ badge.1 }}; padding: 3px 8px; border-radius: 999px; white-space: nowrap;">
+                                {{ badge.0 }}
+                            </span>
+                            {% endwith %}
+                        </td>
+                        <td style="text-align: center; vertical-align: middle;">
+                            <a href="{% url 'app:admin_order_detail' ord.order_number %}" class="btn primary small" style="text-decoration: none; padding: 5px 10px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="ri-edit-line"></i> Kelola
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">
+                            <i class="ri-inbox-line" style="font-size: 48px; display: block; margin-bottom: 8px;"></i>
+                            Belum ada data transaksi pesanan yang sesuai filter.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+.status-pill {
+    padding: 6px 14px;
+    background: #f1f5f9;
+    color: #475569;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+.status-pill:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+.status-pill.active {
+    background: #2c4cf4;
+    color: #ffffff;
+}
+</style>
+{% endblock content1 %}
+

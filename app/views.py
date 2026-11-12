@@ -1,12 +1,10 @@
 from django.shortcuts import render, redirect
-
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
 from django.utils import timezone
 from .models import UserAdmin, UserPengguna, Provinsi, Books, CategoryBooks
-
 
 @login_required
 def index(request):
@@ -37,7 +35,7 @@ def index(request):
             messages.error(request, 'Profil pengguna belum tersedia.')
             return redirect('app:profile_pengguna')
 
-        if not userC.photo or not userC.telp or not userC.provinsi_anggota or not userC.alamat:
+        if not userC.photo or not userC.telp or not userC.provinsi_pengguna or not userC.alamat:
             messages.error(request, 'Harap lengkapi profil Anda terlebih dahulu.')
             return redirect('app:profile_pengguna')
             

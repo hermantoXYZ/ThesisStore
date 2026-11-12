@@ -1,0 +1,217 @@
+{% extends "admin_super/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h2 style="margin: 0; font-size: 1.4rem; color: #1e293b; font-weight: 700;">
+                    Pesanan #{{ order.order_number }}
+                </h2>
+                {% with badge=order.get_status_badge %}
+                <span style="font-size: 0.8rem; font-weight: 700; color: {{ badge.1 }}; background: {{ badge.2 }}; border: 1px solid {{ badge.1 }}; padding: 3px 10px; border-radius: 999px;">
+                    {{ badge.0 }}
+                </span>
+                {% endwith %}
+            </div>
+            <p style="font-size: 0.85rem; color: #64748b; margin-top: 4px; margin-bottom: 0;">
+                Waktu Transaksi: {{ order.created_at|date:"d F Y, H:i:s" }} WIB | Akun Pembeli: <strong>{{ order.user.username }}</strong>
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'app:admin_order_list' %}" class="btn secondary" style="text-decoration: none;">
+                <i class="ri-arrow-left-line"></i> Kembali ke Daftar Pesanan
+            </a>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 380px; gap: 1.5rem; align-items: start;">
+        
+        <!-- LEFT: ITEMS & SHIPPING -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            
+            <!-- ITEMS TABLE -->
+            <div style="background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                <h3 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem;">
+                    Daftar Produk Buku Dipesan
+                </h3>
+
+                <div class="table-responsive">
+                    <table class="student-table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Produk Buku</th>
+                                <th style="text-align: right;">Harga Satuan</th>
+                                <th style="text-align: center;">Jumlah</th>
+                                <th style="text-align: right;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        {% if item.book and item.book.featured_image %}
+                                            <img src="{{ item.book.featured_image.url }}" alt="{{ item.judul_buku }}" style="width: 40px; height: 54px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0;">
+                                        {% else %}
+                                            <div style="width: 40px; height: 54px; background: #f1f5f9; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #94a3b8;">
+                                                <i class="ri-book-line"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <strong style="color: #1e293b; font-size: 0.9rem;">{{ item.judul_buku }}</strong>
+                                            {% if item.book %}
+                                                <div style="font-size: 0.75rem; color: #64748b;">
+                                                    Kategori: {{ item.book.kategori.nama_kategori|default:"-" }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="text-align: right; vertical-align: middle;">
+                                    Rp{{ item.harga_satuan|floatformat:0 }}
+                                </td>
+                                <td style="text-align: center; vertical-align: middle; font-weight: 600;">
+                                    {{ item.quantity }} eks
+                                </td>
+                                <td style="text-align: right; vertical-align: middle; font-weight: 700; color: #0f172a;">
+                                    Rp{{ item.subtotal|floatformat:0 }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" style="text-align: right; font-weight: 700;">Subtotal:</td>
+                                <td style="text-align: right; font-weight: 700;">Rp{{ order.subtotal|floatformat:0 }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" style="text-align: right; font-weight: 700;">Biaya Pengiriman:</td>
+                                <td style="text-align: right; font-weight: 700; color: #10b981;">Rp{{ order.ongkir|floatformat:0 }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" style="text-align: right; font-size: 1.05rem; font-weight: 800; color: #1e293b;">Total Tagihan:</td>
+                                <td style="text-align: right; font-size: 1.15rem; font-weight: 800; color: #2c4cf4;">Rp{{ order.total_harga|floatformat:0 }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SHIPPING ADDRESS -->
+            <div style="background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                <h3 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem;">
+                    Tujuan &amp; Alamat Pengiriman
+                </h3>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.9rem;">
+                    <div>
+                        <span style="display: block; font-size: 0.8rem; color: #64748b;">Nama Penerima:</span>
+                        <strong style="color: #1e293b;">{{ order.nama_penerima }}</strong>
+                    </div>
+                    <div>
+                        <span style="display: block; font-size: 0.8rem; color: #64748b;">No. Handphone:</span>
+                        <strong style="color: #1e293b;">{{ order.no_hp }}</strong>
+                        <a href="https://wa.me/{{ order.no_hp|cut:' '|cut:'-' }}?text=Halo%20{{ order.nama_penerima|urlencode }},%20kami%20dari%20Admin%20ThesisStore%20terkait%20pesanan%20nomor%20{{ order.order_number }}"
+                           target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 2px; font-size: 0.75rem; color: #16a34a; margin-left: 6px;">
+                            <i class="ri-whatsapp-line"></i> Hubungi WA
+                        </a>
+                    </div>
+                    <div style="grid-column: span 2;">
+                        <span style="display: block; font-size: 0.8rem; color: #64748b;">Alamat Lengkap:</span>
+                        <p style="margin: 0; color: #334155; line-height: 1.5;">
+                            {{ order.alamat_pengiriman }}
+                            {% if order.kota or order.provinsi %}
+                                <br>{{ order.kota }}{% if order.kota and order.provinsi %}, {% endif %}{{ order.provinsi }} {{ order.kode_pos|default:'' }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% if order.catatan %}
+                    <div style="grid-column: span 2; background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                        <span style="display: block; font-size: 0.75rem; color: #64748b;">Catatan dari Pembeli:</span>
+                        <span style="color: #334155;">{{ order.catatan }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT: STATUS MANAGEMENT & PAYMENT PROOF -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            
+            <!-- UPDATE STATUS FORM -->
+            <div style="background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                <h3 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem;">
+                    Update Status &amp; Pengiriman
+                </h3>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.4rem;">
+                            Status Pesanan:
+                        </label>
+                        <select name="status" style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; font-weight: 600;">
+                            {% for val, label in status_choices %}
+                                <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.4rem;">
+                            Kurir / Ekspedisi:
+                        </label>
+                        <input type="text" name="kurir" value="{{ order.kurir|default:'' }}" placeholder="Contoh: JNE Regular / SiCepat / J&T"
+                               style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;">
+                    </div>
+
+                    <div style="margin-bottom: 1.25rem;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.4rem;">
+                            Nomor Resi Pengiriman:
+                        </label>
+                        <input type="text" name="nomor_resi" value="{{ order.nomor_resi|default:'' }}" placeholder="Masukkan Nomor Resi..."
+                               style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; font-family: monospace;">
+                    </div>
+
+                    <button type="submit" class="btn primary" style="width: 100%; padding: 0.75rem; font-weight: 700; border-radius: 8px; cursor: pointer; border: none;">
+                        <i class="ri-save-line"></i> Simpan Perubahan
+                    </button>
+                </form>
+            </div>
+
+            <!-- PAYMENT PROOF PREVIEW -->
+            <div style="background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                <h3 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem;">
+                    Bukti Pembayaran Pelanggan
+                </h3>
+
+                {% if order.bukti_transfer %}
+                    <div style="text-align: center;">
+                        <a href="{{ order.bukti_transfer.url }}" target="_blank">
+                            <img src="{{ order.bukti_transfer.url }}" alt="Bukti Transfer" style="max-width: 100%; max-height: 250px; object-fit: contain; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 10px;">
+                        </a>
+                        <div>
+                            <a href="{{ order.bukti_transfer.url }}" target="_blank" class="btn secondary small" style="text-decoration: none;">
+                                <i class="ri-zoom-in-line"></i> Lihat Ukuran Penuh
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div style="text-align: center; padding: 20px 10px; color: #94a3b8;">
+                        <i class="ri-file-warning-line" style="font-size: 36px; display: block; margin-bottom: 6px;"></i>
+                        <span style="font-size: 0.85rem;">Pembeli belum mengunggah bukti transfer.</span>
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock content1 %}
+

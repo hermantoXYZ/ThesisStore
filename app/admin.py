@@ -19,7 +19,11 @@ from .models import (
     Page,
     Category,
     JurnalMaster,
-    KodeSurat
+    KodeSurat,
+    Cart,
+    CartItem,
+    Order,
+    OrderItem,
 )
 
 admin.site.register(CategoryBooks)
@@ -42,4 +46,8 @@ admin.site.register(Category)
 admin.site.register(JurnalMaster)
 admin.site.register(KodeSurat)
 admin.site.register(NoSuratThesis)
+admin.site.register(Cart)
+admin.site.register(CartItem)
+admin.site.register(Order)
+admin.site.register(OrderItem)
 
