@@ -69,13 +69,14 @@
             <table id="layananTable" class="student-table" style="width: 100%;">
                 <thead>
                     <tr>
-                        <th style="width: 40px; text-align: center;">No</th>
+                        <th style="white-space: nowrap;">No</th>
                         <th style="white-space: nowrap;">No. Pesanan &amp; Tanggal</th>
                         <th style="white-space: nowrap;">Pelanggan / Penerima</th>
                         <th style="white-space: nowrap;">Ringkasan Buku</th>
-                        <th style="white-space: nowrap;">Quantity</th>
+                        <th style="white-space: nowrap;">Qty</th>
                         <th style="white-space: nowrap;">Total Tagihan</th>
                         <th style="width: 110px; text-align: center;">Status</th>
+                        <th style="white-space: nowrap;">Metode Pembayaran</th>
                         <th style="width: 110px; text-align: center;">Aksi</th>
                     </tr>
                 </thead>
@@ -89,7 +90,7 @@
                             {{ ord.created_at|date:"d M Y, H:i" }}
                             </div>
                         </td>
-                        <td style="vertical-align: middle;">
+                        <td>
                             <div style="font-weight: 600; color: #1e293b; font-size: 0.9rem;">
                                 {{ ord.user.first_name }}
                             </div>
@@ -97,7 +98,7 @@
                             {{ ord.no_hp }}
                             </div>
                         </td>
-                        <td style="vertical-align: middle;">
+                        <td>
                             {% for item in ord.items.all %}
                                 {{ item.judul_buku|truncatewords:5 }}<br>
                             {% endfor %}
@@ -107,21 +108,10 @@
                                 {{ item.quantity }}
                             {% endfor %}
                         </td>
-                        <td style="vertical-align: middle;">
+                        <td>
                             <strong style="color: #0f172a; font-size: 0.92rem;">Rp{{ ord.total_harga|floatformat:0 }}</strong>
-                            <div style="margin-top: 4px;">
-                                {% if ord.metode_pembayaran == 'Midtrans' or ord.snap_token %}
-                                    <span style="font-size: 0.7rem; font-weight: 700; color: #2c4cf4; background: #eff6ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bfdbfe; display: inline-flex; align-items: center; gap: 3px;">
-                                        <i class="ri-flashlight-line"></i> Midtrans{% if ord.payment_type %}: {{ ord.payment_type|upper }}{% endif %}
-                                    </span>
-                                {% else %}
-                                    <span style="font-size: 0.7rem; color: #64748b; background: #f8fafc; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0; display: inline-flex; align-items: center; gap: 3px;">
-                                        <i class="ri-bank-card-line"></i> Transfer
-                                    </span>
-                                {% endif %}
-                            </div>
                         </td>
-                      <td style="text-align: left; vertical-align: middle;">
+                      <td style="text-align: left;">
                             <span style="
                                 font-size: 0.78rem;
                                 font-weight: 700;
@@ -144,6 +134,17 @@
                             ">
                                 {{ ord.get_status_display }}
                             </span>
+                        </td>
+                        <td style="white-space: nowrap;">
+                                {% if ord.metode_pembayaran == 'Midtrans' or ord.snap_token %}
+                                          <span style="font-size: 0.7rem; color: #64748b; background: #f8fafc; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0; display: inline-flex; align-items: center; gap: 3px;">
+                                        <i class="ri-flashlight-line"></i> Midtrans{% if ord.payment_type %}: {{ ord.payment_type|upper }}{% endif %}
+                                    </span>
+                                {% else %}
+                                    <span style="font-size: 0.7rem; color: #64748b; background: #f8fafc; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0; display: inline-flex; align-items: center; gap: 3px;">
+                                        <i class="ri-bank-card-line"></i> Transfer
+                                    </span>
+                                {% endif %}
                         </td>
                         <td>
                             <a href="{% url 'app:admin_order_detail' ord.order_number %}" class="btn info small">
