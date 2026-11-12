@@ -1,12 +1,18 @@
 import uuid
+import json
 from datetime import date
 from django.utils import timezone
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse, HttpResponse
+from django.conf import settings
 from django.db import transaction
 from .form_pengguna import formProfile
 from .models import UserPengguna, Books, Cart, CartItem, Order, OrderItem
+from .midtrans import create_snap_transaction, get_snap_js_url, verify_signature, sync_order_status_from_midtrans
 from django.urls import reverse
 from app.decorators_pengguna import pengguna_required, check_userpengguna
 
@@ -227,9 +233,13 @@ def checkout_view(request):
                     if item.book.stok == 0:
                         item.book.status = 'Habis'
                     item.book.save()
-
-            # Bersihkan item di keranjang
             items.delete()
+
+            if metode_pembayaran in ('Midtrans', 'Payment Gateway', 'Otomatis'):
+                try:
+                    create_snap_transaction(order)
+                except Exception:
+                    pass
 
         messages.success(request, f'Pesanan #{order.order_number} berhasil dibuat! Silakan selesaikan pembayaran.')
         return redirect('app:pesanan_detail', order_number=order.order_number)
@@ -302,15 +312,64 @@ def pesanan_detail(request, order_number):
         user=request.user
     )
 
+    # Sinkronisasi status langsung ke Midtrans jika order masih berstatus pending
+    if order.status == 'pending':
+        try:
+            is_updated, msg = sync_order_status_from_midtrans(order)
+            if is_updated and order.status in ('processing', 'paid'):
+                messages.success(request, f'Pembayaran pesanan #{order.order_number} berhasil diverifikasi!')
+        except Exception:
+            pass
+
+    # Buat atau ambil snap token jika metode pembayaran Midtrans (atau jika ingin bayar otomatis)
+    snap_token = order.snap_token
+    if order.status == 'pending':
+        if not snap_token and order.metode_pembayaran in ('Midtrans', 'Payment Gateway', 'Otomatis'):
+            try:
+                snap_token = create_snap_transaction(order)
+            except Exception:
+                snap_token = None
+
     context = {
         'title': f'Detail Pesanan {order.order_number}',
         'heading': f'Pesanan #{order.order_number}',
         'order': order,
+        'snap_token': snap_token,
+        'midtrans_client_key': getattr(settings, 'MIDTRANS_CLIENT_KEY', ''),
+        'midtrans_snap_js_url': get_snap_js_url(),
         'userpengguna': userpengguna,
         'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
     }
     return render(request, 'pengguna/pesanan_detail.html', context)
 
+
+@pengguna_required
+@check_userpengguna
+@require_POST
+def batalkan_pesanan(request, order_number):
+    with transaction.atomic():
+        order = get_object_or_404(Order.objects.select_for_update(),order_number=order_number, user=request.user)
+        if order.status != 'pending':
+            messages.error(request, 'Pesanan tidak dapat dibatalkan karena sudah diproses atau dibayar.')
+            return redirect('app:pesanan_detail', order_number=order.order_number)
+
+        for item in order.items.select_related('book'):
+            if item.book.stok is not None:
+                item.book.stok += item.quantity
+                item.book.status = 'Tersedia'
+                item.book.save()
+
+        # Ubah status pesanan
+        order.status = 'cancelled'
+        order.save(update_fields=['status'])
+
+    messages.success(
+        request,
+        f'Pesanan #{order.order_number} berhasil dibatalkan. Stok buku telah dikembalikan.'
+    )
+
+    return redirect('app:pesanan_detail', order_number=order.order_number)
+    
 
 @pengguna_required
 @check_userpengguna
@@ -326,3 +385,83 @@ def upload_bukti_transfer(request, order_number):
         messages.error(request, 'Gagal mengunggah file bukti transfer. Pastikan file berupa gambar atau dokumen PDF.')
 
     return redirect('app:pesanan_detail', order_number=order.order_number)
+
+
+@login_required
+def get_order_snap_token(request, order_number):
+    """API endpoint AJAX untuk mengambil atau membuat Snap Token Midtrans sebuah pesanan."""
+    order = get_object_or_404(Order, order_number=order_number, user=request.user)
+    token = order.snap_token
+    if not token and order.status == 'pending':
+        token = create_snap_transaction(order)
+
+    return JsonResponse({
+        'status': 'success' if token else 'error',
+        'snap_token': token,
+        'client_key': getattr(settings, 'MIDTRANS_CLIENT_KEY', ''),
+        'snap_js_url': get_snap_js_url(),
+    })
+
+
+@login_required
+def sync_order_midtrans(request, order_number):
+    """API endpoint AJAX untuk mengecek dan menyinkronkan status pesanan langsung dari Midtrans."""
+    order = get_object_or_404(Order, order_number=order_number, user=request.user)
+    is_updated, message = sync_order_status_from_midtrans(order)
+    return JsonResponse({
+        'status': 'success',
+        'updated': is_updated,
+        'order_status': order.status,
+        'status_display': order.get_status_display(),
+        'message': message,
+    })
+
+
+@csrf_exempt
+@require_POST
+def midtrans_notification(request):
+    """
+    Webhook endpoint untuk menerima HTTP Notification / Webhook dari Midtrans.
+    Dipanggil otomatis oleh Midtrans saat status pembayaran berubah.
+    """
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        return JsonResponse({'status': 'invalid payload'}, status=400)
+
+    order_id = data.get('order_id')
+    status_code = data.get('status_code')
+    gross_amount = data.get('gross_amount')
+    signature_key = data.get('signature_key')
+    transaction_status = data.get('transaction_status')
+    fraud_status = data.get('fraud_status')
+    payment_type = data.get('payment_type', '')
+    transaction_id = data.get('transaction_id', '')
+
+    # Validasi signature Midtrans
+    if not verify_signature(order_id, status_code, gross_amount, signature_key):
+        return JsonResponse({'status': 'invalid signature'}, status=403)
+
+    order = Order.objects.filter(order_number=order_id).first()
+    if not order:
+        return JsonResponse({'status': 'order not found'}, status=404)
+
+    # Sinkronisasi status pesanan berdasarkan Midtrans Transaction Status
+    if transaction_status in ('capture', 'settlement'):
+        if fraud_status == 'challenge':
+            order.status = 'paid'
+        else:
+            order.status = 'processing'
+            order.paid_at = timezone.now()
+        order.payment_type = payment_type
+        order.transaction_id = transaction_id
+        order.save()
+    elif transaction_status in ('cancel', 'deny', 'expire'):
+        order.status = 'cancelled'
+        order.save()
+    elif transaction_status == 'pending':
+        order.status = 'pending'
+        order.payment_type = payment_type
+        order.save()
+
+    return JsonResponse({'status': 'OK', 'order_status': order.status})

@@ -670,7 +670,7 @@ body.dark-mode .recent-activities::-webkit-scrollbar-thumb:hover {
 }
 
 .sidebar-menu li.active {
-    background: linear-gradient(135deg, #1c84c6, #1c84c6);
+    background: linear-gradient(135deg, #2a4ff6, #2a4ff6);
     transform: translateX(4px);
 }
 
@@ -861,11 +861,15 @@ body.dark-mode .sidebar-footer-p p {
 
 .sidebar-collapsed .main-content {
     margin-left: 0;
+    max-width: 100%;
+    width: 100%;
 }
 
 @media (max-width: 768px) {
     .main-content {
         margin-left: 0;
+        max-width: 100%;
+        width: 100%;
     }
 
     .sidebar {
@@ -878,7 +882,11 @@ body.dark-mode .sidebar-footer-p p {
     background: #f5f6fa;
     padding: 20px;
     margin-left: 280px;
-    width: 999px;
+    min-width: 0;
+    max-width: calc(100% - 280px);
+    width: calc(100% - 280px);
+    box-sizing: border-box;
+    transition: margin 0.3s ease, width 0.3s ease, max-width 0.3s ease;
 }
 
 .dashboard-content {
@@ -1312,16 +1320,21 @@ body.dark-mode #toggle-sidebar i {
         height: 100vh;
         z-index: 1100;
         background: #fff;
-        transition: var(--tran-05);
+        left: 0;
+        transform: translateX(0);
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, left 0.3s ease;
     }
 
     .sidebar-collapsed .sidebar {
-        left: 0;
-        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        transform: translateX(-280px);
+        left: -280px;
+        box-shadow: none;
     }
 
     .main-content {
         width: 100%;
+        max-width: 100%;
         padding: 15px;
         margin-left: 0;
     }
@@ -2840,12 +2853,12 @@ body.dark-mode .close:focus {
 }
 
 .btn.primary {
-    background: #1d84c6;
+    background: #2a50f6;
     color: white;
 }
 
 .btn.primary:hover {
-    background: #1976D2;
+    background: #2a50f6;
 }
 
 .btn.secondary {
@@ -3347,7 +3360,7 @@ body.dark-mode #toggle-sidebar:hover {
     height: 150px;
     border-radius: 50%;
     overflow: hidden;
-    border: 5px solid #1d84c6;
+    border: 5px solid #a8a8a8;
     /* Green border around photo */
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     background: #fff;

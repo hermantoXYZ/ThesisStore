@@ -102,8 +102,12 @@ urlpatterns = [
     path('keranjang/hapus/<uuid:item_id>/', views_pengguna.cart_remove, name='cart_remove'),
     path('checkout/', views_pengguna.checkout_view, name='checkout'),
     path('pesanan/', views_pengguna.pesanan_list, name='pesanan_list'),
+    path('pesanan/<str:order_number>/batalkan/', views_pengguna.batalkan_pesanan, name='batalkan_pesanan'),
     path('pesanan/<str:order_number>/', views_pengguna.pesanan_detail, name='pesanan_detail'),
     path('pesanan/<str:order_number>/upload-bukti/', views_pengguna.upload_bukti_transfer, name='upload_bukti_transfer'),
+    path('pesanan/<str:order_number>/midtrans-token/', views_pengguna.get_order_snap_token, name='get_order_snap_token'),
+    path('pesanan/<str:order_number>/sync-midtrans/', views_pengguna.sync_order_midtrans, name='sync_order_midtrans'),
+    path('midtrans/notification/', views_pengguna.midtrans_notification, name='midtrans_notification'),
 
     ###### UMUM ######         
     path('dashboard', views.index, name='dashboard'),

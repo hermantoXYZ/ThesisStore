@@ -21,6 +21,19 @@
             line-height: 1.2;
             box-shadow: 0 1px 3px rgba(0,0,0,0.15);
         }
+        @media (max-width: 900px) {
+    .checkout-layout-grid {
+        grid-template-columns: 1fr !important;
+    }
+    }
+    .payment-method-card:has(input[type="radio"]:checked) {
+        border-color: #2c4cf4 !important;
+        background: #f8faff !important;
+    }
+    .payment-method-card:has(input[type="radio"]:not(:checked)) {
+        border-color: #cbd5e1 !important;
+        background: #ffffff !important;
+    }
     </style>
 </head>
 <body>

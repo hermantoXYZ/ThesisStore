@@ -19,6 +19,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from  .import views
+from app.views_pengguna import midtrans_notification
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -47,6 +48,7 @@ urlpatterns += [
     path('call/jurnal/list/', views.journal_list, name='journal_list'),
     path('katalog-pelatihan/', views.katalog_pelatihan, name='katalog_pelatihan'),
     path('app/', include(('app.urls', 'app'), namespace='app')),
+    path('midtrans-notification/', midtrans_notification, name='midtrans_notification_root'),
     path('login/', views.loginView, name='login'),
     path('register/', views.registerView, name='register'),
     path('logout/', views.LogoutView, name='logout'),

@@ -1,136 +1,333 @@
 {% extends "admin_super/base.html" %}
 
 {% block content1 %}
-<div class="dashboard-content">
+<div class="dashboard-content" style="width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;">
 
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
-        <div>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <h2 style="margin: 0; font-size: 1.4rem; color: #1e293b; font-weight: 700;">
-                    Pesanan #{{ order.order_number }}
-                </h2>
-                {% with badge=order.get_status_badge %}
-                <span style="font-size: 0.8rem; font-weight: 700; color: {{ badge.1 }}; background: {{ badge.2 }}; border: 1px solid {{ badge.1 }}; padding: 3px 10px; border-radius: 999px;">
-                    {{ badge.0 }}
-                </span>
-                {% endwith %}
+    <!-- 1. PAGE HEADER CARD -->
+    <div class="admin-card header-card" style="background: #ffffff; padding: 18px 22px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.04); margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+            <div style="min-width: 0; flex: 1;">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px;">
+                    <h2 style="margin: 0; font-size: 1.35rem; color: #0f172a; font-weight: 800; font-family: monospace; word-break: break-all;">
+                        #{{ order.order_number }}
+                    </h2>
+                    
+                    {% with badge=order.get_status_badge %}
+                    <span style="font-size: 0.8rem; font-weight: 700; color: {{ badge.1 }}; background: {{ badge.2 }}; border: 1.5px solid {{ badge.1 }}; padding: 3px 10px; border-radius: 999px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
+                        <i class="ri-checkbox-blank-circle-fill" style="font-size: 0.55rem;"></i> {{ badge.0 }}
+                    </span>
+                    {% endwith %}
+
+                    {% if order.metode_pembayaran == 'Midtrans' or order.snap_token %}
+                        <span style="font-size: 0.75rem; font-weight: 700; color: #2c4cf4; background: #eff6ff; border: 1px solid #bfdbfe; padding: 3px 9px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
+                            <i class="ri-flashlight-line"></i> Midtrans Payment Gateway
+                        </span>
+                    {% else %}
+                        <span style="font-size: 0.75rem; font-weight: 600; color: #475569; background: #f1f5f9; border: 1px solid #e2e8f0; padding: 3px 9px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
+                            <i class="ri-bank-card-line"></i> Transfer Manual Bank
+                        </span>
+                    {% endif %}
+                </div>
+                <div style="font-size: 0.82rem; color: #64748b; line-height: 1.5; word-break: break-word;">
+                    <i class="ri-calendar-line"></i> {{ order.created_at|date:"d F Y, H:i:s" }} WIB
+                    <span style="margin: 0 6px; color: #cbd5e1;">|</span>
+                    <i class="ri-user-3-line"></i> Pembeli: <strong>{{ order.user.username }}</strong>
+                    {% if order.user.email %}
+                        <span style="margin: 0 6px; color: #cbd5e1;">|</span>
+                        <i class="ri-mail-line"></i> {{ order.user.email }}
+                    {% endif %}
+                </div>
             </div>
-            <p style="font-size: 0.85rem; color: #64748b; margin-top: 4px; margin-bottom: 0;">
-                Waktu Transaksi: {{ order.created_at|date:"d F Y, H:i:s" }} WIB | Akun Pembeli: <strong>{{ order.user.username }}</strong>
-            </p>
-        </div>
-        <div>
-            <a href="{% url 'app:admin_order_list' %}" class="btn secondary" style="text-decoration: none;">
-                <i class="ri-arrow-left-line"></i> Kembali ke Daftar Pesanan
-            </a>
+
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; flex-shrink: 0;">
+                {% if order.metode_pembayaran == 'Midtrans' or order.snap_token %}
+                    <a href="?sync=midtrans" class="btn secondary" style="text-decoration: none; font-size: 0.85rem; font-weight: 600; padding: 7px 12px; display: inline-flex; align-items: center; gap: 5px;">
+                        <i class="ri-refresh-line"></i> Sinkronkan Midtrans
+                    </a>
+                {% endif %}
+                <a href="{% url 'app:admin_order_list' %}" class="btn secondary" style="text-decoration: none; font-size: 0.85rem; font-weight: 600; padding: 7px 12px; display: inline-flex; align-items: center; gap: 5px;">
+                    <i class="ri-arrow-left-line"></i> Kembali
+                </a>
+            </div>
         </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 380px; gap: 1.5rem; align-items: start;">
+    <!-- 2. TWO-COLUMN RESPONSIVE GRID -->
+    <div class="order-detail-grid">
         
-        <!-- LEFT: ITEMS & SHIPPING -->
-        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <!-- LEFT COLUMN: STATUS PEMBAYARAN, BUKTI, PRODUK, ALAMAT -->
+        <div class="order-detail-left" style="display: flex; flex-direction: column; gap: 1.25rem;">
             
-            <!-- ITEMS TABLE -->
-            <div style="background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
-                <h3 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem;">
-                    Daftar Produk Buku Dipesan
+            <!-- KARTU 1: STATUS & VERIFIKASI PEMBAYARAN -->
+            <div class="admin-card" style="background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem; flex-wrap: wrap; gap: 8px;">
+                    <h3 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="ri-secure-payment-line" style="color: #2c4cf4; font-size: 1.2rem;"></i>
+                        Status &amp; Verifikasi Pembayaran
+                    </h3>
+                    {% if order.metode_pembayaran == 'Midtrans' or order.snap_token %}
+                        <a href="?sync=midtrans" style="font-size: 0.78rem; color: #2c4cf4; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="ri-refresh-line"></i> Cek Realtime API
+                        </a>
+                    {% endif %}
+                </div>
+
+                {% if order.metode_pembayaran == 'Midtrans' or order.snap_token %}
+                    <!-- METODE MIDTRANS -->
+                    {% if order.status in 'processing,paid,shipped,delivered' %}
+                        <!-- MIDTRANS: LUNAS -->
+                        <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 16px; margin-bottom: 1rem;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 34px; height: 34px; border-radius: 50%; background: #22c55e; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+                                        <i class="ri-checkbox-circle-line"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 800; font-size: 0.98rem; color: #15803d;">
+                                            Pembayaran Lunas via Midtrans
+                                        </div>
+                                        <div style="font-size: 0.78rem; color: #166534;">
+                                            Terverifikasi otomatis oleh sistem payment gateway
+                                        </div>
+                                    </div>
+                                </div>
+                                <span style="background: #dcfce7; color: #15803d; border: 1px solid #86efac; font-size: 0.72rem; font-weight: 800; padding: 3px 9px; border-radius: 999px;">
+                                    LUNAS / VERIFIED
+                                </span>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; font-size: 0.82rem; background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
+                                <div>
+                                    <span style="display: block; font-size: 0.72rem; color: #64748b; font-weight: 600;">Channel / Metode:</span>
+                                    <strong style="color: #0f172a; text-transform: uppercase;">
+                                        <i class="ri-bank-card-line" style="color: #2c4cf4;"></i> {{ order.payment_type|default:"Midtrans" }}
+                                    </strong>
+                                </div>
+                                <div>
+                                    <span style="display: block; font-size: 0.72rem; color: #64748b; font-weight: 600;">Transaction ID:</span>
+                                    <span style="font-family: monospace; font-weight: 700; color: #1e3a8a; word-break: break-all;">
+                                        {{ order.transaction_id|default:"-" }}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span style="display: block; font-size: 0.72rem; color: #64748b; font-weight: 600;">Waktu Pembayaran:</span>
+                                    <strong style="color: #0f172a;">
+                                        {% if order.paid_at %}{{ order.paid_at|date:"d M Y, H:i:s" }} WIB{% else %}{{ order.updated_at|date:"d M Y, H:i:s" }} WIB{% endif %}
+                                    </strong>
+                                </div>
+                                <div>
+                                    <span style="display: block; font-size: 0.72rem; color: #64748b; font-weight: 600;">Total Dibayar:</span>
+                                    <strong style="color: #15803d; font-size: 0.95rem;">
+                                        Rp{{ order.total_harga|floatformat:0 }}
+                                    </strong>
+                                </div>
+                            </div>
+                        </div>
+                    {% elif order.status == 'cancelled' %}
+                        <!-- MIDTRANS: BATAL -->
+                        <div style="background: #fef2f2; border: 1.5px solid #fca5a5; border-radius: 10px; padding: 14px; margin-bottom: 1rem; display: flex; align-items: center; gap: 10px;">
+                            <i class="ri-close-circle-fill" style="color: #ef4444; font-size: 1.5rem; flex-shrink: 0;"></i>
+                            <div>
+                                <div style="font-weight: 800; font-size: 0.92rem; color: #991b1b;">
+                                    Transaksi Dibatalkan / Kadaluarsa
+                                </div>
+                                <div style="font-size: 0.78rem; color: #b91c1c;">
+                                    Waktu pembayaran berakhir atau dibatalkan oleh pengguna.
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <!-- MIDTRANS: MENUNGGU PEMBAYARAN -->
+                        <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 10px; padding: 14px; margin-bottom: 1rem;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <i class="ri-time-line" style="color: #f59e0b; font-size: 1.5rem; flex-shrink: 0;"></i>
+                                    <div>
+                                        <div style="font-weight: 800; font-size: 0.95rem; color: #92400e;">
+                                            Menunggu Pembayaran Pelanggan (Midtrans)
+                                        </div>
+                                        <div style="font-size: 0.78rem; color: #b45309;">
+                                            Jika pembeli sudah bayar, klik sinkronkan untuk memperbarui status langsung dari API Midtrans.
+                                        </div>
+                                    </div>
+                                </div>
+                                <a href="?sync=midtrans" class="btn primary small" style="text-decoration: none; font-size: 0.8rem; font-weight: 700; padding: 6px 12px;">
+                                    <i class="ri-refresh-line"></i> Sinkronkan Status Sekarang
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                {% else %}
+                    <!-- METODE TRANSFER MANUAL -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; margin-bottom: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="ri-bank-line" style="color: #2c4cf4; font-size: 1.4rem; flex-shrink: 0;"></i>
+                            <div>
+                                <strong style="color: #1e293b; font-size: 0.92rem;">Transfer Bank Manual (Bank Mandiri)</strong>
+                                <div style="font-size: 0.78rem; color: #64748b;">
+                                    Rekening Resmi: 123-00-9876543-2 a.n. PT Thesis Edukasi Nusantara
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- BUKTI TRANSFER PELANGGAN (IMAGE / PDF) -->
+                {% if order.bukti_transfer %}
+                    <div style="border-top: 1px solid #f1f5f9; padding-top: 14px;">
+                        <span style="display: block; font-size: 0.82rem; font-weight: 700; color: #334155; margin-bottom: 8px;">
+                            <i class="ri-attachment-line"></i> Bukti Pembayaran dari Pelanggan:
+                        </span>
+                        
+                        <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: #f8fafc; padding: 12px 14px; border-radius: 8px; border: 1px solid #e2e8f0; min-width: 0;">
+                            {% if order.bukti_transfer.name|slice:"-4:" == ".pdf" or order.bukti_transfer.name|slice:"-4:" == ".PDF" %}
+                                <div style="width: 50px; height: 50px; border-radius: 8px; background: #fef2f2; border: 1px solid #fecaca; display: flex; align-items: center; justify-content: center; color: #dc2626; font-size: 1.6rem; flex-shrink: 0;">
+                                    <i class="ri-file-pdf-line"></i>
+                                </div>
+                            {% else %}
+                                <a href="{{ order.bukti_transfer.url }}" target="_blank" rel="noopener noreferrer" style="flex-shrink: 0;">
+                                    <img src="{{ order.bukti_transfer.url }}" alt="Bukti Transfer" style="height: 60px; width: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1; display: block;">
+                                </a>
+                            {% endif %}
+
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-size: 0.82rem; font-weight: 700; color: #1e293b; word-break: break-all; overflow-wrap: anywhere; line-height: 1.35;">
+                                    {{ order.bukti_transfer.name|cut:"img_bukti_transfer/" }}
+                                </div>
+                                <div style="font-size: 0.75rem; color: #64748b; margin-top: 3px;">
+                                    File bukti pembayaran telah diunggah oleh pembeli.
+                                </div>
+                            </div>
+
+                            <a href="{{ order.bukti_transfer.url }}" target="_blank" rel="noopener noreferrer" class="btn secondary small" style="text-decoration: none; font-size: 0.8rem; font-weight: 700; padding: 6px 12px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; flex-shrink: 0;">
+                                <i class="ri-external-link-line"></i> Buka File
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    {% if order.metode_pembayaran != 'Midtrans' and not order.snap_token %}
+                        <div style="border-top: 1px solid #f1f5f9; padding-top: 12px; color: #94a3b8; font-size: 0.82rem; display: flex; align-items: center; gap: 6px;">
+                            <i class="ri-information-line"></i> Pelanggan belum mengunggah file bukti transfer.
+                        </div>
+                    {% endif %}
+                {% endif %}
+
+            </div>
+
+            <!-- KARTU 2: DAFTAR PRODUK BUKU YANG DIPESAN -->
+            <div class="admin-card" style="background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; min-width: 0;">
+                <h3 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem; display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-book-2-line" style="color: #2c4cf4; font-size: 1.2rem;"></i>
+                    Daftar Produk Buku yang Dipesan
                 </h3>
 
-                <div class="table-responsive">
-                    <table class="student-table" style="width: 100%;">
+                <div class="table-responsive" style="width: 100%; overflow-x: auto; min-width: 0;">
+                    <table class="student-table" style="width: 100%; border-collapse: separate; border-spacing: 0; min-width: 480px;">
                         <thead>
-                            <tr>
-                                <th>Produk Buku</th>
-                                <th style="text-align: right;">Harga Satuan</th>
-                                <th style="text-align: center;">Jumlah</th>
-                                <th style="text-align: right;">Subtotal</th>
+                            <tr style="background: #f8fafc;">
+                                <th style="padding: 10px 12px; font-size: 0.8rem; color: #475569;">Buku</th>
+                                <th style="padding: 10px 12px; font-size: 0.8rem; color: #475569; text-align: right; white-space: nowrap;">Harga Satuan</th>
+                                <th style="padding: 10px 12px; font-size: 0.8rem; color: #475569; text-align: center; white-space: nowrap;">Qty</th>
+                                <th style="padding: 10px 12px; font-size: 0.8rem; color: #475569; text-align: right; white-space: nowrap;">Subtotal</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for item in order.items.all %}
-                            <tr>
-                                <td>
-                                    <div style="display: flex; align-items: center; gap: 12px;">
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
                                         {% if item.book and item.book.featured_image %}
-                                            <img src="{{ item.book.featured_image.url }}" alt="{{ item.judul_buku }}" style="width: 40px; height: 54px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0;">
+                                            <img src="{{ item.book.featured_image.url }}" alt="{{ item.judul_buku }}" style="width: 40px; height: 54px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0; flex-shrink: 0;">
                                         {% else %}
-                                            <div style="width: 40px; height: 54px; background: #f1f5f9; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #94a3b8;">
-                                                <i class="ri-book-line"></i>
+                                            <div style="width: 40px; height: 54px; background: #f1f5f9; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #94a3b8; flex-shrink: 0; border: 1px solid #e2e8f0;">
+                                                <i class="ri-book-line" style="font-size: 1.3rem;"></i>
                                             </div>
                                         {% endif %}
-                                        <div>
-                                            <strong style="color: #1e293b; font-size: 0.9rem;">{{ item.judul_buku }}</strong>
+                                        <div style="min-width: 0;">
+                                            <strong style="color: #0f172a; font-size: 0.88rem; display: block; line-height: 1.35; word-break: break-word;">
+                                                {{ item.judul_buku }}
+                                            </strong>
                                             {% if item.book %}
-                                                <div style="font-size: 0.75rem; color: #64748b;">
-                                                    Kategori: {{ item.book.kategori.nama_kategori|default:"-" }}
+                                                <div style="font-size: 0.74rem; color: #64748b; margin-top: 3px;">
+                                                    Kategori: <span style="color: #2c4cf4; font-weight: 600;">{{ item.book.kategori.nama_kategori|default:"Umum" }}</span>
+                                                    {% if item.book.stok is not None %}
+                                                        <span style="margin: 0 3px;">•</span> Stok: {{ item.book.stok }}
+                                                    {% endif %}
                                                 </div>
                                             {% endif %}
                                         </div>
                                     </div>
                                 </td>
-                                <td style="text-align: right; vertical-align: middle;">
+                                <td style="text-align: right; vertical-align: middle; font-size: 0.88rem; color: #334155; padding: 12px; white-space: nowrap;">
                                     Rp{{ item.harga_satuan|floatformat:0 }}
                                 </td>
-                                <td style="text-align: center; vertical-align: middle; font-weight: 600;">
-                                    {{ item.quantity }} eks
+                                <td style="text-align: center; vertical-align: middle; font-weight: 700; color: #0f172a; padding: 12px; white-space: nowrap;">
+                                    {{ item.quantity }}
                                 </td>
-                                <td style="text-align: right; vertical-align: middle; font-weight: 700; color: #0f172a;">
+                                <td style="text-align: right; vertical-align: middle; font-weight: 800; color: #0f172a; font-size: 0.92rem; padding: 12px; white-space: nowrap;">
                                     Rp{{ item.subtotal|floatformat:0 }}
                                 </td>
                             </tr>
                             {% endfor %}
                         </tbody>
-                        <tfoot>
+                        <tfoot style="background: #fafafa; border-top: 2px solid #e2e8f0;">
                             <tr>
-                                <td colspan="3" style="text-align: right; font-weight: 700;">Subtotal:</td>
-                                <td style="text-align: right; font-weight: 700;">Rp{{ order.subtotal|floatformat:0 }}</td>
+                                <td colspan="3" style="text-align: right; font-weight: 600; color: #475569; padding: 8px 12px; font-size: 0.85rem;">Subtotal:</td>
+                                <td style="text-align: right; font-weight: 700; color: #0f172a; padding: 8px 12px; font-size: 0.88rem; white-space: nowrap;">Rp{{ order.subtotal|floatformat:0 }}</td>
                             </tr>
                             <tr>
-                                <td colspan="3" style="text-align: right; font-weight: 700;">Biaya Pengiriman:</td>
-                                <td style="text-align: right; font-weight: 700; color: #10b981;">Rp{{ order.ongkir|floatformat:0 }}</td>
+                                <td colspan="3" style="text-align: right; font-weight: 600; color: #475569; padding: 8px 12px; font-size: 0.85rem;">Ongkos Kirim:</td>
+                                <td style="text-align: right; font-weight: 700; color: #10b981; padding: 8px 12px; font-size: 0.88rem; white-space: nowrap;">
+                                    {% if order.ongkir and order.ongkir > 0 %}Rp{{ order.ongkir|floatformat:0 }}{% else %}Gratis Promo{% endif %}
+                                </td>
                             </tr>
-                            <tr>
-                                <td colspan="3" style="text-align: right; font-size: 1.05rem; font-weight: 800; color: #1e293b;">Total Tagihan:</td>
-                                <td style="text-align: right; font-size: 1.15rem; font-weight: 800; color: #2c4cf4;">Rp{{ order.total_harga|floatformat:0 }}</td>
+                            <tr style="background: #f8faff; border-top: 1px solid #cbd5e1;">
+                                <td colspan="3" style="text-align: right; font-size: 0.98rem; font-weight: 800; color: #1e293b; padding: 10px 12px;">Total Tagihan:</td>
+                                <td style="text-align: right; font-size: 1.15rem; font-weight: 800; color: #2c4cf4; padding: 10px 12px; white-space: nowrap;">Rp{{ order.total_harga|floatformat:0 }}</td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
             </div>
 
-            <!-- SHIPPING ADDRESS -->
-            <div style="background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
-                <h3 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem;">
-                    Tujuan &amp; Alamat Pengiriman
+            <!-- KARTU 3: ALAMAT & TUJUAN PENGIRIMAN -->
+            <div class="admin-card" style="background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; min-width: 0;">
+                <h3 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem; display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-map-pin-line" style="color: #2c4cf4; font-size: 1.2rem;"></i>
+                    Informasi &amp; Alamat Tujuan Pengiriman
                 </h3>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.9rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; font-size: 0.88rem;">
                     <div>
-                        <span style="display: block; font-size: 0.8rem; color: #64748b;">Nama Penerima:</span>
-                        <strong style="color: #1e293b;">{{ order.nama_penerima }}</strong>
+                        <span style="display: block; font-size: 0.78rem; color: #64748b; font-weight: 600;">Nama Penerima:</span>
+                        <strong style="color: #0f172a; font-size: 0.95rem;">{{ order.nama_penerima }}</strong>
                     </div>
                     <div>
-                        <span style="display: block; font-size: 0.8rem; color: #64748b;">No. Handphone:</span>
-                        <strong style="color: #1e293b;">{{ order.no_hp }}</strong>
-                        <a href="https://wa.me/{{ order.no_hp|cut:' '|cut:'-' }}?text=Halo%20{{ order.nama_penerima|urlencode }},%20kami%20dari%20Admin%20ThesisStore%20terkait%20pesanan%20nomor%20{{ order.order_number }}"
-                           target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 2px; font-size: 0.75rem; color: #16a34a; margin-left: 6px;">
-                            <i class="ri-whatsapp-line"></i> Hubungi WA
-                        </a>
+                        <span style="display: block; font-size: 0.78rem; color: #64748b; font-weight: 600;">No. Handphone:</span>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <strong style="color: #0f172a; font-size: 0.95rem;">{{ order.no_hp }}</strong>
+                            <a href="https://wa.me/{{ order.no_hp|cut:' '|cut:'-' }}?text=Halo%20{{ order.nama_penerima|urlencode }},%20kami%20dari%20Admin%20ThesisStore%20mengenai%20pesanan%20nomor%20{{ order.order_number }}"
+                               target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 3px; font-size: 0.75rem; font-weight: 700; color: #16a34a; background: #dcfce7; padding: 2px 7px; border-radius: 4px; text-decoration: none; border: 1px solid #86efac;">
+                                <i class="ri-whatsapp-line"></i> Chat WA
+                            </a>
+                        </div>
                     </div>
-                    <div style="grid-column: span 2;">
-                        <span style="display: block; font-size: 0.8rem; color: #64748b;">Alamat Lengkap:</span>
-                        <p style="margin: 0; color: #334155; line-height: 1.5;">
+                    <div style="grid-column: 1 / -1;">
+                        <span style="display: block; font-size: 0.78rem; color: #64748b; font-weight: 600; margin-bottom: 3px;">Alamat Lengkap Pengiriman:</span>
+                        <div style="background: #f8fafc; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; color: #1e293b; line-height: 1.5; word-break: break-word;">
                             {{ order.alamat_pengiriman }}
                             {% if order.kota or order.provinsi %}
-                                <br>{{ order.kota }}{% if order.kota and order.provinsi %}, {% endif %}{{ order.provinsi }} {{ order.kode_pos|default:'' }}
+                                <div style="margin-top: 4px; font-weight: 600; color: #475569;">
+                                    {{ order.kota }}{% if order.kota and order.provinsi %}, {% endif %}{{ order.provinsi }} {{ order.kode_pos|default:'' }}
+                                </div>
                             {% endif %}
-                        </p>
+                        </div>
                     </div>
                     {% if order.catatan %}
-                    <div style="grid-column: span 2; background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                        <span style="display: block; font-size: 0.75rem; color: #64748b;">Catatan dari Pembeli:</span>
-                        <span style="color: #334155;">{{ order.catatan }}</span>
+                    <div style="grid-column: 1 / -1; background: #fffbeb; padding: 10px 14px; border-radius: 8px; border: 1px solid #fde68a;">
+                        <span style="display: block; font-size: 0.75rem; font-weight: 700; color: #b45309;">Catatan dari Pembeli:</span>
+                        <span style="color: #78350f; font-size: 0.85rem; word-break: break-word;">"{{ order.catatan }}"</span>
                     </div>
                     {% endif %}
                 </div>
@@ -138,12 +335,13 @@
 
         </div>
 
-        <!-- RIGHT: STATUS MANAGEMENT & PAYMENT PROOF -->
-        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <!-- RIGHT COLUMN: UPDATE STATUS & KONTAK -->
+        <div class="order-detail-right" style="display: flex; flex-direction: column; gap: 1.25rem;">
             
-            <!-- UPDATE STATUS FORM -->
-            <div style="background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
-                <h3 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem;">
+            <!-- KARTU 4: FORM UPDATE STATUS & RESI PENGIRIMAN -->
+            <div class="admin-card" style="background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; min-width: 0;">
+                <h3 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0 0 1.25rem 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem; display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-edit-box-line" style="color: #2c4cf4; font-size: 1.2rem;"></i>
                     Update Status &amp; Pengiriman
                 </h3>
 
@@ -151,10 +349,10 @@
                     {% csrf_token %}
                     
                     <div style="margin-bottom: 1rem;">
-                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.4rem;">
+                        <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #334155; margin-bottom: 0.35rem;">
                             Status Pesanan:
                         </label>
-                        <select name="status" style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; font-weight: 600;">
+                        <select name="status" style="width: 100%; padding: 0.65rem 0.8rem; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.88rem; font-weight: 700; color: #0f172a; background: #ffffff;">
                             {% for val, label in status_choices %}
                                 <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ label }}</option>
                             {% endfor %}
@@ -162,50 +360,69 @@
                     </div>
 
                     <div style="margin-bottom: 1rem;">
-                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.4rem;">
-                            Kurir / Ekspedisi:
+                        <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #334155; margin-bottom: 0.35rem;">
+                            Kurir / Ekspedisi Pengiriman:
                         </label>
-                        <input type="text" name="kurir" value="{{ order.kurir|default:'' }}" placeholder="Contoh: JNE Regular / SiCepat / J&T"
-                               style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;">
+                        <input type="text" name="kurir" value="{{ order.kurir|default:'' }}" placeholder="Contoh: JNE Regular / J&T Express / SiCepat"
+                               style="width: 100%; padding: 0.65rem 0.8rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88rem; box-sizing: border-box;">
                     </div>
 
                     <div style="margin-bottom: 1.25rem;">
-                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.4rem;">
+                        <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #334155; margin-bottom: 0.35rem;">
                             Nomor Resi Pengiriman:
                         </label>
                         <input type="text" name="nomor_resi" value="{{ order.nomor_resi|default:'' }}" placeholder="Masukkan Nomor Resi..."
-                               style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; font-family: monospace;">
+                               style="width: 100%; padding: 0.65rem 0.8rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; font-family: monospace; font-weight: 700; letter-spacing: 0.5px; box-sizing: border-box;">
                     </div>
 
-                    <button type="submit" class="btn primary" style="width: 100%; padding: 0.75rem; font-weight: 700; border-radius: 8px; cursor: pointer; border: none;">
-                        <i class="ri-save-line"></i> Simpan Perubahan
+                    <button type="submit" class="btn primary" style="width: 100%; padding: 0.75rem; font-weight: 700; font-size: 0.92rem; border-radius: 8px; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(44, 76, 244, 0.25);">
+                        <i class="ri-save-line" style="font-size: 1.1rem;"></i> Simpan Perubahan Status
                     </button>
                 </form>
-            </div>
 
-            <!-- PAYMENT PROOF PREVIEW -->
-            <div style="background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
-                <h3 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem;">
-                    Bukti Pembayaran Pelanggan
-                </h3>
-
-                {% if order.bukti_transfer %}
-                    <div style="text-align: center;">
-                        <a href="{{ order.bukti_transfer.url }}" target="_blank">
-                            <img src="{{ order.bukti_transfer.url }}" alt="Bukti Transfer" style="max-width: 100%; max-height: 250px; object-fit: contain; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 10px;">
-                        </a>
-                        <div>
-                            <a href="{{ order.bukti_transfer.url }}" target="_blank" class="btn secondary small" style="text-decoration: none;">
-                                <i class="ri-zoom-in-line"></i> Lihat Ukuran Penuh
-                            </a>
+                {% if order.nomor_resi %}
+                    <div style="margin-top: 1rem; background: #eff6ff; border: 1px solid #bfdbfe; padding: 10px 12px; border-radius: 8px;">
+                        <span style="display: block; font-size: 0.72rem; color: #1e40af; font-weight: 700;">Nomor Resi Aktif:</span>
+                        <div style="font-family: monospace; font-size: 0.95rem; font-weight: 800; color: #1e3a8a; margin-top: 2px; word-break: break-all;">
+                            {{ order.kurir|default:"Ekspedisi" }}: {{ order.nomor_resi }}
                         </div>
                     </div>
-                {% else %}
-                    <div style="text-align: center; padding: 20px 10px; color: #94a3b8;">
-                        <i class="ri-file-warning-line" style="font-size: 36px; display: block; margin-bottom: 6px;"></i>
-                        <span style="font-size: 0.85rem;">Pembeli belum mengunggah bukti transfer.</span>
-                    </div>
                 {% endif %}
+            </div>
+
+            <!-- KARTU 5: KONTAK PELANGGAN -->
+            <div class="admin-card" style="background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; min-width: 0;">
+                <h3 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem; display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-user-line" style="color: #2c4cf4; font-size: 1.2rem;"></i>
+                    Kontak Pembeli
+                </h3>
+
+                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem; word-break: break-word;">
+                    <div>
+                        <span style="font-size: 0.72rem; color: #64748b; display: block;">Nama Akun:</span>
+                        <strong style="color: #1e293b;">{{ order.user.get_full_name|default:order.user.username }}</strong>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.72rem; color: #64748b; display: block;">Username:</span>
+                        <span style="color: #1e293b; font-family: monospace;">@{{ order.user.username }}</span>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.72rem; color: #64748b; display: block;">Email:</span>
+                        <span style="color: #1e293b; word-break: break-all;">{{ order.user.email|default:"-" }}</span>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.72rem; color: #64748b; display: block;">No. Handphone:</span>
+                        <strong style="color: #1e293b;">{{ order.no_hp }}</strong>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid #f1f5f9;">
+                    <a href="https://wa.me/{{ order.no_hp|cut:' '|cut:'-' }}?text=Halo%20{{ order.nama_penerima|urlencode }},%20kami%20dari%20Admin%20ThesisStore%20ingin%20mengonfirmasi%20pesanan%20nomor%20{{ order.order_number }}."
+                       target="_blank" rel="noopener noreferrer"
+                       style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px; background: #16a34a; color: #ffffff; font-weight: 700; font-size: 0.88rem; border-radius: 8px; text-decoration: none; box-shadow: 0 2px 6px rgba(22, 163, 74, 0.25); box-sizing: border-box;">
+                        <i class="ri-whatsapp-line" style="font-size: 1.1rem;"></i> Hubungi via WhatsApp
+                    </a>
+                </div>
             </div>
 
         </div>
@@ -213,5 +430,28 @@
     </div>
 
 </div>
-{% endblock content1 %}
 
+<style>
+.order-detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 350px;
+    gap: 1.5rem;
+    align-items: start;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+.order-detail-left,
+.order-detail-right {
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+}
+@media (max-width: 1024px) {
+    .order-detail-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 1.25rem;
+    }
+}
+</style>
+{% endblock content1 %}

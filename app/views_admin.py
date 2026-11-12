@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from .midtrans import sync_order_status_from_midtrans
 from app.models import (
     UserAdmin, Books, CategoryBooks, MediaBooks, Article, Page, Category,
     KerjaSama, WebSetting, HeroSlide, DokumentasiArticle, DokumentasiPage,
@@ -1152,13 +1153,6 @@ def admin_order_list(request):
     if status_filter != 'all' and status_filter in dict(Order.STATUS_CHOICES):
         orders_qs = orders_qs.filter(status=status_filter)
 
-    if search_q:
-        orders_qs = orders_qs.filter(
-            Q(order_number__icontains=search_q) |
-            Q(nama_penerima__icontains=search_q) |
-            Q(no_hp__icontains=search_q)
-        )
-
     all_orders = Order.objects.all()
     count_all = all_orders.count()
     count_pending = all_orders.filter(status='pending').count()
@@ -1172,7 +1166,6 @@ def admin_order_list(request):
         'heading': 'Kelola Pesanan & Pengiriman Buku',
         'orders': orders_qs,
         'status_filter': status_filter,
-        'search_q': search_q,
         'count_all': count_all,
         'count_pending': count_pending,
         'count_paid': count_paid,
@@ -1190,6 +1183,22 @@ def admin_order_detail(request, order_number):
         Order.objects.prefetch_related('items__book'),
         order_number=order_number
     )
+
+    # Sinkronisasi status dengan Midtrans jika ada query ?sync=midtrans atau jika order pending via Midtrans
+    sync_req = request.GET.get('sync')
+    if sync_req == 'midtrans' or (request.method == 'GET' and order.status == 'pending' and (order.snap_token or order.metode_pembayaran == 'Midtrans')):
+        try:
+            updated, msg = sync_order_status_from_midtrans(order)
+            if updated:
+                messages.success(request, f'Status pesanan berhasil disinkronkan dengan Midtrans: {msg}')
+                if sync_req == 'midtrans':
+                    return redirect('app:admin_order_detail', order_number=order.order_number)
+            elif sync_req == 'midtrans':
+                messages.info(request, f'Hasil cek status Midtrans: {msg}')
+                return redirect('app:admin_order_detail', order_number=order.order_number)
+        except Exception as e:
+            if sync_req == 'midtrans':
+                messages.error(request, f'Gagal memeriksa status ke Midtrans: {str(e)}')
 
     if request.method == 'POST':
         new_status = request.POST.get('status')

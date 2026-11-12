@@ -215,123 +215,6 @@ def rename_bukti_transfer(instance, filename):
     return os.path.join('orders/bukti_transfer/', f"transfer_{order_num}_{timestamp}_{random_str}.{ext}")
 
 
-class Cart(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='cart')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = 'Keranjang Belanja'
-        verbose_name_plural = 'Keranjang Belanja'
-
-    def __str__(self):
-        return f"Keranjang {self.user.username}"
-
-    def get_total_price(self):
-        return sum((item.get_subtotal() or 0) for item in self.items.all())
-
-    def get_total_items(self):
-        return sum(item.quantity for item in self.items.all())
-
-
-class CartItem(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
-    book = models.ForeignKey(Books, on_delete=models.CASCADE, related_name='cart_items')
-    quantity = models.PositiveIntegerField(default=1)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = 'Item Keranjang'
-        verbose_name_plural = 'Item Keranjang'
-        unique_together = ('cart', 'book')
-
-    def __str__(self):
-        return f"{self.quantity}x {self.book.judul}"
-
-    def get_price(self):
-        return self.book.harga_efektif
-
-    def get_subtotal(self):
-        return (self.get_price() or 0) * self.quantity
-
-
-class Order(models.Model):
-    STATUS_CHOICES = (
-        ('pending', 'Menunggu Pembayaran'),
-        ('paid', 'Menunggu Konfirmasi'),
-        ('processing', 'Sedang Diproses'),
-        ('shipped', 'Dalam Pengiriman'),
-        ('delivered', 'Selesai'),
-        ('cancelled', 'Dibatalkan'),
-    )
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    order_number = models.CharField(max_length=50, unique=True, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-
-    # Data Penerima & Pengiriman
-    nama_penerima = models.CharField(max_length=150)
-    no_hp = models.CharField(max_length=25)
-    provinsi = models.CharField(max_length=100, blank=True, null=True)
-    kota = models.CharField(max_length=100, blank=True, null=True)
-    kode_pos = models.CharField(max_length=10, blank=True, null=True)
-    alamat_pengiriman = models.TextField()
-    catatan = models.TextField(blank=True, null=True)
-
-    # Rincian Biaya
-    subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    ongkir = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    total_harga = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-
-    # Pembayaran & Ekspedisi
-    metode_pembayaran = models.CharField(max_length=50, default='Transfer Bank')
-    bukti_transfer = models.FileField(upload_to=rename_bukti_transfer, blank=True, null=True)
-    nomor_resi = models.CharField(max_length=100, blank=True, null=True)
-    kurir = models.CharField(max_length=50, blank=True, null=True)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = 'Pesanan'
-        verbose_name_plural = 'Daftar Pesanan'
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"{self.order_number} - {self.nama_penerima}"
-
-    def get_status_badge(self):
-        badges = {
-            'pending': ('Menunggu Pembayaran', '#f59e0b', '#fffbeb'),
-            'paid': ('Menunggu Konfirmasi', '#0284c7', '#f0f9ff'),
-            'processing': ('Sedang Diproses', '#2563eb', '#eff6ff'),
-            'shipped': ('Dalam Pengiriman', '#7c3aed', '#f5f3ff'),
-            'delivered': ('Selesai', '#10b981', '#ecfdf5'),
-            'cancelled': ('Dibatalkan', '#ef4444', '#fef2f2'),
-        }
-        return badges.get(self.status, (self.get_status_display(), '#64748b', '#f8fafc'))
-
-
-class OrderItem(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
-    book = models.ForeignKey(Books, on_delete=models.SET_NULL, null=True, blank=True, related_name='order_items')
-    judul_buku = models.CharField(max_length=255)
-    harga_satuan = models.DecimalField(max_digits=12, decimal_places=2)
-    quantity = models.PositiveIntegerField(default=1)
-    subtotal = models.DecimalField(max_digits=12, decimal_places=2)
-
-    class Meta:
-        verbose_name = 'Item Pesanan'
-        verbose_name_plural = 'Item Pesanan'
-
-    def __str__(self):
-        return f"{self.quantity}x {self.judul_buku}"
-
 class Course(models.Model):
 
     COURSE_TYPE_CHOICES = [
@@ -433,6 +316,112 @@ class CourseAgenda(models.Model):
         if self.session_number:
             return f"{self.course.name} - Sesi {self.session_number}: {self.title}"
         return f"{self.course.name} - {self.title}"
+
+
+class Cart(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='cart')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Keranjang Belanja'
+        verbose_name_plural = 'Keranjang Belanja'
+
+    def __str__(self):
+        return f"Keranjang {self.user.username}"
+
+    def get_total_price(self):
+        return sum((item.get_subtotal() or 0) for item in self.items.all())
+
+    def get_total_items(self):
+        return sum(item.quantity for item in self.items.all())
+
+
+class CartItem(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+    book = models.ForeignKey(Books, on_delete=models.CASCADE, related_name='cart_items')
+    quantity = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('cart', 'book')
+
+    def __str__(self):
+        return f"{self.quantity}x {self.book.judul}"
+
+    def get_price(self):
+        return self.book.harga_efektif
+
+    def get_subtotal(self):
+        return (self.get_price() or 0) * self.quantity
+
+
+class Order(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Menunggu Pembayaran'),
+        ('paid', 'Menunggu Konfirmasi'),
+        ('processing', 'Sedang Diproses'),
+        ('shipped', 'Dalam Pengiriman'),
+        ('delivered', 'Selesai'),
+        ('cancelled', 'Dibatalkan'),
+    )
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    order_number = models.CharField(max_length=50, unique=True, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+
+    # Data Penerima & Pengiriman
+    nama_penerima = models.CharField(max_length=150)
+    no_hp = models.CharField(max_length=25)
+    provinsi = models.CharField(max_length=100, blank=True, null=True)
+    kota = models.CharField(max_length=100, blank=True, null=True)
+    kode_pos = models.CharField(max_length=10, blank=True, null=True)
+    alamat_pengiriman = models.TextField()
+    catatan = models.TextField(blank=True, null=True)
+
+    # Rincian Biaya
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    ongkir = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_harga = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    # Pembayaran & Ekspedisi
+    metode_pembayaran = models.CharField(max_length=50, default='Transfer Bank')
+    bukti_transfer = models.FileField(upload_to=rename_bukti_transfer, blank=True, null=True)
+    nomor_resi = models.CharField(max_length=100, blank=True, null=True)
+    kurir = models.CharField(max_length=50, blank=True, null=True)
+
+    # Integrasi Midtrans Payment Gateway
+    snap_token = models.CharField(max_length=255, blank=True, null=True)
+    payment_type = models.CharField(max_length=50, blank=True, null=True)
+    transaction_id = models.CharField(max_length=100, blank=True, null=True)
+    paid_at = models.DateTimeField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.order_number} - {self.nama_penerima}"
+
+
+class OrderItem(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+    book = models.ForeignKey(Books, on_delete=models.SET_NULL, null=True, blank=True, related_name='order_items')
+    judul_buku = models.CharField(max_length=255)
+    harga_satuan = models.DecimalField(max_digits=12, decimal_places=2)
+    quantity = models.PositiveIntegerField(default=1)
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2)
+
+
+    def __str__(self):
+        return f"{self.quantity}x {self.judul_buku}"
 
 def rename_jurnal_cover(instance, filename):
     ext = filename.split('.')[-1]
