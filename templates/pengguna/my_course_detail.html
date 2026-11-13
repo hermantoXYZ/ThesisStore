@@ -64,23 +64,6 @@
             <h1 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0 0 0.35rem 0;">
                 {{ course.name }}
             </h1>
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <span style="background: #eff6ff; color: #2c4cf4; font-size: 0.75rem; font-weight: 700; padding: 3px 9px; border-radius: 4px;">
-                    {{ course.get_course_type_display }}
-                </span>
-                <span style="background: #f3e8ff; color: #8c54fc; font-size: 0.75rem; font-weight: 700; padding: 3px 9px; border-radius: 4px;">
-                    <i class="ri-vidicon-line"></i> {{ course.get_format_display }}
-                </span>
-                {% if is_active %}
-                    <span style="background: #ecfdf5; color: #059669; font-size: 0.75rem; font-weight: 700; padding: 3px 9px; border-radius: 4px; border: 1px solid #a7f3d0;">
-                        <i class="ri-checkbox-circle-fill"></i> Peserta Terdaftar
-                    </span>
-                {% else %}
-                    <span style="background: #fffbeb; color: #d97706; font-size: 0.75rem; font-weight: 700; padding: 3px 9px; border-radius: 4px; border: 1px solid #fde68a;">
-                        <i class="ri-time-line"></i> Menunggu Pembayaran
-                    </span>
-                {% endif %}
-            </div>
         </div>
 
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
@@ -113,9 +96,23 @@
                         </h2>
                     </div>
                     {% if is_active %}
+                    <div style="display: flex; align-items: center; gap: 8px;">
                         <span style="font-size: 0.78rem; font-weight: 700; color: #059669; background: #ecfdf5; padding: 3px 10px; border-radius: 999px; border: 1px solid #a7f3d0;">
-                            Live Akses Siap
+                            {{ course.get_course_type_display }}
                         </span>
+                         <span style="background: #f3e8ff; color: #8c54fc; font-size: 0.75rem; font-weight: 700; padding: 3px 9px; border-radius: 999px;">
+                    <i class="ri-vidicon-line"></i> {{ course.get_format_display }}
+                </span>
+                          {% if is_active %}
+                    <span style="background: #ecfdf5; color: #059669; font-size: 0.75rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; border: 1px solid #a7f3d0;">
+                        <i class="ri-checkbox-circle-fill"></i> Peserta Terdaftar
+                    </span>
+                {% else %}
+                    <span style="background: #fffbeb; color: #d97706; font-size: 0.75rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; border: 1px solid #fde68a;">
+                        <i class="ri-time-line"></i> Menunggu Pembayaran
+                    </span>
+                {% endif %}
+                        </div>
                     {% endif %}
                 </div>
 
@@ -238,7 +235,7 @@
                     </h2>
                 </div>
                 <div style="font-size: 0.92rem; color: #334155; line-height: 1.7; white-space: pre-line;">
-                    {{ course.description|default:"Tidak ada deskripsi tambahan untuk program ini." }}
+                    {{ course.description|safe}}
                 </div>
             </div>
 

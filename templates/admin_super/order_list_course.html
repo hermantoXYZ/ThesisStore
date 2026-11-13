@@ -1,0 +1,171 @@
+{% extends "admin_super/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content">
+    
+    <!-- STATS CARDS -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+            <div>
+                <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Total Pesanan</span>
+                <h3 style="margin: 0; font-size: 1.35rem; font-weight: 700; color: #1e293b;">{{ count_all }}</h3>
+            </div>
+        </div>
+
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+            <div>
+                <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Menunggu Bayar</span>
+                <h3 style="margin: 0; font-size: 1.35rem; font-weight: 700; color: #1e293b;">{{ count_pending }}</h3>
+            </div>
+        </div>
+
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+            <div>
+                <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Konfirmasi Bayar</span>
+                <h3 style="margin: 0; font-size: 1.35rem; font-weight: 700; color: #1e293b;">{{ count_paid }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN TABLE SECTION -->
+    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 2px solid #f0f0f0; padding-bottom: 14px;">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50;">
+                    Daftar Orders Courses
+                </h3>
+                <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                    Kelola data transaksi order courses pelanggan, konfirmasi bukti transfer.
+                </p>
+            </div>
+        </div>
+
+        <!-- Filter Status Pills -->
+        <div style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.75rem;">
+            <a href="?status=all{% if search_q %}&q={{ search_q }}{% endif %}" class="status-pill {% if status_filter == 'all' %}active{% endif %}">Semua</a>
+            <a href="?status=pending{% if search_q %}&q={{ search_q }}{% endif %}" class="status-pill {% if status_filter == 'pending' %}active{% endif %}">Menunggu Bayar</a>
+            <a href="?status=paid{% if search_q %}&q={{ search_q }}{% endif %}" class="status-pill {% if status_filter == 'paid' %}active{% endif %}">Menunggu Konfirmasi</a>
+            <a href="?status=processing{% if search_q %}&q={{ search_q }}{% endif %}" class="status-pill {% if status_filter == 'processing' %}active{% endif %}">Diproses</a>
+        </div>
+
+         <div class="table-responsive">
+            <table id="layananTable" class="student-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="white-space: nowrap;">No</th>
+                        <th style="white-space: nowrap;">No. Pesanan &amp; Tanggal</th>
+                        <th style="white-space: nowrap;">Peserta</th>
+                        <th style="white-space: nowrap;">Ringkasan Course</th>
+                        <th style="white-space: nowrap;">Total Tagihan</th>
+                        <th style="width: 110px; text-align: center;">Status</th>
+                        <th style="white-space: nowrap;">Metode Pembayaran</th>
+                        <th style="width: 110px; text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ord in orders %}
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle;">{{ forloop.counter }}</td>
+                        <td style="vertical-align: middle;">
+                            <strong style="color: #1e293b; font-size: 0.92rem; font-family: monospace;">#{{ ord.order_number }}</strong>
+                            <div style="font-size: 0.8rem; color: #64748b; margin-top: 3px;">
+                            {{ ord.created_at|date:"d M Y, H:i" }}
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 600; color: #1e293b; font-size: 0.9rem; vertical-align: middle;">
+                                {{ ord.user.first_name }}
+                            </div>
+                            <div style="font-size: 0.8rem; color: #64748b;">
+                            {{ ord.no_hp }}
+                            </div>
+                        </td>
+                        <td>
+                            {% for item in ord.items.all %}
+                                {{ item.judul_buku|truncatewords:5 }}<br>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <strong style="color: #0f172a; font-size: 0.92rem;">Rp{{ ord.total_harga|floatformat:0 }}</strong>
+                        </td>
+                      <td style="text-align: left;">
+                            <span style="
+                                font-size: 0.78rem;
+                                font-weight: 700;
+                                padding: 4px 10px;
+                                border-radius: 999px;
+                                white-space: nowrap;
+                                {% if ord.status == 'pending' %}
+                                    background: #fff3cd; color: #856404;
+                                {% elif ord.status == 'paid' %}
+                                    background: #cfe2ff; color: #084298;
+                                {% elif ord.status == 'processing' %}
+                                    background: #e0cffc; color: #59359a;
+                                {% elif ord.status == 'shipped' %}
+                                    background: #cff4fc; color: #055160;
+                                {% elif ord.status == 'delivered' %}
+                                    background: #d1e7dd; color: #0f5132;
+                                {% elif ord.status == 'cancelled' %}
+                                    background: #f8d7da; color: #842029;
+                                {% endif %}
+                            ">
+                                {{ ord.get_status_display }}
+                            </span>
+                        </td>
+                        <td style="white-space: nowrap;">
+                                {% if ord.metode_pembayaran == 'Midtrans' or ord.snap_token %}
+                                          <span style="font-size: 0.7rem; color: #64748b; background: #f8fafc; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0; display: inline-flex; align-items: center; gap: 3px;">
+                                        <i class="ri-flashlight-line"></i> Midtrans{% if ord.payment_type %}: {{ ord.payment_type|upper }}{% endif %}
+                                    </span>
+                                {% else %}
+                                    <span style="font-size: 0.7rem; color: #64748b; background: #f8fafc; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0; display: inline-flex; align-items: center; gap: 3px;">
+                                        <i class="ri-bank-card-line"></i> Transfer
+                                    </span>
+                                {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'app:admin_order_detail_course' ord.order_number %}" class="btn info small">
+                         <i class="ri-eye-line"></i>    Detail
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">
+                            <i class="ri-inbox-line" style="font-size: 48px; display: block; margin-bottom: 8px;"></i>
+                            Belum ada data transaksi pesanan yang sesuai filter.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+.status-pill {
+    padding: 6px 14px;
+    background: #f1f5f9;
+    color: #475569;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+.status-pill:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+.status-pill.active {
+    background: #2c4cf4;
+    color: #ffffff;
+}
+</style>
+{% endblock content1 %}
+

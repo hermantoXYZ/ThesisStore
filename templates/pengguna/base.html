@@ -60,9 +60,10 @@
                             {% endif %}
                         </a>
                     </li>
-                    <li class="{% if title == 'Pesanan Saya' %}active{% endif %}">
+                    <li class="{% if title == 'Pesanan Saya' or title == 'Detail Pesanan' %}active{% endif %}">
                         <a href="{% url 'app:pesanan_list' %}"><i class="ri-shopping-bag-3-line"></i> Pesanan Saya</a>
                     </li>
+                      <li class="nav-section-label"><span>My Academy</span></li>
                     <li class="{% if 'Pelatihan' in title or 'Course' in title or 'Sertifikat' in title %}active{% endif %}">
                         <a href="{% url 'app:my_courses' %}"><i class="ri-video-line"></i> Pelatihan & Course</a>
                     </li>

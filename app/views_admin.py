@@ -1144,16 +1144,16 @@ def kode_surat_hapus(request, uuid):
 # =========================================================================
 
 @admin_required
-def admin_order_list(request):
+def admin_order_list_buku(request):
     status_filter = request.GET.get('status', 'all')
     search_q = request.GET.get('q', '').strip()
 
-    orders_qs = Order.objects.select_related('user').prefetch_related('items').order_by('-created_at')
+    orders_qs = Order.objects.filter(items__book__isnull=False).select_related('user').prefetch_related('items').order_by('-created_at')
 
     if status_filter != 'all' and status_filter in dict(Order.STATUS_CHOICES):
         orders_qs = orders_qs.filter(status=status_filter)
 
-    all_orders = Order.objects.all()
+    all_orders = Order.objects.filter(items__book__isnull=False).distinct()
     count_all = all_orders.count()
     count_pending = all_orders.filter(status='pending').count()
     count_paid = all_orders.filter(status='paid').count()
@@ -1162,7 +1162,7 @@ def admin_order_list(request):
     count_delivered = all_orders.filter(status='delivered').count()
 
     context = {
-        'title': 'Pesanan Toko Buku',
+        'title': 'Pesanan Buku',
         'heading': 'Kelola Pesanan & Pengiriman Buku',
         'orders': orders_qs,
         'status_filter': status_filter,
@@ -1178,7 +1178,35 @@ def admin_order_list(request):
 
 
 @admin_required
-def admin_order_detail(request, order_number):
+def admin_order_list_course(request):
+    status_filter = request.GET.get('status', 'all')
+    search_q = request.GET.get('q', '').strip()
+    orders_qs = Order.objects.filter(items__course__isnull=False).select_related('user').prefetch_related('items').order_by('-created_at')
+
+    if status_filter != 'all' and status_filter in dict(Order.STATUS_CHOICES):
+        orders_qs = orders_qs.filter(status=status_filter)
+
+    all_orders = Order.objects.filter(items__course__isnull=False).distinct()
+    count_all = all_orders.count()
+    count_pending = all_orders.filter(status='pending').count()
+    count_paid = all_orders.filter(status='paid').count()
+    count_processing = all_orders.filter(status='processing').count()
+
+    context = {
+        'title': 'Course Orders',
+        'heading': 'Kelola Pesanan Course & Pelatihan',
+        'orders': orders_qs,
+        'status_filter': status_filter,
+        'count_all': count_all,
+        'count_pending': count_pending,
+        'count_paid': count_paid,
+        'count_processing': count_processing,
+        'photo': _get_admin_photo(request),
+    }
+    return render(request, 'admin_super/order_list_course.html', context)
+
+@admin_required
+def admin_order_detail_buku(request, order_number):
     order = get_object_or_404(
         Order.objects.prefetch_related('items__book', 'items__course'),
         order_number=order_number
@@ -1224,4 +1252,45 @@ def admin_order_detail(request, order_number):
         'photo': _get_admin_photo(request),
     }
     return render(request, 'admin_super/order_detail.html', context)
+
+
+@admin_required
+def admin_order_detail_course(request, order_number):
+    order = get_object_or_404(
+        Order.objects.prefetch_related('items__course'),
+        order_number=order_number
+    )
+    sync_req = request.GET.get('sync')
+    if sync_req == 'midtrans' or (request.method == 'GET' and order.status == 'pending' and (order.snap_token or order.metode_pembayaran == 'Midtrans')):
+        try:
+            updated, msg = sync_order_status_from_midtrans(order)
+            if updated:
+                messages.success(request, f'Status pesanan berhasil disinkronkan dengan Midtrans: {msg}')
+                if sync_req == 'midtrans':
+                    return redirect('app:admin_order_detail', order_number=order.order_number)
+            elif sync_req == 'midtrans':
+                messages.info(request, f'Hasil cek status Midtrans: {msg}')
+                return redirect('app:admin_order_detail', order_number=order.order_number)
+        except Exception as e:
+            if sync_req == 'midtrans':
+                messages.error(request, f'Gagal memeriksa status ke Midtrans: {str(e)}')
+
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+
+        if new_status in dict(Order.STATUS_CHOICES):
+            order.status = new_status
+
+        order.save()
+        messages.success(request, f'Status pesanan #{order.order_number} berhasil diperbarui menjadi "{order.get_status_display()}".')
+        return redirect('app:admin_order_detail', order_number=order.order_number)
+
+    context = {
+        'title': f'Detail Pesanan #{order.order_number}',
+        'heading': f'Kelola Pesanan #{order.order_number}',
+        'order': order,
+        'status_choices': Order.STATUS_CHOICES,
+        'photo': _get_admin_photo(request),
+    }
+    return render(request, 'admin_super/order_detail_course.html', context)
 

@@ -10,11 +10,9 @@
                 <h1 style="font-size: 1.4rem; font-weight: 700; color: #1e293b; margin: 0;">
                     Pesanan #{{ order.order_number }}
                 </h1>
-                {% with badge=order.get_status_badge %}
                 <span style="display: inline-flex; align-items: center; font-size: 0.78rem; font-weight: 700; color: {{ badge.1 }}; background: {{ badge.2 }}; border: 1px solid {{ badge.1 }}; padding: 3px 10px; border-radius: 999px;">
-                    {{ badge.0 }}
+                    {{ order.get_status_display }}
                 </span>
-                {% endwith %}
             </div>
             <p style="color: #64748b; font-size: 0.88rem; margin: 0.35rem 0 0 0;">
                 Waktu Pemesanan: {{ order.created_at|date:"d F Y, H:i" }} WIB
@@ -41,7 +39,7 @@
             <div class="step-item {% if order.status in 'processing shipped delivered' %}completed{% endif %}">
                 <div class="step-icon"><i class="ri-box-3-line"></i></div>
                 <div class="step-label">{% if has_physical_items %}Diproses{% else %}Terkonfirmasi{% endif %}</div>
-            </div>
+            </div> 
             {% if has_physical_items %}
             <div class="step-item {% if order.status in 'shipped delivered' %}completed{% endif %}">
                 <div class="step-icon"><i class="ri-truck-line"></i></div>

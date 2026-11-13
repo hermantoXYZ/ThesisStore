@@ -403,7 +403,6 @@ def pesanan_detail(request, order_number):
         user=request.user
     )
 
-    # Sinkronisasi status langsung ke Midtrans jika order masih berstatus pending
     if order.status == 'pending':
         try:
             is_updated, msg = sync_order_status_from_midtrans(order)
@@ -425,7 +424,7 @@ def pesanan_detail(request, order_number):
     has_physical_items = any(it.book is not None for it in order.items.all())
 
     context = {
-        'title': f'Detail Pesanan {order.order_number}',
+        'title': "Detail Pesanan",
         'heading': f'Pesanan #{order.order_number}',
         'order': order,
         'course_items': course_items,
@@ -608,7 +607,6 @@ def my_courses_list(request):
 @pengguna_required
 @check_userpengguna
 def my_course_detail(request, order_item_id):
-    """Menampilkan detail ruang belajar/sesi pelatihan yang diikuti oleh user, lengkap dengan link pertemuan & agenda."""
     userpengguna = UserPengguna.objects.filter(user=request.user).first()
     order_item = get_object_or_404(
         OrderItem.objects.select_related('order', 'course').prefetch_related('course__agendas', 'course__coaches__user', 'course__coaches__bidang_keahlian'),
@@ -622,8 +620,8 @@ def my_course_detail(request, order_item_id):
     is_active = order.status in ('paid', 'processing', 'shipped', 'delivered')
 
     context = {
-        'title': f'Pelatihan: {course.name}',
-        'heading': f'Pelatihan: {course.name}',
+        'title': 'Detail Academy',
+        'heading': f'Detail Academy',
         'order_item': order_item,
         'course': course,
         'order': order,
@@ -638,7 +636,6 @@ def my_course_detail(request, order_item_id):
 @pengguna_required
 @check_userpengguna
 def download_certificate(request, order_item_id):
-    """Halaman tampilan dan cetak/unduh E-Sertifikat resmi pelatihan yang telah diselesaikan."""
     userpengguna = UserPengguna.objects.filter(user=request.user).first()
     order_item = get_object_or_404(
         OrderItem.objects.select_related('order', 'course').prefetch_related('course__coaches__user'),
