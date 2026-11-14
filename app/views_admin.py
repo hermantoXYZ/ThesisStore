@@ -1305,6 +1305,8 @@ def reviewer_application_list(request):
         apps = apps.filter(status=status_filter)
 
     pending_count = CallForReviewer.objects.filter(status='pending').count()
+    approved_count = CallForReviewer.objects.filter(status='approved').count()
+    rejected_count = CallForReviewer.objects.filter(status='rejected').count()
 
     context = {
         'title': 'Pendaftaran Reviewer',
@@ -1312,6 +1314,8 @@ def reviewer_application_list(request):
         'apps': apps,
         'status_filter': status_filter,
         'pending_count': pending_count,
+        'approved_count': approved_count,
+        'rejected_count': rejected_count,
         'photo': _get_admin_photo(request),
     }
     return render(request, 'admin_super/reviewer_list.html', context)

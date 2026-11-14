@@ -22,7 +22,7 @@
 
                 <div style="flex: 1;">
 
-                    <strong style="font-size: 14px; display: block; margin-bottom: 5px;">
+                    <strong style="font-size: 14px; display: block;">
                         {% if existing_app.status == 'pending' %}
                             Pendaftaran Menunggu Verifikasi Admin
                         {% elif existing_app.status == 'approved' %}
@@ -473,46 +473,34 @@
                     <span style="color: red;">*</span>
 
                     <small style="font-size: 11px; color: #999; font-weight: 400;">
-                        (Pilih satu atau lebih)
+                        (Pilih satu jurnal)
                     </small>
                 </h3>
-
-
                 {% if journals %}
-
                 <div class="journal-grid">
-
                     {% for journal in journals %}
-
                     <label class="journal-choice journal-option">
-
                         <div class="journal-choice-content">
-
-                            <input type="checkbox"
-                                   name="journal_interests"
-                                   value="{{ journal.id }}"
-                                   {% if existing_app and journal in existing_app.journal_interests.all %}checked{% endif %}
-                                   {% if existing_app.status == 'approved' or existing_app.status == 'pending' %}disabled{% endif %}>
-
+                            <input type="radio"
+                                name="journal_interests"
+                                value="{{ journal.id }}"
+                                required
+                                {% if existing_app and journal in existing_app.journal_interests.all %}checked{% endif %}
+                                {% if existing_app.status == 'approved' or existing_app.status == 'pending' %}disabled{% endif %}>
                             <div>
                                 <strong>{{ journal.nama }}</strong>
                             </div>
                         </div>
                     </label>
-
                     {% endfor %}
-
                 </div>
-
                 {% else %}
-
                 <div class="journal-empty">
                     <p>
                         Belum ada jurnal yang membuka pendaftaran
                         reviewer saat ini.
                     </p>
                 </div>
-
                 {% endif %}
 
 
@@ -532,6 +520,22 @@
                     {% endif %}
                 </div>
 
+                {% endif %}
+
+                {% if existing_app.status == 'approved' %}
+                 <div class="form-actions" style="margin-top: 25px;">
+                       <a href="{% url 'app:dashboard' %}"
+                           class="btn secondary">
+                            <i class="ri-arrow-left-line"></i>
+                            Kembali ke Dashboard
+                        </a>
+                         {% if sk_jurnal %}
+        <a href="{{ sk_jurnal }}" class="btn success" target="_blank">
+            <i class="ri-download-line"></i>
+            Download SK
+        </a>
+        {% endif %}
+                 </div>
                 {% endif %}
 
                 {% if not existing_app or existing_app.status == 'rejected' %}
@@ -638,6 +642,7 @@
 /* STATUS */
 .journal-status {
     border-left: 4px solid transparent;
+    border-radius: 0px;
 }
 
 .status-pending {
@@ -650,13 +655,13 @@
     background: #e8f5e9;
     border-color: #2e7d32;
     color: #1b5e20;
-    border-radius: 0px;
 }
 
 .status-rejected {
     background: #fff1f2;
     border-color: #dc3545;
     color: #991b1b;
+
 }
 
 .journal-admin-note {

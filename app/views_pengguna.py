@@ -710,6 +710,14 @@ def apply_journal(request):
             messages.success(request, 'Pendaftaran Anda berhasil dikirim! Tim kami akan segera memverifikasi.')
 
         return redirect('app:apply_journal')
+        
+    sk_jurnal = None
+
+    if existing_app and existing_app.status == 'approved':
+        jurnal = existing_app.journal_interests.first()
+
+        if jurnal and jurnal.file_sk:
+            sk_jurnal = jurnal.file_sk.url
 
     context = {
         'title': 'Review & Editor Journal',
@@ -718,5 +726,6 @@ def apply_journal(request):
         'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
         'journals': journals,
         'existing_app': existing_app,
+        'sk_jurnal': sk_jurnal,
     }
     return render(request, 'pengguna/apply_journal.html', context)

@@ -1,9 +1,7 @@
 {% extends "admin_super/base.html" %}
 
 {% block content1 %}
-<div class="dashboard-content" style="width: 100%; max-width: 860px; min-width: 0; box-sizing: border-box;">
-
-    <!-- Back + Header -->
+<div class="dashboard-content" style="width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;">
     <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.75rem; flex-wrap: wrap;">
         <a href="{% url 'app:admin_reviewer_list' %}" style="display: inline-flex; align-items: center; gap: 0.4rem; background: #f1f5f9; color: #475569; border-radius: 8px; padding: 0.5rem 1rem; text-decoration: none; font-size: 0.875rem; font-weight: 600;">
             <i class="ri-arrow-left-line"></i> Kembali
@@ -12,8 +10,6 @@
             <h1 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0;">Detail Pendaftaran Reviewer</h1>
         </div>
     </div>
-
-    <!-- Applicant Info Card -->
     <div style="background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 1.75rem; margin-bottom: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.05);">
         <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: #94a3b8; letter-spacing: 0.08em; margin-bottom: 1rem;">Profil Pemohon</div>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
