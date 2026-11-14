@@ -5,7 +5,7 @@ from app.models import (
     UserAdmin, Books, CategoryBooks, MediaBooks, Article, Page, Category,
     KerjaSama, WebSetting, HeroSlide, DokumentasiArticle, DokumentasiPage,
     Course, CourseAgenda, JurnalMaster, LoaJurnal, NoSuratThesis, KodeSurat,
-    Order, OrderItem
+    Order, OrderItem, CallForReviewer
 )
 from .form_admin import (
     formProfile, CategoryBooksForm, BooksForm, ArticleForm, PageForm, CategoryForm,
@@ -1294,3 +1294,53 @@ def admin_order_detail_course(request, order_number):
     }
     return render(request, 'admin_super/order_detail_course.html', context)
 
+
+
+@admin_required
+def reviewer_application_list(request):
+    status_filter = request.GET.get('status', '')
+    apps = CallForReviewer.objects.select_related('applicant__user', 'applicant__bidang_keahlian').prefetch_related('journal_interests')
+
+    if status_filter in ('pending', 'approved', 'rejected'):
+        apps = apps.filter(status=status_filter)
+
+    pending_count = CallForReviewer.objects.filter(status='pending').count()
+
+    context = {
+        'title': 'Pendaftaran Reviewer',
+        'heading': 'Kelola Pendaftaran Reviewer & Editor Jurnal',
+        'apps': apps,
+        'status_filter': status_filter,
+        'pending_count': pending_count,
+        'photo': _get_admin_photo(request),
+    }
+    return render(request, 'admin_super/reviewer_list.html', context)
+
+
+@admin_required
+def reviewer_application_detail(request, app_id):
+    app = get_object_or_404(
+        CallForReviewer.objects.select_related(
+            'applicant__user', 'applicant__bidang_keahlian', 'applicant__provinsi_pengguna'
+        ).prefetch_related('journal_interests'),
+        id=app_id
+    )
+
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        notes = request.POST.get('verification_notes', '').strip()
+
+        if new_status in ('approved', 'rejected', 'pending'):
+            app.status = new_status
+            app.verification_notes = notes
+            app.save()
+            messages.success(request, f'Status pendaftaran berhasil diubah menjadi "{new_status}".')
+            return redirect('app:admin_reviewer_list')
+
+    context = {
+        'title': f'Detail Pendaftaran Reviewer',
+        'heading': 'Detail Pendaftaran Reviewer',
+        'app': app,
+        'photo': _get_admin_photo(request),
+    }
+    return render(request, 'admin_super/reviewer_detail.html', context)

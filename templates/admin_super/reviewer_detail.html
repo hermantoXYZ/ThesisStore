@@ -1,0 +1,176 @@
+{% extends "admin_super/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content" style="width: 100%; max-width: 860px; min-width: 0; box-sizing: border-box;">
+
+    <!-- Back + Header -->
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.75rem; flex-wrap: wrap;">
+        <a href="{% url 'app:admin_reviewer_list' %}" style="display: inline-flex; align-items: center; gap: 0.4rem; background: #f1f5f9; color: #475569; border-radius: 8px; padding: 0.5rem 1rem; text-decoration: none; font-size: 0.875rem; font-weight: 600;">
+            <i class="ri-arrow-left-line"></i> Kembali
+        </a>
+        <div>
+            <h1 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0;">Detail Pendaftaran Reviewer</h1>
+        </div>
+    </div>
+
+    <!-- Applicant Info Card -->
+    <div style="background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 1.75rem; margin-bottom: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.05);">
+        <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: #94a3b8; letter-spacing: 0.08em; margin-bottom: 1rem;">Profil Pemohon</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div>
+                <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 2px;">Nama Lengkap</div>
+                <div style="font-weight: 700; color: #1e293b;">{{ app.applicant.user.get_full_name|default:app.applicant.user.username }}</div>
+            </div>
+            <div>
+                <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 2px;">Email</div>
+                <div style="font-weight: 600; color: #374151;">{{ app.applicant.user.email }}</div>
+            </div>
+            {% if app.applicant.universitas %}
+            <div>
+                <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 2px;">Universitas</div>
+                <div style="font-weight: 600; color: #374151;">{{ app.applicant.universitas }}</div>
+            </div>
+            {% endif %}
+            {% if app.applicant.fakultas %}
+            <div>
+                <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 2px;">Fakultas / Prodi</div>
+                <div style="font-weight: 600; color: #374151;">{{ app.applicant.fakultas }}{% if app.applicant.program_studi %} / {{ app.applicant.program_studi }}{% endif %}</div>
+            </div>
+            {% endif %}
+            {% if app.applicant.bidang_keahlian %}
+            <div>
+                <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 2px;">Bidang Keahlian</div>
+                <div style="font-weight: 600; color: #374151;">{{ app.applicant.bidang_keahlian }}</div>
+            </div>
+            {% endif %}
+            {% if app.applicant.jafung %}
+            <div>
+                <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 2px;">Jabatan Fungsional</div>
+                <div style="font-weight: 600; color: #374151;">{{ app.applicant.jafung }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Academic Links -->
+        {% if app.applicant.link_sinta or app.applicant.link_scopus or app.applicant.link_google_scholar or app.applicant.link_orcid %}
+        <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid #f1f5f9;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: #94a3b8; letter-spacing: 0.08em; margin-bottom: 0.6rem;">Profil Akademik</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.6rem;">
+                {% if app.applicant.link_sinta %}
+                <a href="{{ app.applicant.link_sinta }}" target="_blank" style="display: inline-flex; align-items: center; gap: 0.4rem; background: #dbeafe; color: #1d4ed8; padding: 4px 12px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; text-decoration: none;">
+                    <i class="ri-external-link-line"></i> SINTA
+                </a>
+                {% endif %}
+                {% if app.applicant.link_scopus %}
+                <a href="{{ app.applicant.link_scopus }}" target="_blank" style="display: inline-flex; align-items: center; gap: 0.4rem; background: #fce7f3; color: #9d174d; padding: 4px 12px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; text-decoration: none;">
+                    <i class="ri-external-link-line"></i> Scopus
+                </a>
+                {% endif %}
+                {% if app.applicant.link_google_scholar %}
+                <a href="{{ app.applicant.link_google_scholar }}" target="_blank" style="display: inline-flex; align-items: center; gap: 0.4rem; background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; text-decoration: none;">
+                    <i class="ri-external-link-line"></i> Google Scholar
+                </a>
+                {% endif %}
+                {% if app.applicant.link_orcid %}
+                <a href="{{ app.applicant.link_orcid }}" target="_blank" style="display: inline-flex; align-items: center; gap: 0.4rem; background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; text-decoration: none;">
+                    <i class="ri-external-link-line"></i> ORCID
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Application Details -->
+    <div style="background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 1.75rem; margin-bottom: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.05);">
+        <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: #94a3b8; letter-spacing: 0.08em; margin-bottom: 1rem;">Detail Pendaftaran</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+            <div>
+                <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 2px;">Peran Dilamar</div>
+                {% if app.role_applied == 'reviewer' %}
+                <span style="background: #dbeafe; color: #1d4ed8; padding: 4px 12px; border-radius: 999px; font-size: 0.85rem; font-weight: 700;">
+                    <i class="ri-search-eye-line"></i> Reviewer
+                </span>
+                {% else %}
+                <span style="background: #ede9fe; color: #6d28d9; padding: 4px 12px; border-radius: 999px; font-size: 0.85rem; font-weight: 700;">
+                    <i class="ri-edit-box-line"></i> Editor
+                </span>
+                {% endif %}
+            </div>
+            <div>
+                <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 2px;">Status Saat Ini</div>
+                {% if app.status == 'pending' %}
+                <span style="background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 999px; font-size: 0.85rem; font-weight: 700;">
+                    <i class="ri-time-line"></i> Menunggu Verifikasi
+                </span>
+                {% elif app.status == 'approved' %}
+                <span style="background: #dcfce7; color: #15803d; padding: 4px 12px; border-radius: 999px; font-size: 0.85rem; font-weight: 700;">
+                    <i class="ri-checkbox-circle-fill"></i> Disetujui
+                </span>
+                {% else %}
+                <span style="background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 999px; font-size: 0.85rem; font-weight: 700;">
+                    <i class="ri-close-circle-fill"></i> Ditolak
+                </span>
+                {% endif %}
+            </div>
+            <div>
+                <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 2px;">Tanggal Daftar</div>
+                <div style="font-weight: 600; color: #374151;">{{ app.created_at|date:"d M Y, H:i" }}</div>
+            </div>
+        </div>
+
+        <!-- Jurnal Diminati -->
+        <div>
+            <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 0.6rem;">Jurnal yang Diminati</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                {% for j in app.journal_interests.all %}
+                <span style="background: #e0e7ff; color: #3730a3; padding: 4px 14px; border-radius: 999px; font-size: 0.85rem; font-weight: 600;">
+                    <i class="ri-book-read-line"></i> {{ j.nama }}
+                    {% if j.issn %}<span style="opacity:0.6; font-size:0.75rem;">– {{ j.issn }}</span>{% endif %}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Verification Form -->
+    <div style="background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 1.75rem; box-shadow: 0 1px 4px rgba(0,0,0,0.05);">
+        <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: #94a3b8; letter-spacing: 0.08em; margin-bottom: 1rem;">Verifikasi & Keputusan</div>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div style="margin-bottom: 1.25rem;">
+                <label style="display: block; font-weight: 600; font-size: 0.9rem; color: #374151; margin-bottom: 0.5rem;">
+                    Ubah Status <span style="color: #ef4444;">*</span>
+                </label>
+                <select name="status" style="width: 100%; max-width: 320px; padding: 0.65rem 1rem; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; color: #374151; background: #fff;">
+                    <option value="pending" {% if app.status == 'pending' %}selected{% endif %}>⏳ Menunggu Verifikasi</option>
+                    <option value="approved" {% if app.status == 'approved' %}selected{% endif %}>✅ Setujui</option>
+                    <option value="rejected" {% if app.status == 'rejected' %}selected{% endif %}>❌ Tolak</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-weight: 600; font-size: 0.9rem; color: #374151; margin-bottom: 0.5rem;">
+                    Catatan Verifikasi <span style="color: #94a3b8; font-weight: 400;">(opsional, akan dilihat oleh pemohon)</span>
+                </label>
+                <textarea name="verification_notes" rows="4"
+                    placeholder="Contoh: Profil SINTA tidak ditemukan. Silakan perbarui link SINTA Anda dan ajukan kembali."
+                    style="width: 100%; padding: 0.75rem 1rem; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; color: #374151; resize: vertical; box-sizing: border-box;">{{ app.verification_notes }}</textarea>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <button type="submit" style="background: #2c4cf4; color: #fff; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-size: 0.9rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <i class="ri-save-line"></i> Simpan Keputusan
+                </button>
+                <a href="{% url 'app:admin_reviewer_list' %}" style="display: inline-flex; align-items: center; gap: 0.5rem; background: #f1f5f9; color: #475569; border-radius: 8px; padding: 0.75rem 1.5rem; text-decoration: none; font-size: 0.9rem; font-weight: 600;">
+                    Batal
+                </a>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock content1 %}
+

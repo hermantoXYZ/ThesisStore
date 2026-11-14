@@ -4,20 +4,17 @@ from datetime import date
 from .models import UserPengguna, Provinsi, BidangPenelitian
 
 class formProfile(forms.ModelForm):
-    jafung = forms.ChoiceField(
+    jabatan_fungsional = forms.ChoiceField(
         choices=[
             ('', '-- Pilih Jabatan Fungsional --'),
             ('Tanpa Jabatan Fungsional', 'Tanpa Jabatan Fungsional'),
             ('Asisten Ahli', 'Asisten Ahli'),
             ('Lektor', 'Lektor'),
-        ('Lektor Kepala', 'Lektor Kepala'),
-        ('Guru Besar', 'Guru Besar'),
-    ],
-    widget=forms.Select(attrs={
-        'class': 'form-control',
-        'id': 'id_jafung'
-    }),
-    required=False
+            ('Lektor Kepala', 'Lektor Kepala'),
+            ('Guru Besar', 'Guru Besar'),
+        ],
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_jabatan_fungsional'}),
+        required=False
     )
 
     gender = forms.ChoiceField(
@@ -50,7 +47,10 @@ class formProfile(forms.ModelForm):
             'telp',
             'gender',
             'nuptk',
-            'jafung',
+            'jabatan_fungsional',
+            'universitas',
+            'fakultas',
+            'program_studi',
             'bidang_keahlian',
             'alamat',
             'provinsi_pengguna',
@@ -64,11 +64,15 @@ class formProfile(forms.ModelForm):
             'telp': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Contoh: 081234567890', 'required': True}),
             'nuptk': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nomor NUPTK (opsional)'}),
             'alamat': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Alamat instansi / tempat tinggal'}),
+            'universitas': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nama universitas / institusi'}),
+            'fakultas': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Contoh: Fakultas Ekonomi & Bisnis'}),
+            'program_studi': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Contoh: Manajemen, Akuntansi, dll.'}),
             'photo': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
             'link_sinta': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Contoh: https://sinta.kemdikbud.go.id/authors/detail?id=123456'}),
             'link_scopus': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Contoh: https://www.scopus.com/authid/detail.uri?authorId=123456'}),
             'link_google_scholar': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Contoh: https://scholar.google.com/citations?user=123456'}),
             'link_orcid': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Contoh: https://orcid.org/0000-0001-2345-6789'}),
         }
+
 
 

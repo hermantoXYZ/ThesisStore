@@ -11,7 +11,7 @@ from django.http import JsonResponse, HttpResponse
 from django.conf import settings
 from django.db import transaction
 from .form_pengguna import formProfile
-from .models import UserPengguna, Books, Course, CourseAgenda, Cart, CartItem, Order, OrderItem
+from .models import UserPengguna, Books, Course, CourseAgenda, Cart, CartItem, Order, OrderItem, CallForReviewer, JurnalMaster
 from .midtrans import create_snap_transaction, get_snap_js_url, verify_signature, sync_order_status_from_midtrans
 from django.urls import reverse
 from app.decorators_pengguna import pengguna_required, check_userpengguna
@@ -668,3 +668,55 @@ def download_certificate(request, order_item_id):
         'userpengguna': userpengguna,
     }
     return render(request, 'pengguna/sertifikat_view.html', context)
+
+
+@pengguna_required
+@check_userpengguna
+def apply_journal(request):
+    userpengguna = UserPengguna.objects.filter(user=request.user).first()
+    journals = JurnalMaster.objects.filter(open_registration=True, is_active=True)
+    existing_app = CallForReviewer.objects.filter(applicant=userpengguna).first()
+
+    if request.method == 'POST':
+        if existing_app and existing_app.status in ('pending', 'approved'):
+            messages.warning(request, 'Anda sudah memiliki pendaftaran yang sedang diproses atau telah disetujui.')
+            return redirect('app:apply_journal')
+
+        role_applied = request.POST.get('role_applied', 'reviewer')
+        journal_ids = request.POST.getlist('journal_interests')
+
+        if not journal_ids:
+            messages.error(request, 'Silakan pilih minimal satu jurnal yang diminati.')
+            return redirect('app:apply_journal')
+
+        if role_applied not in ('reviewer', 'editor'):
+            messages.error(request, 'Peran yang dipilih tidak valid.')
+            return redirect('app:apply_journal')
+
+        if existing_app:
+            existing_app.role_applied = role_applied
+            existing_app.status = 'pending'
+            existing_app.verification_notes = ''
+            existing_app.save()
+            existing_app.journal_interests.set(journals.filter(id__in=journal_ids))
+            messages.success(request, 'Pendaftaran Anda telah diperbarui dan sedang menunggu verifikasi admin.')
+        else:
+            new_app = CallForReviewer.objects.create(
+                applicant=userpengguna,
+                role_applied=role_applied,
+                status='pending',
+            )
+            new_app.journal_interests.set(journals.filter(id__in=journal_ids))
+            messages.success(request, 'Pendaftaran Anda berhasil dikirim! Tim kami akan segera memverifikasi.')
+
+        return redirect('app:apply_journal')
+
+    context = {
+        'title': 'Review & Editor Journal',
+        'heading': 'Daftar sebagai Reviewer / Editor Jurnal',
+        'userpengguna': userpengguna,
+        'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
+        'journals': journals,
+        'existing_app': existing_app,
+    }
+    return render(request, 'pengguna/apply_journal.html', context)

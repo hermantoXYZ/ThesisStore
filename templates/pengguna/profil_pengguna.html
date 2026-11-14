@@ -129,10 +129,10 @@ Update Data Lainnya
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="id_jafung">Jabatan Fungsional <small style="color: #888;">(Opsional)</small></label>
-                        {{ form.jafung }}
-                        {% if form.jafung.errors %}
-                            <small style="color: red;">{{ form.jafung.errors.0 }}</small>
+                        <label for="id_jabatan_fungsional">Jabatan Fungsional <small style="color: #888;">(Opsional)</small></label>
+                        {{ form.jabatan_fungsional }}
+                        {% if form.jabatan_fungsional.errors %}
+                            <small style="color: red;">{{ form.jabatan_fungsional.errors.0 }}</small>
                         {% endif %}
                     </div>
 
@@ -151,6 +151,34 @@ Update Data Lainnya
                         {{ form.bidang_keahlian }}
                         {% if form.bidang_keahlian.errors %}
                             <small style="color: red;">{{ form.bidang_keahlian.errors.0 }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_universitas">Universitas / Institusi <small style="color: #888;">(Opsional)</small></label>
+                        {{ form.universitas }}
+                        {% if form.universitas.errors %}
+                            <small style="color: red;">{{ form.universitas.errors.0 }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_fakultas">Fakultas <small style="color: #888;">(Opsional)</small></label>
+                        {{ form.fakultas }}
+                        {% if form.fakultas.errors %}
+                            <small style="color: red;">{{ form.fakultas.errors.0 }}</small>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_program_studi">Program Studi <small style="color: #888;">(Opsional)</small></label>
+                        {{ form.program_studi }}
+                        {% if form.program_studi.errors %}
+                            <small style="color: red;">{{ form.program_studi.errors.0 }}</small>
                         {% endif %}
                     </div>
                 </div>
@@ -218,7 +246,6 @@ Update Data Lainnya
 document.addEventListener('DOMContentLoaded', function () {
     const selectConfigs = [
         { id: 'id_gender', search: false },
-        { id: 'id_jafung', search: true },
         { id: 'id_provinsi_pengguna', search: true }
     ];
 

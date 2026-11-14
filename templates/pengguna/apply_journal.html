@@ -1,0 +1,806 @@
+
+{% extends 'pengguna/base.html' %}
+{% load static %}
+
+{% block content1 %}
+<div class="dashboard-content">
+    <div class="profile-container">
+        {% if existing_app %}
+
+        <div class="settings-section journal-status
+            {% if existing_app.status == 'pending' %}status-pending
+            {% elif existing_app.status == 'approved' %}status-approved
+            {% else %}status-rejected{% endif %}">
+
+            <div style="display: flex; align-items: flex-start; gap: 14px;">
+
+                <i class="
+                    {% if existing_app.status == 'pending' %}ri-time-line
+                    {% elif existing_app.status == 'approved' %}ri-checkbox-circle-fill
+                    {% else %}ri-close-circle-fill{% endif %}
+                " style="font-size: 28px; flex-shrink: 0;"></i>
+
+                <div style="flex: 1;">
+
+                    <strong style="font-size: 14px; display: block; margin-bottom: 5px;">
+                        {% if existing_app.status == 'pending' %}
+                            Pendaftaran Menunggu Verifikasi Admin
+                        {% elif existing_app.status == 'approved' %}
+                            Pendaftaran Telah Disetujui
+                        {% else %}
+                            Pendaftaran Ditolak
+                        {% endif %}
+                    </strong>
+
+                    <div style="font-size: 12.5px;">
+                        Peran:
+                        <strong>{{ existing_app.role_applied|capfirst }}</strong>
+                        &nbsp; | &nbsp;
+                        Didaftarkan:
+                        {{ existing_app.created_at|date:"d M Y" }}
+                        &nbsp; | &nbsp;
+                        Diperbarui:
+                        {{ existing_app.updated_at|date:"d M Y" }}
+                    </div>
+
+                    {% if existing_app.verification_notes %}
+                    <div class="journal-admin-note">
+                        <strong>Catatan Admin:</strong>
+                        {{ existing_app.verification_notes }}
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+
+        {% endif %}
+
+
+        <div class="settings-section">
+            <form method="POST">
+                {% csrf_token %}
+                <h3 class="journal-section-title">
+                    Informasi Profil Pengguna
+                </h3>
+                <div class="journal-profile">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nama Lengkap</label>
+                            <input type="text"
+                                   class="form-control"
+                                   value="{{ request.user.first_name }}"
+                                   readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Email Terdaftar</label>
+                            <input type="text"
+                                   class="form-control"
+                                   value="{{ request.user.email|default:'-' }}"
+                                   readonly>
+                        </div>
+
+                    </div>
+
+                    <div class="form-row">
+                        {% if userpengguna.universitas %}
+                        <div class="form-group">
+                            <label>Institusi / Universitas</label>
+                            <input type="text"
+                                   class="form-control"
+                                   value="{{ userpengguna.universitas }}"
+                                   readonly>
+                        </div>
+                        {% else %}
+                        <div class="form-group">
+                            <label>Institusi / Universitas <a style="color: red;" href="{% url 'app:profile_pengguna' %}">
+                            (*Mohon lengkapi di halaman profil)
+                            </a></label>
+                            <input type="text" style="color: #c4bdbd;"
+                                   class="form-control"
+                                   value="Data Masih Kosong"
+                                   readonly>
+                        </div>
+                        {% endif %}
+
+                        {% if userpengguna.telp %}
+                        <div class="form-group">
+                            <label>No. Telepon</label>
+                            <input type="text"
+                                   class="form-control"
+                                   value="{{ userpengguna.telp }}"
+                                   readonly>
+                        </div>
+                        {% else %}
+                        <div class="form-group">
+                            <label>No. Telepon <a style="color: red;" href="{% url 'app:profile_pengguna' %}">
+                            (*Mohon lengkapi di halaman profil)
+                            </a></label>
+                            <input type="text" style="color: #c4bdbd;"
+                                   class="form-control"
+                                   value="Data Masih Kosong"
+                                   readonly>
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+                    <div class="form-row">
+                        {% if userpengguna.fakultas %}
+                        <div class="form-group">
+                            <label>Fakultas</label>
+                            <input type="text"
+                                   class="form-control"
+                                   value="{{ userpengguna.fakultas }}"
+                                   readonly>
+                        </div>
+                       {% else %}
+                        <div class="form-group">
+                            <label>Fakultas <a style="color: red;" href="{% url 'app:profile_pengguna' %}">
+                            (*Mohon lengkapi di halaman profil)
+                            </a></label>
+                            <input type="text" style="color: #c4bdbd;"
+                                   class="form-control"
+                                   value="Data Masih Kosong"
+                                   readonly>
+                        </div>
+                        {% endif %}
+                        
+                        {% if userpengguna.program_studi %}
+                        <div class="form-group">
+                            <label>Program Studi</label>
+                            <input type="text"
+                                   class="form-control"
+                                   value="{{ userpengguna.program_studi }}"
+                                   readonly>
+                        </div>
+                        {% else %}
+                        <div class="form-group">
+                            <label>Program Studi <a style="color: red;" href="{% url 'app:profile_pengguna' %}">
+                            (*Mohon lengkapi di halaman profil)
+                            </a></label>
+                            <input type="text" style="color: #c4bdbd;"
+                                   class="form-control"
+                                   value="Data Masih Kosong"
+                                   readonly>
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+                  <!-- JENIS KELAMIN & PROVINSI -->
+<div class="form-row">
+
+    {% if userpengguna.gender %}
+    <div class="form-group">
+        <label>Jenis Kelamin</label>
+        <input type="text" class="form-control"
+               value="{{ userpengguna.gender }}" readonly>
+    </div>
+    {% else %}
+    <div class="form-group">
+        <label>Jenis Kelamin
+            <a style="color:red;" href="{% url 'app:profile_pengguna' %}">
+                (*Mohon lengkapi di halaman profil)
+            </a>
+        </label>
+        <input type="text" class="form-control"
+               value="Data Masih Kosong" readonly
+               style="color:#c4bdbd;">
+    </div>
+    {% endif %}
+
+
+    {% if userpengguna.provinsi_pengguna %}
+    <div class="form-group">
+        <label>Provinsi</label>
+        <input type="text" class="form-control"
+               value="{{ userpengguna.provinsi_pengguna }}"
+               readonly>
+    </div>
+    {% else %}
+    <div class="form-group">
+        <label>Provinsi
+            <a style="color:red;" href="{% url 'app:profile_pengguna' %}">
+                (*Mohon lengkapi di halaman profil)
+            </a>
+        </label>
+        <input type="text" class="form-control"
+               value="Data Masih Kosong" readonly
+               style="color:#c4bdbd;">
+    </div>
+    {% endif %}
+
+</div>
+
+
+<!-- ALAMAT & JABATAN FUNGSIONAL -->
+<div class="form-row">
+
+    {% if userpengguna.alamat %}
+    <div class="form-group">
+        <label>Alamat Domisili / Instansi</label>
+        <input type="text" class="form-control"
+               value="{{ userpengguna.alamat }}" readonly>
+    </div>
+    {% else %}
+    <div class="form-group">
+        <label>Alamat Domisili / Instansi
+            <a style="color:red;" href="{% url 'app:profile_pengguna' %}">
+                (*Mohon lengkapi di halaman profil)
+            </a>
+        </label>
+        <input type="text" class="form-control"
+               value="Data Masih Kosong" readonly
+               style="color:#c4bdbd;">
+    </div>
+    {% endif %}
+
+
+    {% if userpengguna.jabatan_fungsional %}
+    <div class="form-group">
+        <label>Jabatan Fungsional</label>
+        <input type="text" class="form-control"
+               value="{{ userpengguna.jabatan_fungsional }}" readonly>
+    </div>
+    {% else %}
+    <div class="form-group">
+        <label>Jabatan Fungsional
+            <a style="color:red;" href="{% url 'app:profile_pengguna' %}">
+                (*Mohon lengkapi di halaman profil)
+            </a>
+        </label>
+        <input type="text" class="form-control"
+               value="Data Masih Kosong" readonly
+               style="color:#c4bdbd;">
+    </div>
+    {% endif %}
+
+</div>
+
+
+<!-- NUPTK -->
+<div class="form-row">
+
+    {% if userpengguna.nuptk %}
+    <div class="form-group">
+        <label>NUPTK</label>
+        <input type="text" class="form-control"
+               value="{{ userpengguna.nuptk }}" readonly>
+    </div>
+    {% else %}
+    <div class="form-group">
+        <label>NUPTK
+            <a style="color:red;" href="{% url 'app:profile_pengguna' %}">
+                (*Mohon lengkapi di halaman profil)
+            </a>
+        </label>
+        <input type="text" class="form-control"
+               value="Data Masih Kosong" readonly
+               style="color:#c4bdbd;">
+    </div>
+    {% endif %}
+
+     {% if userpengguna.bidang_keahlian %}
+                        <div class="form-group">
+                            <label>Bidang Keahlian</label>
+                            <input type="text"
+                                   class="form-control"
+                                   value="{{ userpengguna.bidang_keahlian }}"
+                                   readonly>
+                        </div>
+                        {% else %}
+                        <div class="form-group">
+                            <label>Bidang Keahlian <a style="color: red;" href="{% url 'app:profile_pengguna' %}">
+                            (*Mohon lengkapi di halaman profil)
+                            </a></label>
+                            <input type="text" style="color: #c4bdbd;"
+                                   class="form-control"
+                                   value="Data Masih Kosong"
+                                   readonly>
+                        </div>
+
+                        {% endif %}
+
+</div>
+
+<h3 class="journal-section-title">
+    <i class="ri-graduation-cap-line" style="color:#1d84c6;"></i>
+    Profil Akademik & Publikasi Ilmiah
+</h3>
+
+<div class="form-row">
+
+    <!-- SINTA -->
+    <div class="form-group">
+        <label>Link SINTA</label>
+        {% if userpengguna.link_sinta %}
+            <input type="text" class="form-control"
+                   value="{{ userpengguna.link_sinta }}" readonly>
+            <a href="{{ userpengguna.link_sinta }}" target="_blank"
+               rel="noopener noreferrer" class="journal-link">
+                <i class="ri-external-link-line"></i> Lihat Profil SINTA
+            </a>
+        {% else %}
+            <input type="text" class="form-control"
+                   value="Data Masih Kosong" readonly
+                   style="color:#c4bdbd;">
+        {% endif %}
+    </div>
+
+    <!-- SCOPUS -->
+    <div class="form-group">
+        <label>Link Scopus</label>
+        {% if userpengguna.link_scopus %}
+            <input type="text" class="form-control"
+                   value="{{ userpengguna.link_scopus }}" readonly>
+            <a href="{{ userpengguna.link_scopus }}" target="_blank"
+               rel="noopener noreferrer" class="journal-link">
+                <i class="ri-external-link-line"></i> Lihat Profil Scopus
+            </a>
+        {% else %}
+            <input type="text" class="form-control"
+                   value="Data Masih Kosong" readonly
+                   style="color:#c4bdbd;">
+        {% endif %}
+    </div>
+
+</div>
+
+
+<div class="form-row">
+
+    <!-- GOOGLE SCHOLAR -->
+    <div class="form-group">
+        <label>Link Google Scholar</label>
+        {% if userpengguna.link_google_scholar %}
+            <input type="text" class="form-control"
+                   value="{{ userpengguna.link_google_scholar }}" readonly>
+            <a href="{{ userpengguna.link_google_scholar }}" target="_blank"
+               rel="noopener noreferrer" class="journal-link">
+                <i class="ri-external-link-line"></i> Lihat Google Scholar
+            </a>
+        {% else %}
+            <input type="text" class="form-control"
+                   value="Data Masih Kosong" readonly
+                   style="color:#c4bdbd;">
+        {% endif %}
+    </div>
+
+    <!-- ORCID -->
+    <div class="form-group">
+        <label>Link ORCID</label>
+        {% if userpengguna.link_orcid %}
+            <input type="text" class="form-control"
+                   value="{{ userpengguna.link_orcid }}" readonly>
+            <a href="{{ userpengguna.link_orcid }}" target="_blank"
+               rel="noopener noreferrer" class="journal-link">
+                <i class="ri-external-link-line"></i> Lihat ORCID
+            </a>
+        {% else %}
+            <input type="text" class="form-control"
+                   value="Data Masih Kosong" readonly
+                   style="color:#c4bdbd;">
+        {% endif %}
+    </div>
+
+</div>
+
+                    {% if not userpengguna.universitas or not userpengguna.bidang_keahlian %}
+                    <div class="journal-profile-warning">
+                        <i class="ri-error-warning-line"></i>
+                        Profil Anda belum lengkap.
+                        <a href="{% url 'app:profile_pengguna' %}">
+                            Lengkapi profil Anda
+                        </a>
+                    </div>
+                    {% endif %}
+
+                </div>
+
+
+                <!-- SECTION 2: PILIH PERAN -->
+                <h3 class="journal-section-title">
+                    Peran yang Dilamar
+                    <span style="color: red;">*</span>
+                </h3>
+
+                <div class="form-row">
+
+                    <!-- REVIEWER -->
+                    <label class="journal-choice role-option">
+
+                        <div class="journal-choice-content">
+
+                            <input type="radio"
+                                   name="role_applied"
+                                   value="reviewer"
+                                   required
+                                   {% if existing_app.role_applied == 'reviewer' or not existing_app %}checked{% endif %}
+                                   {% if existing_app.status == 'approved' or existing_app.status == 'pending' %}disabled{% endif %}>
+
+                            <div>
+                                <strong>
+                                    Reviewer
+                                </strong>
+
+                                <p>
+                                    Menelaah naskah ilmiah dan memberikan
+                                    rekomendasi kelayakan terbit.
+                                </p>
+                            </div>
+
+                        </div>
+
+                    </label>
+
+
+                    <!-- EDITOR -->
+                    <label class="journal-choice role-option">
+
+                        <div class="journal-choice-content">
+
+                            <input type="radio"
+                                   name="role_applied"
+                                   value="editor"
+                                   {% if existing_app.role_applied == 'editor' %}checked{% endif %}
+                                   {% if existing_app.status == 'approved' or existing_app.status == 'pending' %}disabled{% endif %}>
+
+                            <div>
+                                <strong>
+                                    Editor
+                                </strong>
+
+                                <p>
+                                    Mengelola alur editorial dan memastikan
+                                    standar kualitas jurnal terpenuhi.
+                                </p>
+                            </div>
+
+                        </div>
+
+                    </label>
+
+                </div>
+
+
+                <!-- SECTION 3: PILIH JURNAL -->
+                <h3 class="journal-section-title">
+                    Jurnal yang Diminati
+                    <span style="color: red;">*</span>
+
+                    <small style="font-size: 11px; color: #999; font-weight: 400;">
+                        (Pilih satu atau lebih)
+                    </small>
+                </h3>
+
+
+                {% if journals %}
+
+                <div class="journal-grid">
+
+                    {% for journal in journals %}
+
+                    <label class="journal-choice journal-option">
+
+                        <div class="journal-choice-content">
+
+                            <input type="checkbox"
+                                   name="journal_interests"
+                                   value="{{ journal.id }}"
+                                   {% if existing_app and journal in existing_app.journal_interests.all %}checked{% endif %}
+                                   {% if existing_app.status == 'approved' or existing_app.status == 'pending' %}disabled{% endif %}>
+
+                            <div>
+                                <strong>{{ journal.nama }}</strong>
+                            </div>
+                        </div>
+                    </label>
+
+                    {% endfor %}
+
+                </div>
+
+                {% else %}
+
+                <div class="journal-empty">
+                    <p>
+                        Belum ada jurnal yang membuka pendaftaran
+                        reviewer saat ini.
+                    </p>
+                </div>
+
+                {% endif %}
+
+
+                <!-- INFORMASI READONLY -->
+                {% if existing_app.status == 'approved' or existing_app.status == 'pending' %}
+
+                <div class="journal-readonly-info">
+
+                    {% if existing_app.status == 'approved' %}
+                        Pendaftaran telah disetujui. Informasi di atas
+                        ditampilkan sebagai arsip pendaftaran dan tidak
+                        dapat diubah.
+                    {% else %}
+                        Pendaftaran sedang dalam proses verifikasi.
+                        Informasi di atas tidak dapat diubah selama
+                        proses pemeriksaan.
+                    {% endif %}
+                </div>
+
+                {% endif %}
+
+                {% if not existing_app or existing_app.status == 'rejected' %}
+
+                    {% if journals %}
+
+                    <div class="form-actions" style="margin-top: 25px;">
+ {% if userpengguna.universitas and userpengguna.telp and userpengguna.bidang_keahlian and userpengguna.fakultas and userpengguna.program_studi and userpengguna.link_sinta and userpengguna.link_orcid and userpengguna.link_google_scholar and userpengguna.link_scopus and userpengguna.nuptk and userpengguna.jabatan_fungsional and userpengguna.provinsi_pengguna  %}
+                        <button type="submit" class="btn primary">
+
+                            {% if existing_app and existing_app.status == 'rejected' %}
+                                Ajukan Kembali
+                            {% else %}
+                                Kirim Pendaftaran
+                            {% endif %}
+
+                        </button>
+                        {% else %}
+                        <button type="submit" class="btn primary"
+                                disabled style="background: #ccc; cursor: not-allowed;">
+                            Lengkapi Data Profil Terlebih Dahulu
+                        </button>
+
+                        {% endif %}
+
+                        <a href="{% url 'app:dashboard' %}"
+                           class="btn secondary">
+                            <i class="ri-arrow-left-line"></i>
+                            Kembali ke Dashboard
+                        </a>
+
+                    </div>
+
+                    <p style="font-size: 11.5px; color: #999; margin-top: 12px;">
+                        <i class="ri-information-line"></i>
+                        Dengan mengirimkan formulir ini, Anda menyatakan
+                        bahwa data yang diberikan adalah benar dan bersedia
+                        mengikuti prosedur editorial yang berlaku.
+                    </p>
+
+                    {% endif %}
+
+                {% endif %}
+
+            </form>
+
+        </div>
+
+    </div>
+</div>
+
+
+<!-- CUSTOM CSS -->
+<style>
+
+/* SECTION TITLE */
+.journal-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-top: 20px;
+    margin-bottom: 12px;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* PROFILE */
+.journal-profile {
+    background: #f8faff;
+    border: 1px solid #e5edf5;
+    border-radius: 6px;
+    padding: 16px;
+}
+
+.journal-profile .form-row {
+    margin-bottom: 12px;
+}
+
+.journal-profile .form-row:last-child {
+    margin-bottom: 0;
+}
+
+.journal-profile .form-control {
+    background: #f5f5f5;
+    cursor: default;
+}
+
+.journal-profile-warning {
+    margin-top: 12px;
+    font-size: 12px;
+    color: #d97706;
+}
+
+.journal-profile-warning a {
+    color: #1d84c6;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* STATUS */
+.journal-status {
+    border-left: 4px solid transparent;
+}
+
+.status-pending {
+    background: #fff8e1;
+    border-color: #f39c12;
+    color: #856404;
+}
+
+.status-approved {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+    border-radius: 0px;
+}
+
+.status-rejected {
+    background: #fff1f2;
+    border-color: #dc3545;
+    color: #991b1b;
+}
+
+.journal-admin-note {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: rgb(219 232 221);
+    border-radius: 6px;
+    font-size: 12px;
+    color: #555;
+}
+
+/* CHOICE CARD */
+.journal-choice {
+    display: block;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all .2s ease;
+    background: #fff;
+    margin-bottom: 0;
+}
+
+.journal-choice-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.journal-choice input {
+    width: 16px;
+    height: 16px;
+    margin-top: 3px;
+    flex-shrink: 0;
+    accent-color: #1d84c6;
+    cursor: pointer;
+}
+
+.journal-choice strong {
+    display: block;
+    font-size: 13px;
+    color: #333;
+}
+
+.journal-choice p {
+    font-size: 12px;
+    color: #888;
+    margin: 5px 0 0;
+    line-height: 1.5;
+}
+
+.journal-choice small {
+    display: block;
+    font-size: 11px;
+    color: #999;
+    margin-top: 5px;
+}
+
+/* ROLE */
+.role-option {
+    flex: 1;
+    min-width: 220px;
+}
+
+/* JOURNAL GRID */
+.journal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 10px;
+}
+
+/* HOVER & CHECKED */
+.journal-option:hover,
+.journal-option:has(input:checked),
+.role-option:has(input:checked) {
+    border-color: #1d84c6;
+    background: #f4faff;
+}
+
+/* READONLY */
+.journal-choice:has(input:disabled) {
+    cursor: default;
+}
+
+.journal-choice:has(input:disabled):hover {
+    cursor: default;
+}
+
+.journal-choice input:disabled {
+    cursor: default;
+    opacity: 1;
+}
+
+/* READONLY INFO */
+.journal-readonly-info {
+    margin-top: 20px;
+    padding: 12px 15px;
+    background: #f5f7fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    color: #64748b;
+    font-size: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.6;
+}
+
+/* EMPTY STATE */
+.journal-empty {
+    text-align: center;
+    padding: 30px 15px;
+    background: #fafafa;
+    border: 1px dashed #ddd;
+    border-radius: 6px;
+    color: #999;
+}
+
+.journal-empty p {
+    font-size: 12px;
+    margin: 8px 0 0;
+}
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+
+    .journal-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .role-option {
+        min-width: 100%;
+    }
+
+    .journal-section-title {
+        font-size: 14px;
+    }
+
+    .journal-profile {
+        padding: 12px;
+    }
+
+}
+
+</style>
+
+{% endblock content1 %}

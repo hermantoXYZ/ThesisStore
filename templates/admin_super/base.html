@@ -55,6 +55,14 @@
                     <li class="{% if '/admin/loa' in request.path %}active{% endif %}">
                         <a href="{% url "app:admin_loa_jurnal_list" %}"><i class="ri-file-shield-2-line"></i> LOA Jurnal</a>
                     </li>
+                    <li class="{% if '/admin/reviewer' in request.path %}active{% endif %}">
+                        <a href="{% url "app:admin_reviewer_list" %}" style="display:flex;align-items:center;">
+                            <i class="ri-award-line"></i> Pendaftaran Reviewer
+                            {% if pending_reviewer_count %}
+                            <span style="margin-left:auto;background:#ef4444;color:#fff;font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:999px;line-height:1.2;">{{ pending_reviewer_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
 
                     <li class="nav-section-label"><span>Tata Kelola Surat</span></li>
                     <li class="{% if '/admin/surat' in request.path %}active{% endif %}">

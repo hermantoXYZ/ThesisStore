@@ -44,6 +44,14 @@ class BidangPenelitian(models.Model):
     def __str__(self):
         return f"{self.nama_bidang}"
 
+JAFUNG = [
+    ('Tanpa Jabatan Fungsional', 'Tanpa Jabatan Fungsional'),
+    ('Asisten Ahli', 'Asisten Ahli'),
+    ('Lektor', 'Lektor'),
+    ('Lektor Kepala', 'Lektor Kepala'),
+    ('Guru Besar', 'Guru Besar'),
+]
+
 class UserPengguna(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)    
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name="anggota")
@@ -55,7 +63,10 @@ class UserPengguna(models.Model):
     alamat = models.CharField(max_length=50, null=True, blank=True)
     photo = models.ImageField(upload_to=rename_photo_anggota, null=True, blank=True)
     provinsi_pengguna = models.ForeignKey(Provinsi, on_delete=models.SET_NULL, null=True, blank=True)
-    jafung = models.CharField(max_length=100, null=True, blank=True)
+    jabatan_fungsional = models.CharField(choices=JAFUNG, max_length=100, null=True, blank=True)
+    program_studi = models.CharField(max_length=100, null=True, blank=True)
+    fakultas = models.CharField(max_length=100, null=True, blank=True)
+    universitas = models.CharField(max_length=100, null=True, blank=True)
     nuptk = models.CharField(max_length=20, null=True, blank=True, verbose_name='NUPTK')
     bidang_keahlian = models.ForeignKey(BidangPenelitian, on_delete=models.SET_NULL, null=True, blank=True)
     link_sinta = models.URLField(max_length=200, null=True, blank=True, verbose_name='Link Sinta')
@@ -469,6 +480,7 @@ class JurnalMaster(models.Model):
     indeks_2 = models.ImageField(upload_to=rename_jurnal_index, blank=True, null=True, verbose_name="Logo Indeksasi 2")
     indeks_3 = models.ImageField(upload_to=rename_jurnal_index, blank=True, null=True, verbose_name="Logo Indeksasi 3")
     indeks_4 = models.ImageField(upload_to=rename_jurnal_index, blank=True, null=True, verbose_name="Logo Indeksasi 4")
+    open_registration = models.BooleanField(default=True, verbose_name="Buka Pendaftaran Reviewer")
     is_active = models.BooleanField(default=True, verbose_name="Aktif")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -763,3 +775,20 @@ class HeroSlide(models.Model):
 
     def __str__(self):
         return f"{self.urutan}. {self.judul}"
+
+
+class CallForReviewer(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    applicant = models.ForeignKey(UserPengguna, on_delete=models.CASCADE, related_name='reviewer_applications')
+    journal_interests = models.ManyToManyField(JurnalMaster, related_name='interested_reviewers', verbose_name="Jurnal yang Diminati")
+    role_applied = models.CharField(max_length=20, default='reviewer', verbose_name="Peran yang Dilamar")
+    status = models.CharField(max_length=20, default='pending', verbose_name="Status Verifikasi")
+    verification_notes = models.TextField(blank=True, null=True, verbose_name="Catatan Verifikasi")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']  
+
+    def __str__(self):
+        return f"{self.applicant.user.first_name} - {self.role_applied}"

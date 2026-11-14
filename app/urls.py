@@ -3,7 +3,7 @@ from . import views
 from . import views_admin
 from . import views_pengguna
 from . import views_admin_set
-from .view_print import print_loa_jurnal
+from .view_print import print_loa_jurnal, print_sertifikat_narasumber, print_sertifikat_pengguna
 
 urlpatterns = [
     ###### ADMIN KEANGGOTAAN INDIVIDU ######   
@@ -83,7 +83,7 @@ urlpatterns = [
     path('admin/loa/<uuid:uuid>/edit', views_admin.loa_jurnal_edit, name='admin_loa_jurnal_edit'),
     path('admin/loa/<uuid:uuid>/hapus', views_admin.loa_jurnal_hapus, name='admin_loa_jurnal_hapus'),
     path('admin/loa/<uuid:uuid>/print', print_loa_jurnal.loa_jurnal_print, name='admin_loa_jurnal_print'),
-    path('loa/<uuid:uuid>/print', print_loa_jurnal.loa_jurnal_print),
+    path('loa/<uuid:uuid>/print', print_loa_jurnal.loa_jurnal_print,name='loa_jurnal_print'),
 
     ###### TATA USAHA & NOMOR SURAT THESIS ######
     path('admin/surat', views_admin.surat_list, name='admin_surat_list'),
@@ -114,10 +114,22 @@ urlpatterns = [
     path('pesanan/<str:order_number>/sync-midtrans/', views_pengguna.sync_order_midtrans, name='sync_order_midtrans'),
     path('midtrans/notification/', views_pengguna.midtrans_notification, name='midtrans_notification'),
 
+
+    
+    ###### REVIEW & EDITOR JOURNAL #######
+    path('journal/apply/', views_pengguna.apply_journal, name='apply_journal'),
+
+    ###### ADMIN: PENDAFTARAN REVIEWER ######
+    path('admin/reviewer/', views_admin.reviewer_application_list, name='admin_reviewer_list'),
+    path('admin/reviewer/<uuid:app_id>/', views_admin.reviewer_application_detail, name='admin_reviewer_detail'),
+
+
+
     ###### PELATIHAN SAYA (COURSE ENROLLED) ######
     path('academy/', views_pengguna.my_courses_list, name='my_courses'),
     path('academy/<uuid:order_item_id>/', views_pengguna.my_course_detail, name='my_course_detail'),
-    path('academy/<uuid:order_item_id>/sertifikat/', views_pengguna.download_certificate, name='download_certificate'),
+    path('print/sertifikat/peserta/<uuid:order_item_id>/', print_sertifikat_pengguna.sertifikat_pengguna, name='sertifikat_pengguna'),
+    path('print/sertifikat/narasumber/<uuid:order_item_id>/', print_sertifikat_narasumber.sertifikat_narasumber, name='sertifikat_narasumber'),
 
     ###### UMUM ######         
     path('dashboard', views.index, name='dashboard'),

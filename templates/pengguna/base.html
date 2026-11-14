@@ -67,6 +67,14 @@
                     <li class="{% if 'Pelatihan' in title or 'Course' in title or 'Sertifikat' in title %}active{% endif %}">
                         <a href="{% url 'app:my_courses' %}"><i class="ri-video-line"></i> Pelatihan & Course</a>
                     </li>
+
+                    <li class="nav-section-label"><span>My Journal</span></li>
+                    <li class="{% if title == 'Review & Editor Journal' %}active{% endif %}">
+                        <a href="{% url 'app:apply_journal' %}"><i class="ri-award-line"></i> Review &amp; Editor Journal</a>
+                    </li>
+
+
+                    <li class="nav-section-label"><span>Profil</span></li>
                     <li class="{% if title == 'Profil Pengguna' or title == 'Edit Profile' %}active{% endif %}">
                         <a href="{% url 'app:profile_pengguna' %}"><i class="ri-user-settings-line"></i> Profil Pengguna</a>
                     </li>
