@@ -65,7 +65,7 @@ def user_list(request):
     if role == 'Admin':
         user_data = UserAdmin.objects.select_related('username').all().order_by('username__date_joined')
     else:
-        user_data = UserPengguna.objects.select_related('user', 'bidang_penelitian').all().order_by('-user__date_joined')
+        user_data = UserPengguna.objects.select_related('user', 'bidang_keahlian').all().order_by('-user__date_joined')
 
     context = {
         'title': f'Daftar {role}',

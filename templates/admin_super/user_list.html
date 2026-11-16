@@ -12,8 +12,6 @@
                     Daftar seluruh akun pengguna/anggota dan administrator pada platform ThesisStore.
                 </p>
             </div>
-
-            <!-- Role Switcher Tabs -->
             <div style="display: flex; gap: 8px;">
                 <a href="{% url 'app:user_list' %}?role=Pengguna" class="btn {% if role == 'Pengguna' %}primary{% else %}secondary{% endif %}" style="font-size: 13px;">
                     <i class="ri-user-line"></i> Pengguna ({{ total_pengguna }})
