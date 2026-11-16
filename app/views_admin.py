@@ -10,7 +10,7 @@ from app.models import (
 from .form_admin import (
     formProfile, CategoryBooksForm, BooksForm, ArticleForm, PageForm, CategoryForm,
     WebSettingForm, KerjaSamaForm, HeroSlideForm, CourseForm, CourseAgendaForm,
-    JurnalMasterForm, LoaJurnalForm, KodeSuratForm, NoSuratThesisForm
+    JurnalMasterForm, LoaJurnalForm, KodeSuratForm, NoSuratThesisForm, CourseOrderStatusForm
 )
 from app.decorators_admin import admin_required
 from django.db.models import Q
@@ -1138,18 +1138,11 @@ def kode_surat_hapus(request, uuid):
     messages.warning(request, f'Kode surat "{jenis}" berhasil dihapus.')
     return redirect('app:admin_kode_surat_list')
 
-
-# =========================================================================
-# KELOLA PESANAN BUKU / E-COMMERCE (ADMIN)
-# =========================================================================
-
 @admin_required
 def admin_order_list_buku(request):
     status_filter = request.GET.get('status', 'all')
     search_q = request.GET.get('q', '').strip()
-
     orders_qs = Order.objects.filter(items__book__isnull=False).select_related('user').prefetch_related('items').order_by('-created_at')
-
     if status_filter != 'all' and status_filter in dict(Order.STATUS_CHOICES):
         orders_qs = orders_qs.filter(status=status_filter)
 
@@ -1245,8 +1238,8 @@ def admin_order_detail_buku(request, order_number):
         return redirect('app:admin_order_detail', order_number=order.order_number)
 
     context = {
-        'title': f'Detail Pesanan #{order.order_number}',
-        'heading': f'Kelola Pesanan #{order.order_number}',
+        'title': 'Kelola Pesanan',
+        'heading': f'Detail Pesanan #{order.order_number}',
         'order': order,
         'status_choices': Order.STATUS_CHOICES,
         'photo': _get_admin_photo(request),
@@ -1276,20 +1269,33 @@ def admin_order_detail_course(request, order_number):
                 messages.error(request, f'Gagal memeriksa status ke Midtrans: {str(e)}')
 
     if request.method == 'POST':
-        new_status = request.POST.get('status')
 
-        if new_status in dict(Order.STATUS_CHOICES):
-            order.status = new_status
+        form = CourseOrderStatusForm(request.POST, instance=order)
 
-        order.save()
-        messages.success(request, f'Status pesanan #{order.order_number} berhasil diperbarui menjadi "{order.get_status_display()}".')
-        return redirect('app:admin_order_detail', order_number=order.order_number)
+        if form.is_valid():
+            form.save()
+
+            messages.success(
+                request,
+                f'Status pesanan #{order.order_number} berhasil diperbarui menjadi "{order.get_status_display()}".'
+            )
+
+        else:
+            messages.error(request, 'Status pesanan tidak valid.')
+
+        return redirect(
+            'app:admin_order_detail',
+            order_number=order.order_number
+        )
+
+    else:
+        form = CourseOrderStatusForm(instance=order)
 
     context = {
         'title': f'Detail Pesanan #{order.order_number}',
         'heading': f'Kelola Pesanan #{order.order_number}',
         'order': order,
-        'status_choices': Order.STATUS_CHOICES,
+        'status_choices': form.fields['status'].choices,
         'photo': _get_admin_photo(request),
     }
     return render(request, 'admin_super/order_detail_course.html', context)

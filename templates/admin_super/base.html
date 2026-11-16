@@ -30,10 +30,10 @@
                     </li>
 
                     <li class="nav-section-label"><span>Katalog Buku &amp; Pesanan</span></li>
-                    <li class="{% if title == 'Pesanan Buku' %}active{% endif %}">
+                    <li class="{% if title == 'Pesanan Buku' or title == 'Kelola Pesanan' %}active{% endif %}">
                         <a href="{% url "app:admin_order_list" %}"><i class="ri-shopping-bag-3-line"></i>Book Orders</a>
                     </li>
-                    <li class="{% if title == 'Kelola Buku' %}active{% endif %}">
+                    <li class="{% if title == 'Kelola Buku' or title == 'Edit Buku' %}active{% endif %}">
                         <a href="{% url "app:buku_list" %}"><i class="ri-book-2-line"></i> Kelola Buku</a>
                     </li>
                     <li class="{% if '/buku/kategori/' in request.path %}active{% endif %}">

@@ -141,9 +141,9 @@
                     Ubah Status <span style="color: #ef4444;">*</span>
                 </label>
                 <select name="status" style="width: 100%; max-width: 320px; padding: 0.65rem 1rem; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; color: #374151; background: #fff;">
-                    <option value="pending" {% if app.status == 'pending' %}selected{% endif %}>⏳ Menunggu Verifikasi</option>
-                    <option value="approved" {% if app.status == 'approved' %}selected{% endif %}>✅ Setujui</option>
-                    <option value="rejected" {% if app.status == 'rejected' %}selected{% endif %}>❌ Tolak</option>
+                    <option value="pending" {% if app.status == 'pending' %}selected{% endif %}>Menunggu Verifikasi</option>
+                    <option value="approved" {% if app.status == 'approved' %}selected{% endif %}>Setujui</option>
+                    <option value="rejected" {% if app.status == 'rejected' %}selected{% endif %}>Tolak</option>
                 </select>
             </div>
 

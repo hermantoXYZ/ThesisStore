@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.utils.text import slugify
 import uuid
-from .models import (UserAdmin, Provinsi, BidangPenelitian, CategoryBooks, MediaBooks, Books, UserPengguna, Article, Category, Page, KerjaSama, HeroSlide, WebSetting, Course, CourseAgenda, JurnalMaster, LoaJurnal, NoSuratThesis, KodeSurat)
+from .models import (UserAdmin, Provinsi, BidangPenelitian, CategoryBooks, MediaBooks, Books, UserPengguna, Article, Category, Page, KerjaSama, HeroSlide, WebSetting, Course, CourseAgenda, JurnalMaster, LoaJurnal, NoSuratThesis, KodeSurat, Order)
 
 
 class formProfile(forms.ModelForm):
@@ -849,3 +849,22 @@ class NoSuratThesisForm(forms.ModelForm):
         }
 
 
+class CourseOrderStatusForm(forms.ModelForm):
+    COURSE_STATUS_CHOICES = [
+        ('pending', 'Menunggu Pembayaran'),
+        ('paid', 'Menunggu Konfirmasi'),
+        ('processing', 'Sedang Diproses'),
+        ('delivered', 'Selesai'),
+        ('cancelled', 'Dibatalkan'),
+    ]
+
+    status = forms.ChoiceField(
+        choices=COURSE_STATUS_CHOICES,
+        widget=forms.Select(attrs={
+            'class': 'form-control'
+        })
+    )
+
+    class Meta:
+        model = Order
+        fields = ['status']
