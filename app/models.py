@@ -258,7 +258,7 @@ class Course(models.Model):
 
     FEE_TYPE_CHOICES = [
         ('free', 'Gratis'),
-        ('paid', 'Berbayar / Donasi (Tripay Payment Gateway)'),
+        ('paid', 'Berbayar / Donasi'),
     ]
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)

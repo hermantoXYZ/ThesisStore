@@ -26,18 +26,18 @@
             <table id="layananTable" class="student-table" style="width: 100%;">
                 <thead>
                     <tr>
-                        <th style="width: 40px; text-align: center;">No</th>
-                        <th>Pengguna</th>
+                        <th style="white-space: nowrap;">No</th>
+                        <th style="white-space: nowrap;">Pengguna</th>
                         <th>Email</th>
                         <th style="white-space: nowrap;">Nomor Telepon</th>
                         {% if role == 'Pengguna' %}
-                            <th>Universitas</th>
+                            <th style="white-space: nowrap;">Universitas</th>
                         {% else %}
-                            <th>Jenis Kelamin</th>
+                            <th style="white-space: nowrap;">Jenis Kelamin</th>
                         {% endif %}
-                        <th style="width: 80px; text-align: center;">Status</th>
+                        <th style="white-space: nowrap;">Status</th>
                         <th style="white-space: nowrap;">Last Login</th>
-                        <th style="width: 120px; text-align: center;">Aksi</th>
+                        <th style="white-space: nowrap;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -46,7 +46,7 @@
                         <td style="text-align: center; vertical-align: middle;">{{ forloop.counter }}</td>
                         
                         <!-- Kolom Info Pengguna -->
-                        <td style="vertical-align: middle;">
+                        <td style="vertical-align: middle; white-space: nowrap;">
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <div>
                                     <strong style="color: #1e293b; font-size: 14px;">

@@ -203,7 +203,7 @@
 
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-size: 0.9rem; color: #475569;">
                 <span>Total Item</span>
-                <span style="font-weight: 600; color: #0f172a;">{{ total_items }} buku</span>
+                <span style="font-weight: 600; color: #0f172a;">{{ total_items }} Item</span>
             </div>
 
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-size: 0.9rem; color: #475569;">
@@ -211,10 +211,10 @@
                 <span style="font-weight: 600; color: #0f172a;">Rp{{ total_price|floatformat:0 }}</span>
             </div>
 
-            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; font-size: 0.9rem; color: #475569;">
+            <!-- <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; font-size: 0.9rem; color: #475569;">
                 <span>Biaya Pengiriman</span>
                 <span style="font-weight: 600; color: #10b981;">Gratis / Dihitung</span>
-            </div>
+            </div> -->
 
             <div style="border-top: 1px dashed #cbd5e1; margin-top: 1rem; padding-top: 1rem; display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.5rem;">
                 <span style="font-size: 1rem; font-weight: 700; color: #1e293b;">Total Tagihan</span>
@@ -224,23 +224,37 @@
             <a href="{% url 'app:checkout' %}" class="btn primary checkout" style="display: block; width: 100%; text-align: left; padding: 0.85rem; font-size: 1rem; font-weight: 700; text-decoration: none; border-radius: 1px !important; box-shadow: 0 4px 12px rgba(44, 76, 244, 0.25);">
                 Checkout Sekarang
             </a>
+            {% for item in items %}
+            {% if item.course %}
+                <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 0.65rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #64748b;">
+                        <i class="ri-shield-check-fill" style="color: #10b981; font-size: 1rem;"></i>
+                        <span>Verifikasi Sertifikat</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #64748b;">
+                        <i class="ri-calendar-check-fill" style="color: #2c4cf4; font-size: 1rem;"></i>
+                        <span>Jadwal dan Sesi Pelatihan Terstruktur</span>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Book Assurance -->
+                <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 0.65rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #64748b;">
+                        <i class="ri-shield-check-fill" style="color: #10b981; font-size: 1rem;"></i>
+                        <span>100% Produk Buku Original Ber-ISBN</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #64748b;">
+                        <i class="ri-truck-fill" style="color: #2c4cf4; font-size: 1rem;"></i>
+                        <span>Pengiriman Ekspedisi ke Seluruh Indonesia</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #64748b;">
+                        <i class="ri-secure-payment-fill" style="color: #8c54fc; font-size: 1rem;"></i>
+                        <span>Pembayaran Aman &amp; Verifikasi Langsung</span>
+                    </div>
+                </div>
+            {% endif %}
+            {% endfor %}
 
-            <!-- Assurance Perks -->
-            <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 0.65rem;">
-                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #64748b;">
-                    <i class="ri-shield-check-fill" style="color: #10b981; font-size: 1rem;"></i>
-                    <span>100% Produk Buku Original Ber-ISBN</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #64748b;">
-                    <i class="ri-truck-fill" style="color: #2c4cf4; font-size: 1rem;"></i>
-                    <span>Pengiriman Ekspedisi ke Seluruh Indonesia</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #64748b;">
-                    <i class="ri-secure-payment-fill" style="color: #8c54fc; font-size: 1rem;"></i>
-                    <span>Pembayaran Aman &amp; Verifikasi Langsung</span>
-                </div>
-            </div>
-        </div>
 
     </div>
     {% else %}

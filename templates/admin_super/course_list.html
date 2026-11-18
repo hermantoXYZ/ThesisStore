@@ -21,12 +21,13 @@
             <table id="layananTable" class="student-table" style="width: 100%;">
                 <thead>
                     <tr>
-                        <th style="width: 40px; text-align: center;">No</th>
-                        <th>Kegiatan</th>
-                        <th>Jenis &amp; Format</th>
-                        <th>Pemateri / Coach</th>
-                        <th>Jadwal Pelaksanaan</th>
-                        <th>Biaya</th>
+                        <th style="white-space: nowrap;">No</th>
+                        <th style="white-space: nowrap;">Kegiatan</th>
+                        <th style="white-space: nowrap;">Jenis</th>
+                        <th style="white-space: nowrap;">Format</th>
+                        <th style="white-space: nowrap;">Pemateri / Coach</th>
+                        <th style="white-space: nowrap;">Jadwal</th>
+                        <th style="white-space: nowrap;">Biaya</th>
                         <th style="width: 80px; text-align: center;">Status</th>
                         <th style="width: 130px; text-align: center;">Aksi</th>
                     </tr>
@@ -35,7 +36,7 @@
                     {% for course in courses %}
                     <tr>
                         <td style="text-align: center; vertical-align: middle;">{{ forloop.counter }}</td>
-                        <td style="vertical-align: middle; max-width: 250px; white-space: normal;">
+                        <td style="white-space: nowrap;">
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 {% if course.thumbnail %}
                                     <img src="{{ course.thumbnail.url }}" alt="{{ course.name }}" style="width: 48px; height: 36px; object-fit: cover; border-radius: 4px; border: 1px solid #eee; flex-shrink: 0;">
@@ -50,19 +51,15 @@
                                 </div>
                             </div>
                         </td>
-                        <td style="vertical-align: middle;">
+                        <td style="white-space: nowrap;">
                             <span style="display: inline-block; background: #e8f4fd; color: #2c4cf4; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">
                                 {{ course.get_course_type_display }}
                             </span>
-                            <div style="margin-top: 4px; font-size: 12px; color: #555;">
-                                {% if course.format == 'online' %}
-                                    <i class="ri-vidicon-line" style="color: #2c4cf4;"></i> Online
-                                {% elif course.format == 'offline' %}
-                                    <i class="ri-map-pin-2-line" style="color: #e67e22;"></i> Offline
-                                {% else %}
-                                    <i class="ri-shuffle-line" style="color: #8e44ad;"></i> Hybrid
-                                {% endif %}
-                            </div>
+                        </td>
+                        <td style="white-space: nowrap;">
+                            <span style="display: inline-block; background: #e8f4fd; color: #2c4cf4; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">
+                                {{ course.get_format_display }}
+                            </span>
                         </td>
                         <td style="vertical-align: middle; max-width: 180px; white-space: normal; font-size: 13px;">
                             {% for coach in course.coaches.all %}
@@ -73,9 +70,9 @@
                                 <span style="color: #aaa;">-</span>
                             {% endfor %}
                         </td>
-                        <td style="vertical-align: middle; font-size: 12px;">
+                        <td style="white-space: nowrap">
                             {% if course.start_date %}
-                                <div><i class="ri-calendar-event-line"></i> {{ course.start_date|date:"d M Y" }}</div>
+                                <div>{{ course.start_date|date:"d M Y" }}</div>
                                 {% if course.end_date and course.end_date != course.start_date %}
                                     <div style="color: #7f8c8d;">s/d {{ course.end_date|date:"d M Y" }}</div>
                                 {% endif %}
@@ -83,14 +80,14 @@
                                 <span style="color: #aaa;">Belum dijadwalkan</span>
                             {% endif %}
                         </td>
-                        <td style="vertical-align: middle;">
+                        <td style="white-space: nowrap;">
                             {% if course.fee_type == 'free' or course.price == 0 %}
                                 <span style="color: #27ae60; font-weight: 600; font-size: 13px;">Gratis</span>
                             {% else %}
                                 <span style="color: #e67e22; font-weight: 600; font-size: 13px;">Rp {{ course.formatted_price }}</span>
                             {% endif %}
                         </td>
-                        <td style="text-align: center; vertical-align: middle;">
+                        <td style="text-align: center; vertical-align: middle; white-space: nowrap;">
                             {% if course.is_active %}
                                 <span class="grade-badge a" style="background-color: #27ae60;">Aktif</span>
                             {% else %}

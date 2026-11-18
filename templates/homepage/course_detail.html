@@ -130,11 +130,11 @@
           <div class="course-header-actions">
             <button type="button" class="action-btn" id="btnWishlist" onclick="toggleWishlist()">
               <i class="ri-heart-line" id="wishlistIcon"></i>
-              <span>Favorit</span>
+              <span class="action-label">Favorit</span>
             </button>
             <button type="button" class="action-btn" onclick="shareCourse()">
               <i class="ri-share-line"></i>
-              <span>Bagikan</span>
+              <span class="action-label">Bagikan</span>
             </button>
           </div>
         </div>
@@ -250,7 +250,7 @@
         <div class="course-agenda-section">
           <div class="agenda-section-header">
             <h2 class="sub-heading" style="margin-bottom: 0;">
-              <i class="ri-calendar-event-line" style="color: #2c4cf4;"></i> Jadwal &amp; Rincian Sesi Pembelajaran
+              Jadwal &amp; Rincian Sesi Pembelajaran
             </h2>
             <span class="agenda-count-badge">{{ agendas|length }} Sesi</span>
           </div>
@@ -527,10 +527,10 @@
     gap: 2rem;
   }
 }
-@media (max-width: 868px) {
+@media (max-width: 900px) {
   .course-detail-grid {
     grid-template-columns: 1fr;
-    gap: 2.5rem;
+    gap: 2rem;
   }
 }
 
@@ -541,6 +541,15 @@
   gap: 1.5rem;
   position: sticky;
   top: 90px;
+}
+@media (max-width: 900px) {
+  .course-gallery-col {
+    position: static !important;
+    top: auto !important;
+    max-width: 480px;
+    margin: 0 auto;
+    width: 100%;
+  }
 }
 .main-poster-wrapper {
   position: relative;
@@ -556,11 +565,13 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  width: 100%;
 }
 .poster-aspect-box img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  max-height: 520px;
+  object-fit: contain;
   display: block;
 }
 .poster-placeholder {
@@ -989,26 +1000,6 @@
   text-decoration: underline;
 }
 
-@media (max-width: 640px) {
-  .price-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.65rem;
-  }
-  .cta-row {
-    flex-direction: column;
-  }
-  .btn-add-to-cart,
-  .btn-buy-now {
-    width: 100%;
-    min-width: unset;
-  }
-  .purchase-footer-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-}
 .registration-status-meta {
   display: flex;
   align-items: center;
@@ -1205,6 +1196,19 @@
   font-size: 0.95rem;
   line-height: 1.7;
   color: #334155;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+.desc-text img,
+.desc-text iframe,
+.desc-text video,
+.desc-text table {
+  max-width: 100% !important;
+  height: auto !important;
+}
+.desc-text table {
+  display: block;
+  overflow-x: auto;
 }
 .btn-toggle-desc {
   background: none;
@@ -1259,6 +1263,166 @@
 .spec-val {
   color: #0f172a;
   font-weight: 600;
+}
+
+/* =========================================================================
+   RESPONSIVE MOBILE (<= 640px)
+   ========================================================================= */
+@media (max-width: 640px) {
+  /* Breadcrumb horizontal scroll on small mobile */
+  .course-breadcrumb {
+    font-size: 0.8rem;
+    gap: 4px;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 3px;
+  }
+  .breadcrumb-current {
+    max-width: 180px;
+  }
+
+  /* Title header: judul + action buttons icon-only */
+  .course-title-header {
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+  }
+  .course-title {
+    font-size: 1.35rem;
+    line-height: 1.35;
+    margin-bottom: 0.75rem;
+  }
+  .course-tags-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .badge-course-type,
+  .badge-course-format {
+    font-size: 0.72rem;
+    padding: 2px 8px;
+  }
+  .course-header-actions {
+    gap: 6px;
+  }
+  .action-btn {
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    gap: 0;
+  }
+  .action-btn .action-label {
+    display: none;
+  }
+  .action-btn i {
+    font-size: 1.15rem;
+  }
+
+  /* Price & Status */
+  .price-main {
+    font-size: 1.65rem;
+  }
+  .registration-status-meta {
+    gap: 8px;
+    font-size: 0.8rem;
+  }
+
+  /* Guest Banner */
+  .guest-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .guest-login-btn {
+    align-self: flex-start;
+  }
+
+  /* CTA Buttons */
+  .cta-row {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .btn-add-to-cart,
+  .btn-buy-now {
+    width: 100%;
+    min-width: unset;
+    padding: 13px 16px;
+    font-size: 0.95rem;
+    justify-content: center;
+  }
+  .purchase-footer-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  /* Callout Banner */
+  .info-callout-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem 1.15rem;
+    margin-bottom: 1.5rem;
+  }
+  .info-callout-badges {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* Agenda Timeline */
+  .course-agenda-section {
+    margin-bottom: 1.75rem;
+  }
+  .agenda-timeline {
+    gap: 0.75rem;
+  }
+  .agenda-timeline-item {
+    gap: 0.75rem;
+  }
+  .agenda-marker {
+    width: 32px;
+    height: 32px;
+    font-size: 0.82rem;
+  }
+  .agenda-content-card {
+    padding: 0.85rem 1rem;
+  }
+  .agenda-card-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+  .agenda-card-title {
+    font-size: 0.92rem;
+  }
+  .agenda-card-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+    font-size: 0.78rem;
+  }
+
+  /* Description & Side Boxes */
+  .course-description-section {
+    margin-bottom: 1.75rem;
+  }
+  .coaches-card-box,
+  .benefits-card-box,
+  .course-spec-section {
+    padding: 1rem;
+    border-radius: 10px;
+  }
+  .coach-item {
+    gap: 0.65rem;
+  }
+  .coach-avatar {
+    width: 42px;
+    height: 42px;
+  }
+  .spec-row {
+    grid-template-columns: 120px 8px 1fr;
+    font-size: 0.82rem;
+  }
 }
 </style>
 

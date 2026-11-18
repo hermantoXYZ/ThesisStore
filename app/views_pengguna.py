@@ -57,7 +57,7 @@ def cart_view(request):
         'heading': 'Keranjang Belanja Anda',
         'cart': cart,
         'items': items,
-        'total_price': total_price,
+        'total_price': total_price, 
         'total_items': total_items,
         'userpengguna': userpengguna,
         'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
