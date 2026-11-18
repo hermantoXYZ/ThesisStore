@@ -1,0 +1,253 @@
+
+{% extends 'homepage/base_public.html' %}
+{% load static %}
+
+{% block title %}Team ThesisEdu | {{ webname }} - {{ web_name }}{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="apb-page-header">
+  <div class="apb-container">
+    <div class="apb-breadcrumb">
+      <a href="{% url 'homepage' %}">
+        <i class="ri-home-4-line"></i> Beranda
+      </a>
+      <span>/</span>
+      <span>Tentang</span>
+      <span>/</span>
+      <span>Team ThesisEdu</span>
+    </div>
+
+    <h1 class="apb-page-title">Meet Our Team</h1>
+
+    <p style="color: rgba(255,255,255,0.85); margin-top: 0.5rem; font-size: 1.05rem;">
+      Kenali tim di balik pengembangan dan inovasi ThesisEdu.
+    </p>
+  </div>
+</section>
+
+<!-- Team Section -->
+<section class="apb-section apb-org-page">
+  <div class="apb-container">
+
+    <div style="text-align: center; margin-bottom: 2.5rem;">
+      <h2>Our Team</h2>
+      <p style="color: #64748b;">
+        Bersama membangun ekosistem pendidikan dan penelitian yang lebih baik.
+      </p>
+    </div>
+
+    <!-- Team Members -->
+    <div class="apb-org-section-card active" id="sec-team">
+
+      <div class="apb-org-accordion-header">
+        <h3 class="apb-org-accordion-title">
+          <i class="ri-team-line" style="color: #2c4cf4;"></i>
+          ThesisEdu Development Team
+        </h3>
+      </div>
+
+      <div class="apb-org-accordion-body">
+
+        <div class="apb-org-grid grid-3">
+
+          <!-- Team Member 1 -->
+          <article class="apb-org-card">
+            <div class="apb-org-photo-frame">
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/8/88/President_Megawati_Sukarnoputri_-_Indonesia.jpg?utm_source=id.wikipedia.org&utm_campaign=index&utm_content=original"
+                alt="Team Member"
+                class="apb-org-photo-img"
+                loading="lazy"
+              >
+            </div>
+
+            <div class="apb-org-info">
+              <h4 class="apb-org-name">Arpiah</h4>
+              <p class="apb-org-role">Founder & Project Lead</p>
+
+              <div class="apb-org-card-footer">
+                <button
+                  type="button"
+                  class="apb-org-btn-info"
+                  onclick="openProfileModal(
+                    'Nama Anggota Tim',
+                    'Founder & Project Lead',
+                    'Bertanggung jawab atas arah pengembangan, strategi, dan pengelolaan platform ThesisEdu.'
+                  )"
+                >
+                  See Profile
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- Team Member 2 -->
+          <article class="apb-org-card">
+            <div class="apb-org-photo-frame">
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/8/88/President_Megawati_Sukarnoputri_-_Indonesia.jpg?utm_source=id.wikipedia.org&utm_campaign=index&utm_content=original"
+                alt="Team Member"
+                class="apb-org-photo-img"
+                loading="lazy"
+              >
+            </div>
+
+            <div class="apb-org-info">
+              <h4 class="apb-org-name">Afifa Ahm</h4>
+              <p class="apb-org-role">Lead Developer</p>
+
+              <div class="apb-org-card-footer">
+                <button
+                  type="button"
+                  class="apb-org-btn-info"
+                  onclick="openProfileModal(
+                    'Nama Anggota Tim',
+                    'Lead Developer',
+                    'Bertanggung jawab atas pengembangan sistem, arsitektur aplikasi, dan integrasi teknologi ThesisEdu.'
+                  )"
+                >
+                  See Profile
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- Team Member 3 -->
+          <article class="apb-org-card">
+            <div class="apb-org-photo-frame">
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/8/88/President_Megawati_Sukarnoputri_-_Indonesia.jpg?utm_source=id.wikipedia.org&utm_campaign=index&utm_content=original"
+                alt="Team Member"
+                class="apb-org-photo-img"
+                loading="lazy"
+              >
+            </div>
+
+            <div class="apb-org-info">
+              <h4 class="apb-org-name">Zulhijrah</h4>
+              <p class="apb-org-role">UI/UX Designer</p>
+
+              <div class="apb-org-card-footer">
+                <button
+                  type="button"
+                  class="apb-org-btn-info"
+                  onclick="openProfileModal(
+                    'Nama Anggota Tim',
+                    'UI/UX Designer',
+                    'Bertanggung jawab atas desain antarmuka dan pengalaman pengguna platform ThesisEdu.'
+                  )"
+                >
+                  See Profile
+                </button>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Profile Modal -->
+<div class="apb-org-modal-backdrop"
+     id="orgModalBackdrop"
+     onclick="handleBackdropClick(event)">
+
+  <div class="apb-org-modal">
+
+    <div class="apb-org-modal-header">
+
+      <button
+        type="button"
+        class="apb-org-modal-close"
+        onclick="closeProfileModal()"
+        aria-label="Close"
+      >
+        <i class="ri-close-line"></i>
+      </button>
+
+      <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; background: rgba(255,255,255,0.2); padding: 0.25rem 0.75rem; border-radius: 9999px; margin-bottom: 0.5rem;">
+        <i class="ri-user-star-line"></i> ThesisEdu Team
+      </div>
+
+      <h3 id="modalName"
+          style="font-size: 1.25rem; font-weight: 800; color: #ffffff; margin: 0; line-height: 1.3;">
+      </h3>
+
+      <p id="modalRole"
+         style="font-size: 0.9rem; color: rgba(255,255,255,0.9); margin: 0.25rem 0 0 0;">
+      </p>
+
+    </div>
+
+    <div class="apb-org-modal-body">
+
+      <div style="margin-bottom: 1.25rem;">
+        <label style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: #64748b; display: block; margin-bottom: 0.25rem;">
+          Profile & Contribution
+        </label>
+
+        <p id="modalDesc"
+           style="font-size: 0.95rem; color: #334155; line-height: 1.5; margin: 0;">
+        </p>
+      </div>
+
+      <div style="border-top: 1px solid #e2e8f0; padding-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+
+        <span style="font-size: 0.8rem; color: #64748b;">
+          <i class="ri-graduation-cap-line"></i> ThesisEdu
+        </span>
+
+        <button
+          type="button"
+          class="apb-btn apb-btn-primary"
+          style="padding: 0.4rem 1rem; font-size: 0.85rem;"
+          onclick="closeProfileModal()"
+        >
+          Close
+        </button>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+
+  function openProfileModal(name, role, desc) {
+    document.getElementById('modalName').textContent = name;
+    document.getElementById('modalRole').textContent = role;
+    document.getElementById('modalDesc').textContent = desc;
+
+    const modal = document.getElementById('orgModalBackdrop');
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeProfileModal() {
+    const modal = document.getElementById('orgModalBackdrop');
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function handleBackdropClick(event) {
+    if (event.target.id === 'orgModalBackdrop') {
+      closeProfileModal();
+    }
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeProfileModal();
+    }
+  });
+
+</script>
+{% endblock %}

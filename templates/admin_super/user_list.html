@@ -31,11 +31,12 @@
                         <th>Email</th>
                         <th style="white-space: nowrap;">Nomor Telepon</th>
                         {% if role == 'Pengguna' %}
-                            <th>Domisili</th>
+                            <th>Universitas</th>
                         {% else %}
                             <th>Jenis Kelamin</th>
                         {% endif %}
                         <th style="width: 80px; text-align: center;">Status</th>
+                        <th style="white-space: nowrap;">Last Login</th>
                         <th style="width: 120px; text-align: center;">Aksi</th>
                     </tr>
                 </thead>
@@ -55,15 +56,15 @@
                                             {{ item.username.first_name }}
                                         {% endif %}
                                     </strong>
-                                    <div style="font-size: 12px; color: #64748b; text-transform: lowercase;">
-                                        @{% if role == 'Pengguna' %}{{ item.user.username }}{% else %}{{ item.username.username }}{% endif %}
+                                    <div style="font-size: 12px; color: #64748b;">
+                                        {% if role == 'Pengguna' %}{{ item.jabatan_fungsional|default:"-" }}{% else %}{{ item.username.username }}{% endif %}
                                     </div>
                                 </div>
                             </div>
                         </td>
 
                         <!-- Kolom Kontak -->
-                        <td style="vertical-align: middle; font-size: 13px; text-transform: lowercase;">
+                        <td style="vertical-align: middle; font-size: 13px; text-transform: lowercase; white-space: nowrap">
                                 {% if role == 'Pengguna' %}
                                     {{ item.user.email|default:"-" }}
                                 {% else %}
@@ -74,10 +75,7 @@
 
                         {% if role == 'Pengguna' %}
                             <td style="vertical-align: middle; font-size: 12px; color: #475569;">
-                                <div><i class="ri-map-pin-line"></i> {{ item.provinsi_anggota.nama_provinsi|default:"-" }}</div>
-                                {% if item.alamat %}
-                                    <div style="font-size: 11px; color: #94a3b8; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ item.alamat }}">{{ item.alamat }}</div>
-                                {% endif %}
+                                {{ item.universitas|default:"-" }}
                             </td>
                         {% else %}
                             <td style="vertical-align: middle; font-size: 13px;">
@@ -100,6 +98,9 @@
                                     <span class="grade-badge d" style="background-color: #e74c3c;">Nonaktif</span>
                                 {% endif %}
                             {% endif %}
+                        </td>
+                        <td style="text-align: center; vertical-align: middle; white-space: nowrap;">
+                             {{ item.user.last_login|date:"d M Y H:i:s" }}
                         </td>
                         <td style="text-align: center; vertical-align: middle; white-space: nowrap;">
                             {% if role == 'Pengguna' %}
@@ -193,4 +194,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock content1 %}
-

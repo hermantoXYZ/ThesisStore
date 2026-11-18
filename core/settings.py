@@ -60,9 +60,12 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'core.context_processors.web_name',
+                'core.context_processors.versioned_static',
             ],
         },
     },
@@ -86,7 +89,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'db_storethesis',
+        'NAME': 'db_thesisedu',
         'USER': 'root',
         'PASSWORD': 'rootpassword',
         'HOST': '127.0.0.1',
@@ -153,3 +156,4 @@ MIDTRANS_CLIENT_KEY = os.environ.get('MIDTRANS_CLIENT_KEY', 'SB-Mid-client-FBLH8
 # Set True jika sudah production live, False jika masih sandbox / testing
 MIDTRANS_IS_PRODUCTION = os.environ.get('MIDTRANS_IS_PRODUCTION', 'False').lower() in ('true', '1')
 
+EMAIL_BACKEND = 'app.email_backend.DynamicEmailBackend'

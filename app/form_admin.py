@@ -1,3 +1,4 @@
+from app.models import BidangIlmu
 from django import forms
 from django.contrib.auth.models import User
 from django.utils.text import slugify
@@ -90,6 +91,16 @@ class BooksForm(forms.ModelForm):
         label='Penulis (Bisa pilih satu atau lebih)'
     )
 
+    bidang_ilmu = forms.ModelMultipleChoiceField(
+        queryset=BidangIlmu.objects.all(),
+        widget=forms.SelectMultiple(attrs={
+            'class': 'form-control',
+            'id': 'id_bidang_ilmu'
+        }),
+        required=False,
+        label='Bidang Ilmu (Bisa pilih satu atau lebih)'
+    )
+
     editor = forms.ModelMultipleChoiceField(
         queryset=UserPengguna.objects.select_related('user').all(),
         widget=forms.SelectMultiple(attrs={
@@ -131,6 +142,7 @@ class BooksForm(forms.ModelForm):
             'penulis',
             'editor',
             'kategori',
+            'nama_penerbit',
             'featured_image',
             'harga',
             'harga_potongan',
@@ -165,6 +177,11 @@ class BooksForm(forms.ModelForm):
                 'placeholder': 'Contoh: 125000',
                 'required': True
             }),
+            'nama_penerbit': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Contoh: Cv Thesis Edukasi Nusantara',
+                'required': True
+            }),
             'harga_potongan': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'step': '1000',
@@ -182,10 +199,6 @@ class BooksForm(forms.ModelForm):
                 'rows': 16,
                 'placeholder': 'Sinopsis / deskripsi buku...',
                 'required': True
-            }),
-            'bidang_ilmu': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Contoh: Sistem Informasi / Akuntansi'
             }),
             'isbn': forms.TextInput(attrs={
                 'class': 'form-control',

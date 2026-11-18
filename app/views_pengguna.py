@@ -35,7 +35,7 @@ def profile_pengguna(request):
 
     context = {
         'title': 'Profil Pengguna',
-        'heading': 'Profil Pengguna APBISDI',
+        'heading': 'Profil Pengguna',
         'userpengguna': userpengguna,
         'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
         'form': form,

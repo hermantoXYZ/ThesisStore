@@ -108,8 +108,8 @@
         <div class="apb-stat-label">Penulis &amp; Peneliti</div>
       </div>
       <div class="apb-stat-item">
-        <div class="apb-stat-number">38+</div>
-        <div class="apb-stat-label">Sebaran Kampus Mitra</div>
+        <div class="apb-stat-number">{{ jumlah_jurnal }}</div>
+        <div class="apb-stat-label">Jurnal Ilmiah</div>
       </div>
     </div>
   </div>
@@ -284,7 +284,7 @@
               <div class="book-price-wrap">
                 {% if book.harga_potongan %}
                   <div style="display: flex; align-items: baseline; gap: 6px;">
-                    <span class="price-val">Rp {{ book.harga_potongan|floatformat:0 }}</span>
+                    <span class="price-val">Rp {{ book.harga_efektif|floatformat:0 }}</span>
                     <span class="price-slash">Rp {{ book.harga|floatformat:0 }}</span>
                   </div>
                 {% else %}
@@ -1113,24 +1113,6 @@ function filterCourseType(type, btn) {
           </div>
         {% endif %}
       {% empty %}
-        <div class="apb-partner-item" title="Perpustakaan Nasional RI">
-          <div class="apb-partner-badge"><i class="ri-government-line"></i> Perpustakaan Nasional RI</div>
-        </div>
-        <div class="apb-partner-item" title="Kemdiktisaintek RI">
-          <div class="apb-partner-badge"><i class="ri-book-read-line"></i> Kemdiktisaintek RI</div>
-        </div>
-        <div class="apb-partner-item" title="Ikatan Penerbit Indonesia (IKAPI)">
-          <div class="apb-partner-badge"><i class="ri-community-line"></i> Anggota IKAPI</div>
-        </div>
-        <div class="apb-partner-item" title="Crossref Official Registrant">
-          <div class="apb-partner-badge"><i class="ri-links-line"></i> Crossref DOI</div>
-        </div>
-        <div class="apb-partner-item" title="SINTA Science and Technology Index">
-          <div class="apb-partner-badge"><i class="ri-award-line"></i> SINTA Kemdikbud</div>
-        </div>
-        <div class="apb-partner-item" title="Google Scholar">
-          <div class="apb-partner-badge"><i class="ri-graduation-cap-line"></i> Google Scholar</div>
-        </div>
       {% endfor %}
     </div>
   </div>

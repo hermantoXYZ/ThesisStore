@@ -22,7 +22,7 @@
       {{ article.title }}
     </h1>
     <div style="display: flex; justify-content: center; align-items: center; gap: 1.5rem; margin-top: 1.25rem; font-size: 0.9rem; color: rgba(255,255,255,0.85); flex-wrap: wrap;">
-      <span><i class="ri-user-line"></i> {{ article.author.get_full_name|default:article.author.username|default:"Admin APBISDI" }}</span>
+      <span><i class="ri-user-line"></i> {{ article.author.get_full_name|default:article.author.username }}</span>
       <span><i class="ri-calendar-line"></i> {{ article.created_at|date:"d F Y" }}</span>
       {% if article.category %}
         <span><i class="ri-folder-line"></i> {{ article.category.name }}</span>
@@ -144,11 +144,10 @@
           </div>
         </div>
 
-        <!-- Join APBISDI Card -->
         <div class="apb-sidebar-card" style="background: linear-gradient(135deg, #4850f8 0%, #2c4cf4 100%); color: #ffffff;">
-          <h4 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem;">Gabung Anggota</h4>
+          <h4 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem;">Gabung</h4>
           <p style="font-size: 0.875rem; color: rgba(255,255,255,0.9); line-height: 1.5; margin-bottom: 1.25rem;">
-            Dapatkan jejaring kurikulum, riset bersama, dan sertifikasi profesi di bidang Bisnis Digital.
+            Dapatkan akses ke Library ThesisEdu dan Academy.
           </p>
           <a href="{% url 'register' %}" class="apb-btn apb-btn-primary" style="background-color: #ffffff; color: var(--apb-secondary); width: 100%;">
             Daftar Sekarang

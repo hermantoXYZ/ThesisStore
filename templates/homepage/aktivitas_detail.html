@@ -22,7 +22,7 @@
         </h1>
         <div class="apb-akt-detail-meta">
           <span><i class="ri-calendar-line"></i> {{ item.created_at|date:"d F Y" }}</span>
-          <span><i class="ri-user-3-line"></i> {{ item.author.first_name|default:item.author.username|default:"Admin APBISDI" }}</span>
+          <span><i class="ri-user-3-line"></i> {{ item.author.first_name|default:item.author.username }}</span>
           <span><i class="ri-eye-line"></i> {{ item.views_count }} dilihat</span>
         </div>
         {% if item.featured_image %}

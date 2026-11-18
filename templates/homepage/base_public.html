@@ -37,7 +37,7 @@
             </a>
             <div class="apb-dropdown">
               <a href="{% url 'page_detail' 'tentang-kami' %}" class="apb-dropdown-item">Tentang Kami</a>
-              <a href="{% url 'page_detail' 'team' %}" class="apb-dropdown-item">Team</a>
+              <a href="{% url 'team' %}" class="apb-dropdown-item">Team</a>
             </div>
           </li>
            <li class="apb-nav-item">
@@ -113,7 +113,7 @@
   <a href="{% url 'katalog_pelatihan' %}" class="apb-mobile-link">Pelatihan &amp; Course</a>
   <a href="https://journal.thesisedu.org" target="_blank" rel="noopener noreferrer" class="apb-mobile-link">Portal E-Journal (OJS)</a>
   <a href="{% url 'article_list' %}" class="apb-mobile-link">Artikel &amp; Riset</a>
-  <a href="{% url 'struktur_organisasi' %}" class="apb-mobile-link">Struktur Organisasi</a>
+  <a href="{% url 'team' %}" class="apb-mobile-link">Team</a>
   <a href="{% url 'contact_page' %}" class="apb-mobile-link">Kontak</a>
   <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
     {% if user.is_authenticated %}
@@ -139,20 +139,18 @@
       <div class="apb-container">
         <div class="apb-footer-top-grid">
           <div class="apb-footer-col">
-            <div class="apb-footer-col-header">
-              <i class="ri-home-4-line"></i> Tentang Kami
+            <div class="apb-footer-col-header">Tentang Kami
             </div>
             <ul class="apb-footer-nav-list">
               <li><a href="{% url 'homepage' %}" class="apb-footer-nav-link">Home</a></li>
               <li><a href="{% url 'page_detail' 'tentang-kami' %}" class="apb-footer-nav-link">Tentang Kami</a></li>
               <li><a href="{% url 'page_detail' 'visi-misi' %}" class="apb-footer-nav-link">Visi & Misi</a></li>
               <li><a href="{% url 'page_detail' 'tujuan-fungsi-tugas' %}" class="apb-footer-nav-link">Tujuan, Fungsi, & Tugas</a></li>
-              <li><a href="{% url 'struktur_organisasi' %}" class="apb-footer-nav-link">Struktur Organisasi</a></li>
+              <li><a href="{% url 'team' %}" class="apb-footer-nav-link">Team</a></li>
             </ul>
           </div>
           <div class="apb-footer-col">
-            <div class="apb-footer-col-header">
-              <i class="ri-team-line"></i> Statistik & Data
+            <div class="apb-footer-col-header">Statistik & Data
             </div>
             <ul class="apb-footer-nav-list">
               <li><a href="{% url 'public_dashboard_sebaran' %}" class="apb-footer-nav-link">Sebaran Wilayah</a></li>
@@ -162,8 +160,7 @@
             </ul>
           </div>
           <div class="apb-footer-col">
-            <div class="apb-footer-col-header">
-              <i class="ri-book-open-line"></i> Edukasi & Riset
+            <div class="apb-footer-col-header">Edukasi & Riset
             </div>
             <ul class="apb-footer-nav-list">
               <li><a href="{% url 'article_list' %}" class="apb-footer-nav-link">Berita & Artikel</a></li>
@@ -173,8 +170,7 @@
             </ul>
           </div>
           <div class="apb-footer-col">
-            <div class="apb-footer-col-header">
-              <i class="ri-customer-service-2-line"></i> Layanan Bantuan
+            <div class="apb-footer-col-header">Layanan Bantuan
             </div>
             <ul class="apb-footer-nav-list">
               <li><a href="{% url 'contact_page' %}" class="apb-footer-nav-link">Kontak Kami</a></li>

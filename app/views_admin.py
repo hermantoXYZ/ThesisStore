@@ -212,7 +212,7 @@ def article_list(request):
 
     context = {
         'title': 'List Berita',
-        'heading': 'Daftar Artikel & Berita APBISDI',
+        'heading': 'Daftar Artikel & Berita',
         'useradmin': useradmin,
         'photo': useradmin.photo if useradmin else None,
         'list_articles': articles_qs,
@@ -362,7 +362,7 @@ def page_list(request):
 
     context = {
         'title': 'Kelola Halaman',
-        'heading': 'Daftar Halaman Statis APBISDI',
+        'heading': 'Daftar Halaman Statis',
         'useradmin': useradmin,
         'photo': useradmin.photo if useradmin else None,
         'list_pages': pages,

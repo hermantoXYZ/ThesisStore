@@ -1,0 +1,84 @@
+{% extends base_template %}
+
+{% block content1 %}
+<div class="dashboard-content">
+	<div class="profile-container">
+		<div class="settings-section">
+			{% if messages %}
+			{% for message in messages %}
+				<div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} mb-4">
+					<i class="{% if message.tags == 'success' %}ri-checkbox-circle-line{% else %}ri-error-warning-line{% endif %} me-2"></i>
+					{{ message }}
+				</div>
+			{% endfor %}
+			{% endif %}
+
+			<form method="post">
+				{% csrf_token %}
+				
+				<div class="form-row">
+					<div class="form-group" style="width: 100%;">
+						<label for="{{ form.old_password.id_for_label }}" style="font-weight: 600; margin-bottom: 8px; display: block; color: #475569;">Old password</label>
+						{{ form.old_password }}
+						{% if form.old_password.errors %}
+							<div style="color: #dc2626; font-size: 13px; margin-top: 6px; font-weight: 500;">
+								{% for error in form.old_password.errors %}
+									<i class="ri-error-warning-line"></i> {{ error }}
+								{% endfor %}
+							</div>
+						{% endif %}
+					</div>
+				</div>
+
+				<div class="form-row">
+					<div class="form-group" style="width: 100%;">
+						<label for="{{ form.new_password1.id_for_label }}" style="font-weight: 600; margin-bottom: 8px; display: block; color: #475569;">New password</label>
+						{{ form.new_password1 }}
+						{% if form.new_password1.errors %}
+							<div style="color: #dc2626; font-size: 13px; margin-top: 6px; font-weight: 500;">
+								{% for error in form.new_password1.errors %}
+									<i class="ri-error-warning-line"></i> {{ error }}
+								{% endfor %}
+							</div>
+						{% endif %}
+					</div>
+				</div>
+
+				<div class="form-row">
+					<div class="form-group" style="width: 100%;">
+						<label for="{{ form.new_password2.id_for_label }}" style="font-weight: 600; margin-bottom: 8px; display: block; color: #475569;">New password confirmation</label>
+						{{ form.new_password2 }}
+						{% if form.new_password2.errors %}
+							<div style="color: #dc2626; font-size: 13px; margin-top: 6px; font-weight: 500;">
+								{% for error in form.new_password2.errors %}
+									<i class="ri-error-warning-line"></i> {{ error }}
+								{% endfor %}
+							</div>
+						{% endif %}
+					</div>
+				</div>
+
+				{% if form.non_field_errors %}
+					<div class="alert alert-danger" style="margin-top: 15px; padding: 12px; border-radius: 8px; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+						<i class="ri-error-warning-line"></i>
+						<span>
+							{% for error in form.non_field_errors %}
+								{{ error }}
+							{% endfor %}
+						</span>
+					</div>
+				{% endif %}
+
+				<div class="form-actions" style="margin-top: 30px; display: flex; gap: 12px;">
+					<button type="submit" class="btn success" style="background-color: #15803d; color: white; display: flex; align-items: center; gap: 8px; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+						<i class="ri-lock-password-line"></i> RESET
+					</button>
+					<a href="{% url 'app:index' %}" class="btn" style="background-color: #64748b; color: white; display: flex; align-items: center; gap: 8px; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+						<i class="ri-arrow-left-line"></i> KEMBALI
+					</a>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+{% endblock content1 %}

@@ -151,6 +151,7 @@ def homepage(request):
     books = Books.objects.select_related('kategori').prefetch_related('penulis__user', 'media_buku').order_by('-created_at')
     categories = CategoryBooks.objects.filter(aktif=True)
     total_penulis = UserPengguna.objects.count()
+    jumlah_jurnal = JurnalMaster.objects.filter(is_active=True).count()
     courses = Course.objects.filter(is_active=True).prefetch_related('coaches__user').order_by('-created_at')
     hero_slides = HeroSlide.objects.filter(is_active=True).order_by('urutan', 'created_at')
     articles = Article.objects.filter(status='published').select_related('author', 'category').order_by('-created_at')[:6]
@@ -170,6 +171,7 @@ def homepage(request):
         'hero_slides': hero_slides,
         'articles': articles,
         'kerjasama_list': kerjasama_list,
+        'jumlah_jurnal': jumlah_jurnal,
         'total_courses': courses.count(),
         'total_buku': books.count(),
         'total_kategori': categories.count(),
@@ -214,7 +216,7 @@ def course_detail(request, slug):
 
 def buku_detail(request, slug, kategori_slug=None):
     book = get_object_or_404(
-        Books.objects.select_related('kategori').prefetch_related('penulis__user', 'editor__user', 'media_buku'),
+        Books.objects.select_related('kategori').prefetch_related('penulis__user', 'editor__user', 'media_buku', 'bidang_ilmu'),
         slug=slug
     )
     if book.kategori:
@@ -327,10 +329,10 @@ def contact_page(request):
     })
 
 
-def struktur_organisasi(request):
-    return render(request, 'homepage/struktur_organisasi.html', {
-        'title': 'Struktur Organisasi',
-        'webname': 'ThesisStore',
+def team(request):
+    return render(request, 'homepage/team.html', {
+        'title': 'Tim',
+        'webname': 'ThesisEdu-Tim',
     })
 
 

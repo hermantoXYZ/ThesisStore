@@ -84,6 +84,27 @@
                         <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.kategori.errors.0 }}</small>
                     {% endif %}
                 </div>
+                <div class="form-group" style="flex: 1; min-width: 220px; margin-bottom: 16px;">
+                    <label for="id_bidang_ilmu" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Bidang Ilmu
+                    </label>
+                    {{ form.bidang_ilmu }}
+                    {% if form.bidang_ilmu.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.bidang_ilmu.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                 <div class="form-group" style="flex: 1; min-width: 220px; margin-bottom: 16px;">
+                    <label for="id_penerbit" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">
+                        Penerbit
+                    </label>
+                    {{ form.nama_penerbit }}
+                    {% if form.nama_penerbit.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.nama_penerbit.errors.0 }}</small>
+                    {% endif %}
+                </div>
 
             </div>
 
@@ -140,10 +161,6 @@
                 <div class="form-group" style="flex: 1; min-width: 180px; margin-bottom: 16px;">
                     <label for="id_isbn" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">ISBN</label>
                     {{ form.isbn }}
-                </div>
-                <div class="form-group" style="flex: 1; min-width: 180px; margin-bottom: 16px;">
-                    <label for="id_bidang_ilmu" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">Bidang Ilmu</label>
-                    {{ form.bidang_ilmu }}
                 </div>
                 <div class="form-group" style="flex: 1; min-width: 140px; margin-bottom: 16px;">
                     <label for="id_tahun" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">Tahun Terbit</label>
@@ -288,7 +305,8 @@ $(document).ready(function() {
 document.addEventListener('DOMContentLoaded', function () {
     const multiSelectConfigs = [
         { id: 'id_penulis', placeholder: 'Pilih atau cari penulis...' },
-        { id: 'id_editor', placeholder: 'Pilih atau cari editor...' }
+        { id: 'id_editor', placeholder: 'Pilih atau cari editor...' },
+        { id: 'id_bidang_ilmu', placeholder: 'Pilih atau cari bidang ilmu...' }
     ];
 
     multiSelectConfigs.forEach(function(item) {
@@ -319,7 +337,6 @@ document.addEventListener('DOMContentLoaded', function () {
             removeItemButton: false,
         });
     }
-
     const statusEl = document.getElementById('id_status');
     if (statusEl) {
         new Choices(statusEl, {

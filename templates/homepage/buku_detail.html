@@ -82,7 +82,7 @@
           <div class="price-row">
             <div class="price-badge-wrap">
               {% if book.harga_potongan %}
-                <span class="price-main">Rp{{ book.harga_potongan|floatformat:0 }}</span>
+                <span class="price-main">Rp{{ book.harga_efektif|floatformat:0 }}</span>
                 <span class="price-strike">Rp{{ book.harga|floatformat:0 }}</span>
                 <span class="price-discount-tag">HEMAT {{ book.persentase_diskon }}%</span>
               {% else %}
@@ -142,7 +142,7 @@
 
           <!-- Footer row: WA + login link -->
           <div class="purchase-footer-row">
-            <a href="https://wa.me/6281234567890?text=Halo%20Admin%20ThesisStore,%20saya%20tertarik%20dengan%20buku:%0A%0A*Judul:*%20{{ book.judul|urlencode }}%0A*Harga:*%20Rp%20{% if book.harga_potongan %}{{ book.harga_potongan|floatformat:0 }}{% else %}{{ book.harga|floatformat:0 }}{% endif %}%0A*Link:*%20{{ request.build_absolute_uri|urlencode }}"
+            <a href="https://wa.me/6281234567890?text=Halo%20Admin%20ThesisStore,%20saya%20tertarik%20dengan%20buku:%0A%0A*Judul:*%20{{ book.judul|urlencode }}%0A*Harga:*%20Rp%20{% if book.harga_potongan %}{{ book.harga_efektif|floatformat:0 }}{% else %}{{ book.harga|floatformat:0 }}{% endif %}%0A*Link:*%20{{ request.build_absolute_uri|urlencode }}"
                target="_blank" rel="noopener noreferrer" class="wa-link">
               <i class="ri-whatsapp-line"></i> Pesan / Konsultasi via WhatsApp
             </a>
@@ -189,7 +189,7 @@
               <div class="spec-row">
                 <span class="spec-label">Penerbit</span>
                 <span class="spec-divider">:</span>
-                <span class="spec-val">{{ webname|default:"ThesisStore" }} Publishing</span>
+                <span class="spec-val">{{ book.nama_penerbit }}</span>
               </div>
               <div class="spec-row">
                 <span class="spec-label">Penulis</span>
@@ -223,11 +223,6 @@
             </div>
             <div class="spec-col">
               <div class="spec-row">
-                <span class="spec-label">Tanggal Rilis</span>
-                <span class="spec-divider">:</span>
-                <span class="spec-val">{{ book.tahun|default:book.created_at|date:"d M Y" }}</span>
-              </div>
-              <div class="spec-row">
                 <span class="spec-label">Halaman</span>
                 <span class="spec-divider">:</span>
                 <span class="spec-val">{% if book.halaman %}{{ book.halaman }} Halaman{% else %}-{% endif %}</span>
@@ -247,6 +242,17 @@
                 <span class="spec-divider">:</span>
                 <span class="spec-val">{{ book.isbn|default:"-" }}</span>
               </div>
+              <div class="spec-row">
+                <span class="spec-label">Sub Kategori</span>
+                <span class="spec-divider">:</span>
+                <span class="spec-val">
+                  {% for sub in book.bidang_ilmu.all %}
+                    {{ sub.nama }}{% if not forloop.last %}, {% endif %}
+                  {% empty %}
+                    -
+                  {% endfor %}
+                </span>
+              </div>    
             </div>
           </div>
         </div>

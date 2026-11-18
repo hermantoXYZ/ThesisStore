@@ -55,12 +55,12 @@ JAFUNG = [
 class UserPengguna(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)    
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name="anggota")
-    telp = models.CharField(max_length=15)
+    telp = models.CharField(max_length=25)
     gender = models.CharField(max_length=15, null=True, blank=True, choices=[
         ('Laki-laki', 'Laki-laki'),
         ('Perempuan', 'Perempuan'),
     ]) 
-    alamat = models.CharField(max_length=50, null=True, blank=True)
+    alamat = models.TextField(null=True, blank=True)
     photo = models.ImageField(upload_to=rename_photo_anggota, null=True, blank=True)
     provinsi_pengguna = models.ForeignKey(Provinsi, on_delete=models.SET_NULL, null=True, blank=True)
     jabatan_fungsional = models.CharField(choices=JAFUNG, max_length=100, null=True, blank=True)
@@ -150,6 +150,17 @@ def rename_featured_image(instance, filename):
     random_str = uuid.uuid4().hex[:6]
     return os.path.join('books/featured_image/', f"featured_image_{timestamp}_{random_str}.{ext}")
 
+class BidangIlmu(models.Model):
+    nama = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=150, blank=True)
+    aktif = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['nama']
+
+    def __str__(self):
+        return self.nama
+
 class Books(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)    
     judul = models.CharField(max_length=100)
@@ -157,12 +168,13 @@ class Books(models.Model):
     penulis = models.ManyToManyField(UserPengguna, blank=True, related_name='penulis_buku')
     editor = models.ManyToManyField(UserPengguna, blank=True, related_name='editor_buku')
     featured_image = models.ImageField(upload_to=rename_featured_image, max_length=255, blank=True, null=True)
+    nama_penerbit = models.CharField(max_length=100)
     harga = models.DecimalField(max_digits=10, decimal_places=2)
     harga_potongan = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     stok = models.IntegerField()
     deskripsi = models.TextField()
     kategori = models.ForeignKey(CategoryBooks, on_delete=models.SET_NULL, null=True, blank=True)
-    bidang_ilmu = models.CharField(max_length=100, null=True, blank=True)
+    bidang_ilmu = models.ManyToManyField( BidangIlmu, blank=True, related_name='books' )
     isbn = models.CharField(max_length=20, null=True, blank=True)
     tahun = models.CharField(max_length=4, null=True, blank=True)
     ukuran = models.CharField(max_length=50, null=True, blank=True)
@@ -186,14 +198,15 @@ class Books(models.Model):
 
     @property
     def persentase_diskon(self):
-        if self.harga and self.harga > 0 and self.harga_potongan and self.harga_potongan < self.harga:
-            return int(round(((self.harga - self.harga_potongan) / self.harga) * 100))
+        if self.harga and self.harga > 0 and self.harga_potongan:
+            if 0 < self.harga_potongan < self.harga:
+                return int(round((self.harga_potongan / self.harga) * 100))
         return 0
 
     @property
     def harga_efektif(self):
-        if self.harga_potongan and self.harga_potongan > 0:
-            return self.harga_potongan
+        if self.harga and self.harga_potongan:
+            return max(self.harga - self.harga_potongan, 0)
         return self.harga or 0
 
 def rename_media_books(instance, filename):
