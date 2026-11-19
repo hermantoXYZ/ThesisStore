@@ -144,7 +144,7 @@ class CategoryBooks(models.Model):
     def __str__(self):
         return f"{self.nama_kategori}"
  
-def rename_featured_image(instance, filename):
+def rename_book_featured_image(instance, filename):
     ext = filename.split('.')[-1]
     timestamp = timezone.now().strftime('%Y%m%d%H%M%S')
     random_str = uuid.uuid4().hex[:6]
@@ -167,7 +167,7 @@ class Books(models.Model):
     slug = models.SlugField(blank=True, max_length=200)
     penulis = models.ManyToManyField(UserPengguna, blank=True, related_name='penulis_buku')
     editor = models.ManyToManyField(UserPengguna, blank=True, related_name='editor_buku')
-    featured_image = models.ImageField(upload_to=rename_featured_image, max_length=255, blank=True, null=True)
+    featured_image = models.ImageField(upload_to=rename_book_featured_image, max_length=255, blank=True, null=True)
     nama_penerbit = models.CharField(max_length=100)
     harga = models.DecimalField(max_digits=10, decimal_places=2)
     harga_potongan = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -388,71 +388,139 @@ class CartItem(models.Model):
     def get_subtotal(self):
         return (self.get_price() or 0) * self.quantity
 
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if not self.book and not self.course:
+            raise ValidationError("CartItem harus memiliki salah satu relasi produk: book atau course.")
+        if self.book and self.course:
+            raise ValidationError("CartItem tidak boleh memiliki relasi book dan course sekaligus.")
+        if self.course and self.quantity > 1:
+            raise ValidationError("Kuantitas course tidak boleh lebih dari 1.")
+
+    def save(self, *args, **kwargs):
+        if self.course:
+            self.quantity = 1
+        super().save(*args, **kwargs)
+
 
 class Order(models.Model):
-    STATUS_CHOICES = (
-        ('pending', 'Menunggu Pembayaran'),
-        ('paid', 'Menunggu Konfirmasi'),
+
+    ORDER_STATUS_CHOICES = [
+        ('pending', 'Menunggu Diproses'),
         ('processing', 'Sedang Diproses'),
-        ('shipped', 'Dalam Pengiriman'),
-        ('delivered', 'Selesai'),
+        ('completed', 'Selesai'),
         ('cancelled', 'Dibatalkan'),
-    )
+    ]
+
+    PAYMENT_STATUS_CHOICES = [
+        ('not_required', 'Tidak Memerlukan Pembayaran'),
+        ('unpaid', 'Belum Dibayar'),
+        ('pending', 'Menunggu Pembayaran'),
+        ('paid', 'Lunas'),
+        ('failed', 'Gagal'),
+        ('expired', 'Kedaluwarsa'),
+        ('refunded', 'Refund'),
+    ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     order_number = models.CharField(max_length=50, unique=True, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-
-    # Data Penerima & Pengiriman
-    nama_penerima = models.CharField(max_length=150)
-    no_hp = models.CharField(max_length=25)
-    provinsi = models.CharField(max_length=100, blank=True, null=True)
-    kota = models.CharField(max_length=100, blank=True, null=True)
-    kode_pos = models.CharField(max_length=10, blank=True, null=True)
-    alamat_pengiriman = models.TextField()
-    catatan = models.TextField(blank=True, null=True)
-
-    # Rincian Biaya
+    status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='pending')
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='unpaid')
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    ongkir = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     total_harga = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-
-    # Pembayaran & Ekspedisi
-    metode_pembayaran = models.CharField(max_length=50, default='Transfer Bank')
+    metode_pembayaran = models.CharField(max_length=50, blank=True, null=True)
     bukti_transfer = models.FileField(upload_to=rename_bukti_transfer, blank=True, null=True)
-    nomor_resi = models.CharField(max_length=100, blank=True, null=True)
-    kurir = models.CharField(max_length=50, blank=True, null=True)
-
-    # Integrasi Midtrans Payment Gateway
     snap_token = models.CharField(max_length=255, blank=True, null=True)
     payment_type = models.CharField(max_length=50, blank=True, null=True)
     transaction_id = models.CharField(max_length=100, blank=True, null=True)
     paid_at = models.DateTimeField(blank=True, null=True)
-
+    catatan = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-created_at']
+        verbose_name = 'Order'
+        verbose_name_plural = 'Orders'
 
     def __str__(self):
-        return f"{self.order_number} - {self.nama_penerima}"
+        return f"{self.order_number} - {self.user.username}"
+
+    @property
+    def has_physical_items(self):
+        return self.book_items.exists()
+
+    @property
+    def has_course_items(self):
+        return self.course_items.exists()
+
+    @property
+    def all_items(self):
+        return list(self.book_items.all()) + list(self.course_items.all())
 
 
-class OrderItem(models.Model):
+class OrderShipping(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
-    book = models.ForeignKey(Books, on_delete=models.SET_NULL, null=True, blank=True, related_name='order_items')
-    course = models.ForeignKey(Course, on_delete=models.SET_NULL, null=True, blank=True, related_name='order_items')
-    judul_buku = models.CharField(max_length=255)
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='shipping')
+    nama_penerima = models.CharField(max_length=150)
+    no_hp = models.CharField(max_length=25)
+    provinsi = models.CharField(max_length=100)
+    kota = models.CharField(max_length=100)
+    kecamatan = models.CharField(max_length=100, blank=True, null=True)
+    kelurahan = models.CharField(max_length=100, blank=True, null=True)
+    kode_pos = models.CharField(max_length=10, blank=True, null=True)
+    alamat_pengiriman = models.TextField()
+    ongkir = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    kurir = models.CharField(max_length=50, blank=True, null=True)
+    nomor_resi = models.CharField(max_length=100, blank=True, null=True)
+    catatan = models.TextField(blank=True, null=True)
+    shipped_at = models.DateTimeField(blank=True, null=True)
+    delivered_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Pengiriman Order'
+        verbose_name_plural = 'Pengiriman Orders'
+
+    def __str__(self):
+        return f"Pengiriman {self.order.order_number}"
+
+
+class OrderBookItem(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='book_items')
+    book = models.ForeignKey(Books, on_delete=models.SET_NULL, null=True, blank=True, related_name='order_book_items')
+    nama_produk = models.CharField(max_length=255)
     harga_satuan = models.DecimalField(max_digits=12, decimal_places=2)
     quantity = models.PositiveIntegerField(default=1)
     subtotal = models.DecimalField(max_digits=12, decimal_places=2)
-
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.quantity}x {self.judul_buku}"
+        return f"{self.quantity}x {self.nama_produk}"
+
+    @property
+    def judul_buku(self):
+        return self.nama_produk
+
+class OrderCourseItem(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='course_items')
+    course = models.ForeignKey(Course, on_delete=models.SET_NULL, null=True, blank=True, related_name='order_course_items')
+    nama_produk = models.CharField(max_length=255)
+    harga_satuan = models.DecimalField(max_digits=12, decimal_places=2)
+    quantity = models.PositiveIntegerField(default=1)
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.quantity}x {self.nama_produk}"
+
+    @property
+    def judul_buku(self):
+        return self.nama_produk
 
 def rename_jurnal_cover(instance, filename):
     ext = filename.split('.')[-1]

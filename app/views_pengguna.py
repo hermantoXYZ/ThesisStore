@@ -10,8 +10,9 @@ from django.views.decorators.http import require_POST
 from django.http import JsonResponse, HttpResponse
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Q
 from .form_pengguna import formProfile
-from .models import UserPengguna, Books, Course, CourseAgenda, Cart, CartItem, Order, OrderItem, CallForReviewer, JurnalMaster
+from .models import UserPengguna, Books, Course, CourseAgenda, Cart, CartItem, Order, OrderBookItem, OrderCourseItem, OrderShipping, CallForReviewer, JurnalMaster
 from .midtrans import create_snap_transaction, get_snap_js_url, verify_signature, sync_order_status_from_midtrans
 from django.urls import reverse
 from app.decorators_pengguna import pengguna_required, check_userpengguna
@@ -46,11 +47,17 @@ def profile_pengguna(request):
 @check_userpengguna
 def cart_view(request):
     cart, _ = Cart.objects.get_or_create(user=request.user)
+    # Bersihkan item tidak valid jika ada
+    cart.items.filter(book__isnull=True, course__isnull=True).delete()
+    cart.items.filter(book__isnull=False, course__isnull=False).delete()
+
     items = cart.items.select_related('book', 'book__kategori', 'course').order_by('created_at')
     userpengguna = UserPengguna.objects.filter(user=request.user).first()
 
     total_price = cart.get_total_price()
     total_items = cart.get_total_items()
+    has_course = items.filter(course__isnull=False).exists()
+    has_book = items.filter(book__isnull=False).exists()
 
     context = {
         'title': 'Keranjang Belanja',
@@ -59,6 +66,8 @@ def cart_view(request):
         'items': items,
         'total_price': total_price, 
         'total_items': total_items,
+        'has_course': has_course,
+        'has_book': has_book,
         'userpengguna': userpengguna,
         'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
     }
@@ -92,17 +101,25 @@ def cart_add(request, book_uuid):
         return redirect(f"{reverse('register')}?next={target_after_auth}")
 
     cart, _ = Cart.objects.get_or_create(user=request.user)
-    cart_item, created = CartItem.objects.get_or_create(cart=cart, book=book)
+    cart_item, created = CartItem.objects.get_or_create(
+        cart=cart,
+        book=book,
+        defaults={'quantity': quantity, 'course': None}
+    )
 
-    current_qty = 0 if created else cart_item.quantity
-    new_qty = current_qty + quantity
-
-    if book.stok is not None and new_qty > book.stok:
-        new_qty = book.stok
-        messages.warning(request, f'Jumlah disesuaikan dengan sisa stok yang tersedia ({book.stok} eks).')
-
-    cart_item.quantity = new_qty
-    cart_item.save()
+    if not created:
+        cart_item.course = None
+        new_qty = cart_item.quantity + quantity
+        if book.stok is not None and new_qty > book.stok:
+            new_qty = book.stok
+            messages.warning(request, f'Jumlah disesuaikan dengan sisa stok yang tersedia ({book.stok} eks).')
+        cart_item.quantity = new_qty
+        cart_item.save()
+    else:
+        if book.stok is not None and cart_item.quantity > book.stok:
+            cart_item.quantity = book.stok
+            messages.warning(request, f'Jumlah disesuaikan dengan sisa stok yang tersedia ({book.stok} eks).')
+            cart_item.save()
 
     if buy_now:
         return redirect('app:checkout')
@@ -120,10 +137,10 @@ def cart_add_course(request, course_uuid):
 
     # Cek kuota peserta jika ada batas
     if course.max_participants is not None:
-        registered_count = OrderItem.objects.filter(
+        registered_count = OrderCourseItem.objects.filter(
             course=course,
-            order__status__in=['paid', 'processing', 'shipped', 'delivered']
-        ).count()
+            order__payment_status__in=['paid', 'not_required']
+        ).exclude(order__status='cancelled').count()
         if registered_count >= course.max_participants:
             messages.error(request, f'Maaf, kuota peserta untuk "{course.name}" telah penuh.')
             return redirect('course_detail', slug=course.slug or str(course.uuid))
@@ -151,8 +168,13 @@ def cart_add_course(request, course_uuid):
         return redirect(f"{reverse('register')}?next={target_after_auth}")
 
     cart, _ = Cart.objects.get_or_create(user=request.user)
-    cart_item, created = CartItem.objects.get_or_create(cart=cart, course=course)
-    cart_item.quantity = 1  # 1 kuota per pendaftaran akun
+    cart_item, created = CartItem.objects.get_or_create(
+        cart=cart,
+        course=course,
+        defaults={'quantity': 1, 'book': None}
+    )
+    cart_item.book = None
+    cart_item.quantity = 1  # 1 kuota per pendaftaran akun (course tidak boleh > 1)
     cart_item.save()
 
     if buy_now:
@@ -174,6 +196,8 @@ def cart_update(request, item_id):
             cart_item.delete()
             messages.info(request, f'Pelatihan "{item_title}" dihapus dari keranjang.')
         else:
+            cart_item.quantity = 1
+            cart_item.save()
             messages.info(request, f'Pendaftaran pelatihan dibatasi 1 kuota per akun pengguna.')
         return redirect('app:cart_view')
 
@@ -224,6 +248,10 @@ def cart_remove(request, item_id):
 @check_userpengguna
 def checkout_view(request):
     cart, _ = Cart.objects.get_or_create(user=request.user)
+    # Bersihkan item rusak jika ada
+    cart.items.filter(book__isnull=True, course__isnull=True).delete()
+    cart.items.filter(book__isnull=False, course__isnull=False).delete()
+
     items = cart.items.select_related('book', 'course').all()
     userpengguna = UserPengguna.objects.filter(user=request.user).first()
 
@@ -231,8 +259,14 @@ def checkout_view(request):
         messages.warning(request, 'Keranjang belanja Anda masih kosong. Silakan pilih buku atau pelatihan terlebih dahulu.')
         return redirect('app:cart_view')
 
-    has_physical_book = any(item.book is not None for item in items)
-    has_course = any(item.course is not None for item in items)
+    has_physical_book = items.filter(book__isnull=False).exists()
+    has_course = items.filter(course__isnull=False).exists()
+
+    # Pastikan kuantitas course selalu 1
+    for item in items:
+        if item.course and item.quantity != 1:
+            item.quantity = 1
+            item.save(update_fields=['quantity'])
 
     total_subtotal = cart.get_total_price()
     ongkir = 0 
@@ -248,13 +282,14 @@ def checkout_view(request):
         catatan = request.POST.get('catatan', '').strip()
         metode_pembayaran = request.POST.get('metode_pembayaran', 'Transfer Bank')
 
-        # Jika hanya pelatihan digital (tidak ada buku fisik), alamat pengiriman otomatis
-        if not has_physical_book and not alamat_pengiriman:
-            alamat_pengiriman = "Akses Digital / Pelatihan Online (Tidak memerlukan pengiriman fisik)"
-
-        if not nama_penerima or not no_hp or not alamat_pengiriman:
-            messages.error(request, 'Nama penerima, No. Handphone/WhatsApp, dan Alamat wajib diisi.')
-            return redirect('app:checkout')
+        if has_physical_book:
+            if not nama_penerima or not no_hp or not alamat_pengiriman:
+                messages.error(request, 'Nama penerima, No. Handphone/WhatsApp, dan Alamat pengiriman wajib diisi.')
+                return redirect('app:checkout')
+        else:
+            if not nama_penerima or not no_hp:
+                messages.error(request, 'Nama peserta dan No. Handphone/WhatsApp wajib diisi.')
+                return redirect('app:checkout')
 
         with transaction.atomic():
             for item in items:
@@ -270,57 +305,83 @@ def checkout_view(request):
             rand_code = uuid.uuid4().hex[:5].upper()
             order_number = f"ORD-{today_str}-{rand_code}"
 
+            # Hitung snapshot subtotal dan total transaksi berdasarkan harga checkout saat ini
+            computed_subtotal = sum(item.get_subtotal() for item in items)
+            computed_total = computed_subtotal + ongkir
+
+            # Status dan payment_status dikelola terpisah
+            if computed_total == 0:
+                init_status = 'completed'
+                init_payment_status = 'not_required'
+                metode_pembayaran = 'Gratis'
+                paid_at = timezone.now()
+            else:
+                init_status = 'pending'
+                init_payment_status = 'unpaid'
+                paid_at = None
+
             order = Order.objects.create(
                 order_number=order_number,
                 user=request.user,
-                status='pending',
-                nama_penerima=nama_penerima,
-                no_hp=no_hp,
-                provinsi=provinsi,
-                kota=kota,
-                kode_pos=kode_pos,
-                alamat_pengiriman=alamat_pengiriman,
-                catatan=catatan,
-                subtotal=total_subtotal,
-                ongkir=ongkir,
-                total_harga=total_tagihan,
+                status=init_status,
+                payment_status=init_payment_status,
+                subtotal=computed_subtotal,
+                total_harga=computed_total,
                 metode_pembayaran=metode_pembayaran,
+                catatan=catatan,
+                paid_at=paid_at,
             )
 
+            # OrderShipping hanya dibuat jika transaksi membutuhkan pengiriman fisik (ada buku)
+            if has_physical_book:
+                OrderShipping.objects.create(
+                    order=order,
+                    nama_penerima=nama_penerima,
+                    no_hp=no_hp,
+                    provinsi=provinsi,
+                    kota=kota,
+                    kode_pos=kode_pos,
+                    alamat_pengiriman=alamat_pengiriman,
+                    ongkir=ongkir,
+                    catatan=catatan,
+                )
+
+            # Pisahkan detail buku ke OrderBookItem dan detail course ke OrderCourseItem
             for item in items:
                 if item.course:
-                    OrderItem.objects.create(
+                    price_snapshot = item.get_price()
+                    qty_snapshot = 1  # Course kuantitas maksimal 1
+                    subtotal_snapshot = price_snapshot * qty_snapshot
+                    OrderCourseItem.objects.create(
                         order=order,
                         course=item.course,
-                        judul_buku=f"[Pelatihan] {item.course.name}",
-                        harga_satuan=item.get_price(),
-                        quantity=item.quantity,
-                        subtotal=item.get_subtotal(),
+                        nama_produk=item.course.name,
+                        harga_satuan=price_snapshot,
+                        quantity=qty_snapshot,
+                        subtotal=subtotal_snapshot,
                     )
-                else:
-                    OrderItem.objects.create(
+                elif item.book:
+                    price_snapshot = item.get_price()
+                    qty_snapshot = item.quantity
+                    subtotal_snapshot = price_snapshot * qty_snapshot
+                    OrderBookItem.objects.create(
                         order=order,
                         book=item.book,
-                        judul_buku=item.book.judul if item.book else 'Buku',
-                        harga_satuan=item.get_price(),
-                        quantity=item.quantity,
-                        subtotal=item.get_subtotal(),
+                        nama_produk=item.book.judul,
+                        harga_satuan=price_snapshot,
+                        quantity=qty_snapshot,
+                        subtotal=subtotal_snapshot,
                     )
                     # Kurangi stok buku
-                    if item.book and item.book.stok is not None:
-                        item.book.stok = max(0, item.book.stok - item.quantity)
+                    if item.book.stok is not None:
+                        item.book.stok = max(0, item.book.stok - qty_snapshot)
                         if item.book.stok == 0:
                             item.book.status = 'Habis'
-                        item.book.save()
+                        item.book.save(update_fields=['stok', 'status'])
 
             items.delete()
 
-            # Jika pesanan gratis (misalnya course gratis / total_tagihan == 0)
-            if total_tagihan == 0:
-                order.status = 'delivered'  # Langsung aktif/selesai
-                order.paid_at = timezone.now()
-                order.metode_pembayaran = 'Gratis'
-                order.save()
+            if computed_total == 0:
                 messages.success(request, f'Pendaftaran pelatihan #{order.order_number} berhasil! Anda dapat langsung mengakses sesi pelatihan.')
                 return redirect('app:pesanan_detail', order_number=order.order_number)
 
@@ -363,18 +424,22 @@ def pesanan_list(request):
     userpengguna = UserPengguna.objects.filter(user=request.user).first()
     status_filter = request.GET.get('status', 'all')
 
-    orders_qs = Order.objects.filter(user=request.user).prefetch_related('items').order_by('-created_at')
+    orders_qs = Order.objects.filter(user=request.user).prefetch_related(
+        'book_items__book', 'course_items__course', 'shipping'
+    ).order_by('-created_at')
 
-    if status_filter != 'all' and status_filter in dict(Order.STATUS_CHOICES):
-        orders_qs = orders_qs.filter(status=status_filter)
+    if status_filter != 'all':
+        if status_filter in dict(Order.ORDER_STATUS_CHOICES):
+            orders_qs = orders_qs.filter(status=status_filter)
+        elif status_filter in dict(Order.PAYMENT_STATUS_CHOICES):
+            orders_qs = orders_qs.filter(payment_status=status_filter)
 
     all_orders = Order.objects.filter(user=request.user)
     count_all = all_orders.count()
     count_pending = all_orders.filter(status='pending').count()
-    count_paid = all_orders.filter(status='paid').count()
+    count_paid = all_orders.filter(payment_status='paid').count()
     count_processing = all_orders.filter(status='processing').count()
-    count_shipped = all_orders.filter(status='shipped').count()
-    count_delivered = all_orders.filter(status='delivered').count()
+    count_delivered = all_orders.filter(status='completed').count()
 
     context = {
         'title': 'Pesanan Saya',
@@ -385,7 +450,6 @@ def pesanan_list(request):
         'count_pending': count_pending,
         'count_paid': count_paid,
         'count_processing': count_processing,
-        'count_shipped': count_shipped,
         'count_delivered': count_delivered,
         'userpengguna': userpengguna,
         'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
@@ -398,7 +462,11 @@ def pesanan_list(request):
 def pesanan_detail(request, order_number):
     userpengguna = UserPengguna.objects.filter(user=request.user).first()
     order = get_object_or_404(
-        Order.objects.prefetch_related('items__book', 'items__course', 'items__course__agendas'),
+        Order.objects.prefetch_related(
+            'book_items__book',
+            'course_items__course',
+            'course_items__course__agendas'
+        ).select_related('shipping'),
         order_number=order_number,
         user=request.user
     )
@@ -406,29 +474,29 @@ def pesanan_detail(request, order_number):
     if order.status == 'pending':
         try:
             is_updated, msg = sync_order_status_from_midtrans(order)
-            if is_updated and order.status in ('processing', 'paid', 'delivered'):
+            if is_updated and (order.payment_status == 'paid' or order.status in ('processing', 'completed')):
                 messages.success(request, f'Pembayaran pesanan #{order.order_number} berhasil diverifikasi!')
         except Exception:
             pass
 
-    # Buat atau ambil snap token jika metode pembayaran Midtrans (atau jika ingin bayar otomatis)
+    # Buat atau ambil snap token jika metode pembayaran Midtrans
     snap_token = order.snap_token
-    if order.status == 'pending' and order.total_harga > 0:
+    if order.status == 'pending' and order.total_harga > 0 and order.payment_status != 'paid':
         if not snap_token and order.metode_pembayaran in ('Midtrans', 'Payment Gateway', 'Otomatis'):
             try:
                 snap_token = create_snap_transaction(order)
             except Exception:
                 snap_token = None
 
-    course_items = [it for it in order.items.all() if it.course]
-    has_physical_items = any(it.book is not None for it in order.items.all())
+    course_items = order.course_items.all()
+    has_physical_items = order.book_items.exists()
 
     context = {
         'title': "Detail Pesanan",
         'heading': f'Pesanan #{order.order_number}',
         'order': order,
         'course_items': course_items,
-        'has_course': bool(course_items),
+        'has_course': bool(course_items.exists()),
         'has_physical_items': has_physical_items,
         'snap_token': snap_token,
         'midtrans_client_key': getattr(settings, 'MIDTRANS_CLIENT_KEY', ''),
@@ -445,17 +513,17 @@ def pesanan_detail(request, order_number):
 def batalkan_pesanan(request, order_number):
     with transaction.atomic():
         order = get_object_or_404(Order.objects.select_for_update(), order_number=order_number, user=request.user)
-        if order.status != 'pending':
+        if order.status != 'pending' or order.payment_status == 'paid':
             messages.error(request, 'Pesanan tidak dapat dibatalkan karena sudah diproses atau dibayar.')
             return redirect('app:pesanan_detail', order_number=order.order_number)
 
-        for item in order.items.select_related('book', 'course'):
+        # Kembalikan stok buku
+        for item in order.book_items.select_related('book'):
             if item.book and item.book.stok is not None:
                 item.book.stok += item.quantity
                 item.book.status = 'Tersedia'
-                item.book.save()
+                item.book.save(update_fields=['stok', 'status'])
 
-        # Ubah status pesanan
         order.status = 'cancelled'
         order.save(update_fields=['status'])
 
@@ -465,7 +533,7 @@ def batalkan_pesanan(request, order_number):
     )
 
     return redirect('app:pesanan_detail', order_number=order.order_number)
-    
+
 
 @pengguna_required
 @check_userpengguna
@@ -474,8 +542,8 @@ def upload_bukti_transfer(request, order_number):
 
     if request.method == 'POST' and request.FILES.get('bukti_transfer'):
         order.bukti_transfer = request.FILES['bukti_transfer']
-        order.status = 'paid' 
-        order.save()
+        order.payment_status = 'pending'  # Menunggu verifikasi admin
+        order.save(update_fields=['bukti_transfer', 'payment_status'])
         messages.success(request, f'Bukti transfer untuk pesanan #{order.order_number} berhasil diunggah! Admin akan segera memverifikasi pembayaran Anda.')
     else:
         messages.error(request, 'Gagal mengunggah file bukti transfer. Pastikan file berupa gambar atau dokumen PDF.')
@@ -488,7 +556,7 @@ def get_order_snap_token(request, order_number):
     """API endpoint AJAX untuk mengambil atau membuat Snap Token Midtrans sebuah pesanan."""
     order = get_object_or_404(Order, order_number=order_number, user=request.user)
     token = order.snap_token
-    if not token and order.status == 'pending':
+    if not token and order.status == 'pending' and order.payment_status != 'paid':
         token = create_snap_transaction(order)
 
     return JsonResponse({
@@ -508,6 +576,7 @@ def sync_order_midtrans(request, order_number):
         'status': 'success',
         'updated': is_updated,
         'order_status': order.status,
+        'payment_status': order.payment_status,
         'status_display': order.get_status_display(),
         'message': message,
     })
@@ -542,25 +611,35 @@ def midtrans_notification(request):
     if not order:
         return JsonResponse({'status': 'order not found'}, status=404)
 
-    # Sinkronisasi status pesanan berdasarkan Midtrans Transaction Status
+    # Sinkronisasi status dan payment_status secara terpisah
     if transaction_status in ('capture', 'settlement'):
         if fraud_status == 'challenge':
-            order.status = 'paid'
+            order.payment_status = 'pending'
+            order.status = 'pending'
         else:
+            order.payment_status = 'paid'
             order.status = 'processing'
-            order.paid_at = timezone.now()
+            if not order.paid_at:
+                order.paid_at = timezone.now()
         order.payment_type = payment_type
         order.transaction_id = transaction_id
-        order.save()
+        order.save(update_fields=['status', 'payment_status', 'paid_at', 'payment_type', 'transaction_id'])
     elif transaction_status in ('cancel', 'deny', 'expire'):
+        if transaction_status == 'expire':
+            order.payment_status = 'expired'
+        else:
+            order.payment_status = 'failed'
         order.status = 'cancelled'
-        order.save()
+        order.save(update_fields=['status', 'payment_status'])
     elif transaction_status == 'pending':
-        order.status = 'pending'
-        order.payment_type = payment_type
-        order.save()
+        order.payment_status = 'pending'
+        if payment_type and not order.payment_type:
+            order.payment_type = payment_type
+            order.save(update_fields=['payment_status', 'payment_type'])
+        else:
+            order.save(update_fields=['payment_status'])
 
-    return JsonResponse({'status': 'OK', 'order_status': order.status})
+    return JsonResponse({'status': 'OK', 'order_status': order.status, 'payment_status': order.payment_status})
 
 
 @pengguna_required
@@ -570,24 +649,36 @@ def my_courses_list(request):
     userpengguna = UserPengguna.objects.filter(user=request.user).first()
 
     status_filter = request.GET.get('status', 'all')
-    base_qs = OrderItem.objects.filter(
+    base_qs = OrderCourseItem.objects.filter(
         order__user=request.user,
         course__isnull=False
     ).select_related('order', 'course').prefetch_related('course__agendas', 'course__coaches__user').order_by('-order__created_at')
 
     if status_filter == 'active':
-        course_items = base_qs.filter(order__status__in=['paid', 'processing', 'shipped', 'delivered'])
+        course_items = base_qs.filter(
+            Q(order__payment_status__in=['paid', 'not_required']) |
+            Q(order__status__in=['processing', 'completed'])
+        ).exclude(order__status='cancelled')
     elif status_filter == 'pending':
-        course_items = base_qs.filter(order__status='pending')
-    elif status_filter == 'delivered':
-        course_items = base_qs.filter(order__status='delivered')
+        course_items = base_qs.filter(
+            order__status='pending',
+            order__payment_status__in=['unpaid', 'pending']
+        )
+    elif status_filter in ('delivered', 'completed'):
+        course_items = base_qs.filter(order__status='completed')
     else:
         course_items = base_qs
 
     count_all = base_qs.count()
-    count_active = base_qs.filter(order__status__in=['paid', 'processing', 'shipped', 'delivered']).count()
-    count_pending = base_qs.filter(order__status='pending').count()
-    count_delivered = base_qs.filter(order__status='delivered').count()
+    count_active = base_qs.filter(
+        Q(order__payment_status__in=['paid', 'not_required']) |
+        Q(order__status__in=['processing', 'completed'])
+    ).exclude(order__status='cancelled').count()
+    count_pending = base_qs.filter(
+        order__status='pending',
+        order__payment_status__in=['unpaid', 'pending']
+    ).count()
+    count_delivered = base_qs.filter(order__status='completed').count()
 
     context = {
         'title': 'Pelatihan Saya',
@@ -609,7 +700,7 @@ def my_courses_list(request):
 def my_course_detail(request, order_item_id):
     userpengguna = UserPengguna.objects.filter(user=request.user).first()
     order_item = get_object_or_404(
-        OrderItem.objects.select_related('order', 'course').prefetch_related('course__agendas', 'course__coaches__user', 'course__coaches__bidang_keahlian'),
+        OrderCourseItem.objects.select_related('order', 'course').prefetch_related('course__agendas', 'course__coaches__user', 'course__coaches__bidang_keahlian'),
         id=order_item_id,
         order__user=request.user,
         course__isnull=False
@@ -617,7 +708,10 @@ def my_course_detail(request, order_item_id):
     course = order_item.course
     order = order_item.order
     agendas = course.agendas.all().order_by('session_number', 'agenda_date')
-    is_active = order.status in ('paid', 'processing', 'shipped', 'delivered')
+    is_active = (
+        order.payment_status in ('paid', 'not_required') or
+        order.status in ('processing', 'completed')
+    ) and order.status != 'cancelled'
 
     context = {
         'title': 'Detail Academy',
@@ -638,7 +732,7 @@ def my_course_detail(request, order_item_id):
 def download_certificate(request, order_item_id):
     userpengguna = UserPengguna.objects.filter(user=request.user).first()
     order_item = get_object_or_404(
-        OrderItem.objects.select_related('order', 'course').prefetch_related('course__coaches__user'),
+        OrderCourseItem.objects.select_related('order', 'course').prefetch_related('course__coaches__user'),
         id=order_item_id,
         order__user=request.user,
         course__isnull=False
@@ -646,14 +740,19 @@ def download_certificate(request, order_item_id):
     course = order_item.course
     order = order_item.order
 
-    if order.status not in ('paid', 'processing', 'shipped', 'delivered'):
+    is_active = (
+        order.payment_status in ('paid', 'not_required') or
+        order.status in ('processing', 'completed')
+    ) and order.status != 'cancelled'
+
+    if not is_active:
         messages.warning(request, 'Sertifikat baru dapat diakses setelah pembayaran Anda terverifikasi.')
         return redirect('app:my_course_detail', order_item_id=order_item.id)
 
     cert_number = f"CERT/THESIS/{order.created_at.strftime('%Y%m')}/{str(order_item.id)[:8].upper()}"
     participant_name = (
         userpengguna.nama_lengkap
-        if (userpengguna and userpengguna.nama_lengkap)
+        if (userpengguna and hasattr(userpengguna, 'nama_lengkap') and userpengguna.nama_lengkap)
         else (request.user.get_full_name() or request.user.username)
     )
 

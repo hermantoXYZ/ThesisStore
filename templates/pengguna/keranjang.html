@@ -69,9 +69,9 @@
                                     <span style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">
                                         Rp{{ item.get_price|floatformat:0 }}
                                     </span>
-                                    {% if item.course.price and item.course.harga_potongan %}
+                                    {% if item.course.harga and item.course.harga_potongan %}
                                         <span style="font-size: 0.8rem; text-decoration: line-through; color: #94a3b8;">
-                                            Rp{{ item.course.price|floatformat:0 }}
+                                            Rp{{ item.course.harga|floatformat:0 }}
                                         </span>
                                     {% endif %}
                                 {% endif %}
@@ -224,8 +224,7 @@
             <a href="{% url 'app:checkout' %}" class="btn primary checkout" style="display: block; width: 100%; text-align: left; padding: 0.85rem; font-size: 1rem; font-weight: 700; text-decoration: none; border-radius: 1px !important; box-shadow: 0 4px 12px rgba(44, 76, 244, 0.25);">
                 Checkout Sekarang
             </a>
-            {% for item in items %}
-            {% if item.course %}
+            {% if has_course %}
                 <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 0.65rem;">
                     <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #64748b;">
                         <i class="ri-shield-check-fill" style="color: #10b981; font-size: 1rem;"></i>
@@ -236,7 +235,8 @@
                         <span>Jadwal dan Sesi Pelatihan Terstruktur</span>
                     </div>
                 </div>
-            {% else %}
+            {% endif %}
+            {% if has_book %}
                 <!-- Book Assurance -->
                 <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 0.65rem;">
                     <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #64748b;">
@@ -253,8 +253,7 @@
                     </div>
                 </div>
             {% endif %}
-            {% endfor %}
-
+        </div>
 
     </div>
     {% else %}

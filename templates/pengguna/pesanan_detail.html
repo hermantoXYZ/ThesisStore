@@ -128,19 +128,49 @@
                 </div>
 
                 <div style="padding: 1.25rem;">
-                    {% for item in order.items.all %}
-                    <div style="display: flex; gap: 1rem; align-items: center; {% if not forloop.last %}margin-bottom: 1.25rem; padding-bottom: 1.25rem; border-bottom: 1px solid #f1f5f9;{% endif %}">
+                    {% for item in order.book_items.all %}
+                    <div style="display: flex; gap: 1rem; align-items: center; {% if not forloop.last or order.course_items.exists %}margin-bottom: 1.25rem; padding-bottom: 1.25rem; border-bottom: 1px solid #f1f5f9;{% endif %}">
                         <div style="width: 58px; height: 80px; flex-shrink: 0; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                            {% if item.course %}
-                                {% if item.course.thumbnail %}
-                                    <img src="{{ item.course.thumbnail.url }}" alt="{{ item.judul_buku }}" style="width: 100%; height: 100%; object-fit: cover;">
-                                {% else %}
-                                    <i class="ri-graduation-cap-line" style="font-size: 2rem; color: #8c54fc;"></i>
-                                {% endif %}
-                            {% elif item.book and item.book.featured_image %}
-                                <img src="{{ item.book.featured_image.url }}" alt="{{ item.judul_buku }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% if item.book and item.book.featured_image %}
+                                <img src="{{ item.book.featured_image.url }}" alt="{{ item.nama_produk }}" style="width: 100%; height: 100%; object-fit: cover;">
                             {% else %}
                                 <i class="ri-book-line" style="font-size: 1.75rem; color: #cbd5e1;"></i>
+                            {% endif %}
+                        </div>
+
+                        <div style="flex: 1; min-width: 0;">
+                            {% if item.book and item.book.kategori %}
+                                <span style="font-size: 0.72rem; color: #2c4cf4; background: #eff6ff; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+                                    {{ item.book.kategori.nama_kategori }}
+                                </span>
+                            {% endif %}
+                            <h4 style="font-size: 0.98rem; font-weight: 600; color: #1e293b; margin: 0.25rem 0 0.35rem 0;">
+                                {% if item.book %}
+                                    <a href="{{ item.book.get_absolute_url }}" target="_blank" style="color: inherit; text-decoration: none;">
+                                        {{ item.nama_produk }}
+                                    </a>
+                                {% else %}
+                                    {{ item.nama_produk }}
+                                {% endif %}
+                            </h4>
+                            <div style="font-size: 0.85rem; color: #64748b;">
+                                {{ item.quantity }} eksemplar &times; Rp{{ item.harga_satuan|floatformat:0 }}
+                            </div>
+                        </div>
+
+                        <div style="font-size: 1.05rem; font-weight: 700; color: #0f172a; text-align: right;">
+                            Rp{{ item.subtotal|floatformat:0 }}
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    {% for item in order.course_items.all %}
+                    <div style="display: flex; gap: 1rem; align-items: center; {% if not forloop.last %}margin-bottom: 1.25rem; padding-bottom: 1.25rem; border-bottom: 1px solid #f1f5f9;{% endif %}">
+                        <div style="width: 58px; height: 80px; flex-shrink: 0; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                            {% if item.course and item.course.thumbnail %}
+                                <img src="{{ item.course.thumbnail.url }}" alt="{{ item.nama_produk }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                <i class="ri-graduation-cap-line" style="font-size: 2rem; color: #8c54fc;"></i>
                             {% endif %}
                         </div>
 
@@ -149,30 +179,18 @@
                                 <span style="font-size: 0.72rem; color: #8c54fc; background: #f3e8ff; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
                                     Pelatihan: {{ item.course.get_course_type_display }} ({{ item.course.get_format_display }})
                                 </span>
-                            {% elif item.book and item.book.kategori %}
-                                <span style="font-size: 0.72rem; color: #2c4cf4; background: #eff6ff; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
-                                    {{ item.book.kategori.nama_kategori }}
-                                </span>
                             {% endif %}
                             <h4 style="font-size: 0.98rem; font-weight: 600; color: #1e293b; margin: 0.25rem 0 0.35rem 0;">
                                 {% if item.course %}
                                     <a href="{{ item.course.get_absolute_url }}" target="_blank" style="color: inherit; text-decoration: none;">
-                                        {{ item.judul_buku }}
-                                    </a>
-                                {% elif item.book %}
-                                    <a href="{{ item.book.get_absolute_url }}" target="_blank" style="color: inherit; text-decoration: none;">
-                                        {{ item.judul_buku }}
+                                        {{ item.nama_produk }}
                                     </a>
                                 {% else %}
-                                    {{ item.judul_buku }}
+                                    {{ item.nama_produk }}
                                 {% endif %}
                             </h4>
                             <div style="font-size: 0.85rem; color: #64748b;">
-                                {% if item.course %}
-                                    1 Peserta Terdaftar
-                                {% else %}
-                                    {{ item.quantity }} eksemplar &times; Rp{{ item.harga_satuan|floatformat:0 }}
-                                {% endif %}
+                                1 Peserta Terdaftar
                             </div>
                         </div>
 
@@ -189,6 +207,7 @@
             </div>
 
             <!-- SHIPPING ADDRESS & DETAILS -->
+            {% if order.shipping %}
             <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                 <h3 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem;">
                     Informasi Pengiriman
@@ -197,40 +216,48 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; font-size: 0.9rem;">
                     <div>
                         <span style="display: block; color: #64748b; font-size: 0.8rem; margin-bottom: 0.25rem;">Nama Penerima:</span>
-                        <strong style="color: #1e293b;">{{ order.nama_penerima }}</strong>
+                        <strong style="color: #1e293b;">{{ order.shipping.nama_penerima }}</strong>
                     </div>
                     <div>
                         <span style="display: block; color: #64748b; font-size: 0.8rem; margin-bottom: 0.25rem;">No. Handphone / WA:</span>
-                        <strong style="color: #1e293b;">{{ order.no_hp }}</strong>
+                        <strong style="color: #1e293b;">{{ order.shipping.no_hp }}</strong>
                     </div>
                     <div style="grid-column: span 2;">
                         <span style="display: block; color: #64748b; font-size: 0.8rem; margin-bottom: 0.25rem;">Alamat Tujuan:</span>
                         <p style="margin: 0; color: #334155; line-height: 1.5;">
-                            {{ order.alamat_pengiriman }}
-                            {% if order.kota or order.provinsi %}
-                                <br>{{ order.kota }}{% if order.kota and order.provinsi %}, {% endif %}{{ order.provinsi }} {{ order.kode_pos|default:'' }}
+                            {{ order.shipping.alamat_pengiriman }}
+                            {% if order.shipping.kota or order.shipping.provinsi %}
+                                <br>{{ order.shipping.kota }}{% if order.shipping.kota and order.shipping.provinsi %}, {% endif %}{{ order.shipping.provinsi }} {{ order.shipping.kode_pos|default:'' }}
                             {% endif %}
                         </p>
                     </div>
-                    {% if order.catatan %}
+                    {% if order.catatan or order.shipping.catatan %}
                     <div style="grid-column: span 2; background: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
                         <span style="display: block; color: #64748b; font-size: 0.78rem;">Catatan Pesanan:</span>
-                        <span style="color: #334155;">{{ order.catatan }}</span>
+                        <span style="color: #334155;">{{ order.catatan|default:order.shipping.catatan }}</span>
                     </div>
                     {% endif %}
 
-                    {% if order.nomor_resi %}
+                    {% if order.shipping.nomor_resi %}
                     <div style="grid-column: span 2; background: #eff6ff; padding: 1rem; border-radius: 8px; border: 1px solid #bfdbfe;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <span style="display: block; color: #1e40af; font-size: 0.8rem; font-weight: 600;">Ekspedisi &amp; Nomor Resi Pengiriman:</span>
-                                <strong style="font-size: 1.1rem; color: #1e3a8a; font-family: monospace;">{{ order.kurir|default:"JNE / J&T / Pos" }}: {{ order.nomor_resi }}</strong>
+                                <strong style="font-size: 1.1rem; color: #1e3a8a; font-family: monospace;">{{ order.shipping.kurir|default:"JNE / J&T / Pos" }}: {{ order.shipping.nomor_resi }}</strong>
                             </div>
                         </div>
                     </div>
                     {% endif %}
                 </div>
             </div>
+            {% elif order.catatan %}
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <h3 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem;">
+                    Catatan Pesanan
+                </h3>
+                <p style="margin: 0; color: #334155; line-height: 1.5;">{{ order.catatan }}</p>
+            </div>
+            {% endif %}
 
         </div>
 

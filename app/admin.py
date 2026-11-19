@@ -23,7 +23,9 @@ from .models import (
     Cart,
     CartItem,
     Order,
-    OrderItem,
+    OrderShipping,
+    OrderBookItem,
+    OrderCourseItem,
 )
 
 admin.site.register(CategoryBooks)
@@ -49,5 +51,7 @@ admin.site.register(NoSuratThesis)
 admin.site.register(Cart)
 admin.site.register(CartItem)
 admin.site.register(Order)
-admin.site.register(OrderItem)
+admin.site.register(OrderShipping)
+admin.site.register(OrderBookItem)
+admin.site.register(OrderCourseItem)
 

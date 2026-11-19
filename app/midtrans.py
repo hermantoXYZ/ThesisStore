@@ -32,18 +32,27 @@ def create_snap_transaction(order):
         return order.snap_token
 
     item_details = []
-    for item in order.items.all():
+    for item in order.book_items.select_related('book'):
         item_details.append({
             'id': str(item.book.id if item.book else item.id)[:45],
             'price': int(item.harga_satuan),
             'quantity': int(item.quantity),
-            'name': (item.judul_buku or 'Buku')[:50]
+            'name': (item.nama_produk or 'Buku')[:50]
         })
 
-    if order.ongkir and order.ongkir > 0:
+    for item in order.course_items.select_related('course'):
+        item_details.append({
+            'id': str(item.course.uuid if item.course else item.id)[:45],
+            'price': int(item.harga_satuan),
+            'quantity': int(item.quantity),
+            'name': (item.nama_produk or 'Pelatihan')[:50]
+        })
+
+    shipping = getattr(order, 'shipping', None)
+    if shipping and shipping.ongkir and shipping.ongkir > 0:
         item_details.append({
             'id': 'ONGKIR',
-            'price': int(order.ongkir),
+            'price': int(shipping.ongkir),
             'quantity': 1,
             'name': 'Ongkos Kirim'
         })
@@ -51,18 +60,30 @@ def create_snap_transaction(order):
     gross_amount = int(order.total_harga)
 
     email = order.user.email if (order.user and order.user.email) else f"{order.user.username}@thesisedu.org"
-    customer_details = {
-        'first_name': order.nama_penerima[:50],
-        'email': email,
-        'phone': order.no_hp[:20] if order.no_hp else '08123456789',
-        'shipping_address': {
-            'first_name': order.nama_penerima[:50],
-            'phone': order.no_hp[:20] if order.no_hp else '08123456789',
-            'address': order.alamat_pengiriman[:100],
-            'city': (order.kota or '')[:30],
-            'postal_code': (order.kode_pos or '')[:10],
+    if shipping:
+        first_name = (shipping.nama_penerima or order.user.username)[:50]
+        phone = shipping.no_hp[:20] if shipping.no_hp else '08123456789'
+        customer_details = {
+            'first_name': first_name,
+            'email': email,
+            'phone': phone,
+            'shipping_address': {
+                'first_name': first_name,
+                'phone': phone,
+                'address': (shipping.alamat_pengiriman or '')[:100],
+                'city': (shipping.kota or '')[:30],
+                'postal_code': (shipping.kode_pos or '')[:10],
+            }
         }
-    }
+    else:
+        userpengguna = getattr(order.user, 'anggota', None)
+        first_name = (order.user.first_name or order.user.username)[:50]
+        phone = (userpengguna.telp if userpengguna and userpengguna.telp else '08123456789')[:20]
+        customer_details = {
+            'first_name': first_name,
+            'email': email,
+            'phone': phone,
+        }
 
     payload = {
         'transaction_details': {
@@ -158,8 +179,10 @@ def sync_order_status_from_midtrans(order):
 
     if transaction_status in ('capture', 'settlement'):
         if fraud_status == 'challenge':
-            order.status = 'paid'
+            order.payment_status = 'pending'
+            order.status = 'pending'
         else:
+            order.payment_status = 'paid'
             order.status = 'processing'
             if not order.paid_at:
                 order.paid_at = timezone.now()
@@ -167,18 +190,25 @@ def sync_order_status_from_midtrans(order):
             order.payment_type = payment_type
         if transaction_id:
             order.transaction_id = transaction_id
-        order.save(update_fields=['status', 'paid_at', 'payment_type', 'transaction_id'])
+        order.save(update_fields=['status', 'payment_status', 'paid_at', 'payment_type', 'transaction_id'])
         return True, f"Pembayaran berhasil terverifikasi ({payment_type})."
 
     elif transaction_status in ('cancel', 'deny', 'expire'):
+        if transaction_status == 'expire':
+            order.payment_status = 'expired'
+        else:
+            order.payment_status = 'failed'
         order.status = 'cancelled'
-        order.save(update_fields=['status'])
+        order.save(update_fields=['status', 'payment_status'])
         return True, f"Status pesanan dibatalkan ({transaction_status})."
 
     elif transaction_status == 'pending':
+        order.payment_status = 'pending'
         if payment_type and not order.payment_type:
             order.payment_type = payment_type
-            order.save(update_fields=['payment_type'])
+            order.save(update_fields=['payment_status', 'payment_type'])
+        else:
+            order.save(update_fields=['payment_status'])
         return False, "Menunggu pembayaran dari pembeli."
 
     return False, f"Status Midtrans: {transaction_status}"

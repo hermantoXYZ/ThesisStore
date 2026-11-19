@@ -63,41 +63,57 @@
 
                 <!-- Items Preview -->
                 <div style="padding: 1.25rem;">
-                    {% for item in order.items.all %}
+                    {% for item in order.book_items.all %}
+                    <div style="display: flex; gap: 1rem; align-items: center; {% if not forloop.last or order.course_items.exists %}margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px dashed #f1f5f9;{% endif %}">
+                      <div style="width: 52px; height: 72px; flex-shrink: 0; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                        {% if item.book and item.book.featured_image %}
+                            <img src="{{ item.book.featured_image.url }}"
+                                 alt="{{ item.nama_produk }}"
+                                 style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                            <i class="ri-book-line" style="font-size: 1.5rem; color: #cbd5e1;"></i>
+                        {% endif %}
+                      </div>
+
+                      <div style="flex: 1; min-width: 0;">
+                          <h4 style="font-size: 0.95rem; font-weight: 600; color: #1e293b; margin: 0 0 0.3rem 0;">
+                              {{ item.nama_produk }}
+                          </h4>
+                          <div style="font-size: 0.82rem; color: #64748b;">
+                              {{ item.quantity }} barang x Rp{{ item.harga_satuan|floatformat:0 }}
+                          </div>
+                      </div>
+
+                      <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; text-align: right;">
+                          Rp{{ item.subtotal|floatformat:0 }}
+                      </div>
+                    </div>
+                    {% endfor %}
+
+                    {% for item in order.course_items.all %}
                     <div style="display: flex; gap: 1rem; align-items: center; {% if not forloop.last %}margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px dashed #f1f5f9;{% endif %}">
                       <div style="width: 52px; height: 72px; flex-shrink: 0; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                        {% if item.course and item.course.thumbnail %}
+                            <img src="{{ item.course.thumbnail.url }}"
+                                 alt="{{ item.nama_produk }}"
+                                 style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                            <i class="ri-graduation-cap-line" style="font-size: 1.5rem; color: #cbd5e1;"></i>
+                        {% endif %}
+                      </div>
 
-    {% if item.book and item.book.featured_image %}
-        <img src="{{ item.book.featured_image.url }}"
-             alt="{{ item.judul_buku }}"
-             style="width: 100%; height: 100%; object-fit: cover;">
+                      <div style="flex: 1; min-width: 0;">
+                          <h4 style="font-size: 0.95rem; font-weight: 600; color: #1e293b; margin: 0 0 0.3rem 0;">
+                              [Pelatihan] {{ item.nama_produk }}
+                          </h4>
+                          <div style="font-size: 0.82rem; color: #64748b;">
+                              {{ item.quantity }} peserta x Rp{{ item.harga_satuan|floatformat:0 }}
+                          </div>
+                      </div>
 
-    {% elif item.course and item.course.thumbnail %}
-        <img src="{{ item.course.thumbnail.url }}"
-             alt="{{ item.course.name }}"
-             style="width: 100%; height: 100%; object-fit: cover;">
-
-    {% elif item.course %}
-        <i class="ri-graduation-cap-line" style="font-size: 1.5rem; color: #cbd5e1;"></i>
-
-    {% else %}
-        <i class="ri-book-line" style="font-size: 1.5rem; color: #cbd5e1;"></i>
-    {% endif %}
-
-</div>
-
-                        <div style="flex: 1; min-width: 0;">
-                            <h4 style="font-size: 0.95rem; font-weight: 600; color: #1e293b; margin: 0 0 0.3rem 0;">
-                                {{ item.judul_buku }}
-                            </h4>
-                            <div style="font-size: 0.82rem; color: #64748b;">
-                                {{ item.quantity }} barang x Rp{{ item.harga_satuan|floatformat:0 }}
-                            </div>
-                        </div>
-
-                        <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; text-align: right;">
-                            Rp{{ item.subtotal|floatformat:0 }}
-                        </div>
+                      <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; text-align: right;">
+                          {% if item.subtotal == 0 %}<span style="color: #10b981;">Gratis</span>{% else %}Rp{{ item.subtotal|floatformat:0 }}{% endif %}
+                      </div>
                     </div>
                     {% endfor %}
                 </div>

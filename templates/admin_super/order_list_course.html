@@ -75,15 +75,15 @@
                         </td>
                         <td>
                             <div style="font-weight: 600; color: #1e293b; font-size: 0.9rem; vertical-align: middle;">
-                                {{ ord.user.first_name }}
+                                {{ ord.user.first_name|default:ord.user.username }}
                             </div>
                             <div style="font-size: 0.8rem; color: #64748b;">
-                            {{ ord.no_hp }}
+                            {{ ord.user.anggota.telp|default:"" }}
                             </div>
                         </td>
                         <td>
-                            {% for item in ord.items.all %}
-                                {{ item.judul_buku|truncatewords:5 }}<br>
+                            {% for item in ord.course_items.all %}
+                                {{ item.nama_produk|truncatewords:5 }}<br>
                             {% endfor %}
                         </td>
                         <td>

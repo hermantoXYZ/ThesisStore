@@ -166,11 +166,15 @@
                         {{ item.course.get_course_type_display }}
                     </span>
 
-                    {% if item.order.status in 'paid processing delivered' %}
+                    {% if item.order.payment_status in 'paid not_required' or item.order.status in 'processing completed' %}
                         <span class="course-status-pill" style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;">
                             <i class="ri-checkbox-circle-fill"></i> Peserta Aktif
                         </span>
-                    {% elif item.order.status == 'pending' %}
+                    {% elif item.order.status == 'cancelled' %}
+                        <span class="course-status-pill" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;">
+                            Dibatalkan
+                        </span>
+                    {% elif item.order.payment_status in 'unpaid pending' or item.order.status == 'pending' %}
                         <span class="course-status-pill" style="background: #fffbeb; color: #d97706; border: 1px solid #fde68a;">
                             <i class="ri-time-line"></i> Menunggu Bayar
                         </span>
@@ -224,7 +228,7 @@
 
                 <!-- Footer Action Buttons -->
                 <div class="course-card-footer">
-                    {% if item.order.status in 'paid processing delivered' %}
+                    {% if item.order.payment_status in 'paid not_required' or item.order.status in 'processing completed' %}
                         <a href="{% url 'app:my_course_detail' item.id %}" class="btn primary small" style="flex: 1; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 8px 12px; font-weight: 700; font-size: 0.85rem; border-radius: 8px;">
                             <i class="ri-book-open-line"></i> Ruang Belajar
                         </a>
@@ -234,7 +238,7 @@
                                 <i class="ri-video-chat-line"></i> Link
                             </a>
                         {% endif %}
-                    {% elif item.order.status == 'pending' %}
+                    {% elif item.order.payment_status in 'unpaid pending' or item.order.status == 'pending' %}
                         <a href="{% url 'app:pesanan_detail' item.order.order_number %}" class="btn primary small" style="flex: 1; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 8px 12px; font-weight: 700; font-size: 0.85rem; border-radius: 8px; background: #f59e0b; border-color: #f59e0b;">
                             <i class="ri-bank-card-line"></i> Selesaikan Bayar
                         </a>

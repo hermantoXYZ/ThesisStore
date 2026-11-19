@@ -5,7 +5,7 @@ from app.models import (
     UserAdmin, Books, CategoryBooks, MediaBooks, Article, Page, Category,
     KerjaSama, WebSetting, HeroSlide, DokumentasiArticle, DokumentasiPage,
     Course, CourseAgenda, JurnalMaster, LoaJurnal, NoSuratThesis, KodeSurat,
-    Order, OrderItem, CallForReviewer
+    Order, OrderBookItem, OrderCourseItem, CallForReviewer
 )
 from .form_admin import (
     formProfile, CategoryBooksForm, BooksForm, ArticleForm, PageForm, CategoryForm,
@@ -1142,23 +1142,37 @@ def kode_surat_hapus(request, uuid):
 def admin_order_list_buku(request):
     status_filter = request.GET.get('status', 'all')
     search_q = request.GET.get('q', '').strip()
-    orders_qs = Order.objects.filter(items__book__isnull=False).select_related('user').prefetch_related('items').order_by('-created_at')
-    if status_filter != 'all' and status_filter in dict(Order.STATUS_CHOICES):
-        orders_qs = orders_qs.filter(status=status_filter)
+    orders_qs = Order.objects.filter(book_items__isnull=False).distinct().select_related('user', 'shipping').prefetch_related('book_items__book').order_by('-created_at')
 
-    all_orders = Order.objects.filter(items__book__isnull=False).distinct()
+    if search_q:
+        orders_qs = orders_qs.filter(
+            Q(order_number__icontains=search_q) |
+            Q(user__username__icontains=search_q) |
+            Q(user__first_name__icontains=search_q) |
+            Q(shipping__nama_penerima__icontains=search_q) |
+            Q(shipping__no_hp__icontains=search_q)
+        )
+
+    if status_filter != 'all':
+        if status_filter in dict(Order.ORDER_STATUS_CHOICES):
+            orders_qs = orders_qs.filter(status=status_filter)
+        elif status_filter in dict(Order.PAYMENT_STATUS_CHOICES):
+            orders_qs = orders_qs.filter(payment_status=status_filter)
+
+    all_orders = Order.objects.filter(book_items__isnull=False).distinct()
     count_all = all_orders.count()
     count_pending = all_orders.filter(status='pending').count()
-    count_paid = all_orders.filter(status='paid').count()
+    count_paid = all_orders.filter(payment_status='paid').count()
     count_processing = all_orders.filter(status='processing').count()
-    count_shipped = all_orders.filter(status='shipped').count()
-    count_delivered = all_orders.filter(status='delivered').count()
+    count_shipped = all_orders.filter(shipping__nomor_resi__isnull=False).exclude(shipping__nomor_resi='').count()
+    count_delivered = all_orders.filter(status='completed').count()
 
     context = {
         'title': 'Pesanan Buku',
         'heading': 'Kelola Pesanan & Pengiriman Buku',
         'orders': orders_qs,
         'status_filter': status_filter,
+        'search_q': search_q,
         'count_all': count_all,
         'count_pending': count_pending,
         'count_paid': count_paid,
@@ -1174,26 +1188,39 @@ def admin_order_list_buku(request):
 def admin_order_list_course(request):
     status_filter = request.GET.get('status', 'all')
     search_q = request.GET.get('q', '').strip()
-    orders_qs = Order.objects.filter(items__course__isnull=False).select_related('user').prefetch_related('items').order_by('-created_at')
+    orders_qs = Order.objects.filter(course_items__isnull=False).distinct().select_related('user').prefetch_related('course_items__course').order_by('-created_at')
 
-    if status_filter != 'all' and status_filter in dict(Order.STATUS_CHOICES):
-        orders_qs = orders_qs.filter(status=status_filter)
+    if search_q:
+        orders_qs = orders_qs.filter(
+            Q(order_number__icontains=search_q) |
+            Q(user__username__icontains=search_q) |
+            Q(user__first_name__icontains=search_q)
+        )
 
-    all_orders = Order.objects.filter(items__course__isnull=False).distinct()
+    if status_filter != 'all':
+        if status_filter in dict(Order.ORDER_STATUS_CHOICES):
+            orders_qs = orders_qs.filter(status=status_filter)
+        elif status_filter in dict(Order.PAYMENT_STATUS_CHOICES):
+            orders_qs = orders_qs.filter(payment_status=status_filter)
+
+    all_orders = Order.objects.filter(course_items__isnull=False).distinct()
     count_all = all_orders.count()
     count_pending = all_orders.filter(status='pending').count()
-    count_paid = all_orders.filter(status='paid').count()
+    count_paid = all_orders.filter(payment_status='paid').count()
     count_processing = all_orders.filter(status='processing').count()
+    count_completed = all_orders.filter(status='completed').count()
 
     context = {
         'title': 'Course Orders',
         'heading': 'Kelola Pesanan Course & Pelatihan',
         'orders': orders_qs,
         'status_filter': status_filter,
+        'search_q': search_q,
         'count_all': count_all,
         'count_pending': count_pending,
         'count_paid': count_paid,
         'count_processing': count_processing,
+        'count_completed': count_completed,
         'photo': _get_admin_photo(request),
     }
     return render(request, 'admin_super/order_list_course.html', context)
@@ -1201,7 +1228,7 @@ def admin_order_list_course(request):
 @admin_required
 def admin_order_detail_buku(request, order_number):
     order = get_object_or_404(
-        Order.objects.prefetch_related('items__book', 'items__course'),
+        Order.objects.prefetch_related('book_items__book', 'course_items__course').select_related('shipping', 'user'),
         order_number=order_number
     )
 
@@ -1223,25 +1250,39 @@ def admin_order_detail_buku(request, order_number):
 
     if request.method == 'POST':
         new_status = request.POST.get('status')
+        new_payment_status = request.POST.get('payment_status')
         nomor_resi = request.POST.get('nomor_resi', '').strip()
         kurir = request.POST.get('kurir', '').strip()
 
-        if new_status in dict(Order.STATUS_CHOICES):
+        if new_status in dict(Order.ORDER_STATUS_CHOICES):
             order.status = new_status
-        if nomor_resi:
-            order.nomor_resi = nomor_resi
-        if kurir:
-            order.kurir = kurir
+        if new_payment_status in dict(Order.PAYMENT_STATUS_CHOICES):
+            order.payment_status = new_payment_status
+            if new_payment_status == 'paid' and not order.paid_at:
+                order.paid_at = timezone.now()
 
         order.save()
-        messages.success(request, f'Status pesanan #{order.order_number} berhasil diperbarui menjadi "{order.get_status_display()}".')
+
+        # Update OrderShipping jika ada
+        shipping = getattr(order, 'shipping', None)
+        if shipping:
+            if nomor_resi:
+                shipping.nomor_resi = nomor_resi
+                if not shipping.shipped_at:
+                    shipping.shipped_at = timezone.now()
+            if kurir:
+                shipping.kurir = kurir
+            shipping.save()
+
+        messages.success(request, f'Status pesanan #{order.order_number} berhasil diperbarui.')
         return redirect('app:admin_order_detail', order_number=order.order_number)
 
     context = {
         'title': 'Kelola Pesanan',
         'heading': f'Detail Pesanan #{order.order_number}',
         'order': order,
-        'status_choices': Order.STATUS_CHOICES,
+        'status_choices': Order.ORDER_STATUS_CHOICES,
+        'payment_status_choices': Order.PAYMENT_STATUS_CHOICES,
         'photo': _get_admin_photo(request),
     }
     return render(request, 'admin_super/order_detail.html', context)
@@ -1250,7 +1291,7 @@ def admin_order_detail_buku(request, order_number):
 @admin_required
 def admin_order_detail_course(request, order_number):
     order = get_object_or_404(
-        Order.objects.prefetch_related('items__course'),
+        Order.objects.prefetch_related('course_items__course').select_related('user'),
         order_number=order_number
     )
     sync_req = request.GET.get('sync')
@@ -1260,34 +1301,33 @@ def admin_order_detail_course(request, order_number):
             if updated:
                 messages.success(request, f'Status pesanan berhasil disinkronkan dengan Midtrans: {msg}')
                 if sync_req == 'midtrans':
-                    return redirect('app:admin_order_detail', order_number=order.order_number)
+                    return redirect('app:admin_order_detail_course', order_number=order.order_number)
             elif sync_req == 'midtrans':
                 messages.info(request, f'Hasil cek status Midtrans: {msg}')
-                return redirect('app:admin_order_detail', order_number=order.order_number)
+                return redirect('app:admin_order_detail_course', order_number=order.order_number)
         except Exception as e:
             if sync_req == 'midtrans':
                 messages.error(request, f'Gagal memeriksa status ke Midtrans: {str(e)}')
 
     if request.method == 'POST':
-
         form = CourseOrderStatusForm(request.POST, instance=order)
-
         if form.is_valid():
-            form.save()
+            saved_order = form.save(commit=False)
+            if saved_order.payment_status == 'paid' and not saved_order.paid_at:
+                saved_order.paid_at = timezone.now()
+            saved_order.save()
 
             messages.success(
                 request,
                 f'Status pesanan #{order.order_number} berhasil diperbarui menjadi "{order.get_status_display()}".'
             )
-
         else:
             messages.error(request, 'Status pesanan tidak valid.')
 
         return redirect(
-            'app:admin_order_detail',
+            'app:admin_order_detail_course',
             order_number=order.order_number
         )
-
     else:
         form = CourseOrderStatusForm(instance=order)
 
@@ -1295,7 +1335,9 @@ def admin_order_detail_course(request, order_number):
         'title': f'Detail Pesanan #{order.order_number}',
         'heading': f'Kelola Pesanan #{order.order_number}',
         'order': order,
+        'form': form,
         'status_choices': form.fields['status'].choices,
+        'payment_status_choices': form.fields['payment_status'].choices,
         'photo': _get_admin_photo(request),
     }
     return render(request, 'admin_super/order_detail_course.html', context)

@@ -863,16 +863,15 @@ class NoSuratThesisForm(forms.ModelForm):
 
 
 class CourseOrderStatusForm(forms.ModelForm):
-    COURSE_STATUS_CHOICES = [
-        ('pending', 'Menunggu Pembayaran'),
-        ('paid', 'Menunggu Konfirmasi'),
-        ('processing', 'Sedang Diproses'),
-        ('delivered', 'Selesai'),
-        ('cancelled', 'Dibatalkan'),
-    ]
-
     status = forms.ChoiceField(
-        choices=COURSE_STATUS_CHOICES,
+        choices=Order.ORDER_STATUS_CHOICES,
+        widget=forms.Select(attrs={
+            'class': 'form-control'
+        })
+    )
+    payment_status = forms.ChoiceField(
+        choices=Order.PAYMENT_STATUS_CHOICES,
+        required=False,
         widget=forms.Select(attrs={
             'class': 'form-control'
         })
@@ -880,4 +879,4 @@ class CourseOrderStatusForm(forms.ModelForm):
 
     class Meta:
         model = Order
-        fields = ['status']
+        fields = ['status', 'payment_status']
