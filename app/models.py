@@ -277,7 +277,6 @@ class Course(models.Model):
     meeting_url = models.URLField(max_length=500, blank=True, null=True, verbose_name="Link Meeting", help_text="Link Zoom / Google Meet (untuk online/hybrid)")
     thumbnail = models.ImageField(upload_to='courses/thumbnails/', blank=True, null=True, verbose_name="Thumbnail", help_text="Gambar sampul kegiatan")
     fee_type = models.CharField(max_length=20, choices=FEE_TYPE_CHOICES, default='free', verbose_name="Tipe Biaya")
-    price = models.DecimalField(max_digits=12, decimal_places=0, default=0, verbose_name="Nominal Biaya / Donasi (Rp)", help_text="Isi 0 jika gratis")
     is_active = models.BooleanField(default=True, verbose_name="Aktif")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -302,22 +301,18 @@ class Course(models.Model):
         return reverse('course_detail', kwargs={'slug': str(self.uuid)})
 
     @property
-    def formatted_price(self):
-        try:
-            return f"{int(self.price):,}".replace(",", ".")
-        except (ValueError, TypeError):
-            return "0"
-
-    @property
     def persentase_diskon(self):
-        if self.harga and self.harga > 0 and self.harga_potongan and self.harga_potongan < self.harga:
-            return int(round(((self.harga - self.harga_potongan) / self.harga) * 100))
+        if self.harga and self.harga > 0 and self.harga_potongan:
+            if 0 < self.harga_potongan < self.harga:
+                return int(round((self.harga_potongan / self.harga) * 100))
         return 0
 
     @property
     def harga_efektif(self):
-        if self.harga_potongan and self.harga_potongan > 0:
-            return self.harga_potongan
+        if self.fee_type == 'free':
+            return 0
+        if self.harga and self.harga_potongan:
+            return max(self.harga - self.harga_potongan, 0)
         return self.harga or 0
 
 

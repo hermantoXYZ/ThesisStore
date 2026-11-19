@@ -69,7 +69,7 @@
                                     <span style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">
                                         Rp{{ item.get_price|floatformat:0 }}
                                     </span>
-                                    {% if item.course.harga and item.course.harga_potongan %}
+                                    {% if item.course.harga_potongan %}
                                         <span style="font-size: 0.8rem; text-decoration: line-through; color: #94a3b8;">
                                             Rp{{ item.course.harga|floatformat:0 }}
                                         </span>

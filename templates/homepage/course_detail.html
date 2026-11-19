@@ -151,13 +151,10 @@
                 <span class="free-badge-sub">Terbuka untuk umum</span>
               {% else %}
                 {% if course.harga_potongan %}
-                  <span class="price-main">Rp{{ course.harga_potongan|floatformat:0 }}</span>
-                  <span class="price-strike">Rp{{ course.price|floatformat:0 }}</span>
-                  {% if course.persentase_diskon %}
-                    <span class="price-discount-tag">HEMAT {{ course.persentase_diskon }}%</span>
-                  {% endif %}
+                  <span class="price-main">Rp{{ course.harga_efektif|floatformat:0 }}</span>
+                  <span class="price-strike">Rp{{ course.harga|floatformat:0 }}</span>
                 {% else %}
-                  <span class="price-main">Rp{{ course.formatted_price }}</span>
+                  <span class="price-main">Rp{{ course.harga }}</span>
                 {% endif %}
               {% endif %}
             </div>

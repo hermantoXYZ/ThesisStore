@@ -93,6 +93,7 @@
                         </div>
                     </div>
 
+                    {% if has_physical_book %}
                     <div class="checkout-form-grid-3">
                         <div>
                             <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.4rem;">
@@ -108,11 +109,11 @@
                             <input type="text" name="kota" placeholder="Kota / Kabupaten"
                                    style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;">
                         </div>
-                         <div>
+                        <div>
                             <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.4rem;">
-                                Kode Pos
+                                Kecamatan
                             </label>
-                            <input type="text" name="kode_pos" placeholder="Kode Pos"
+                            <input type="text" name="kecamatan" placeholder="Kecamatan"
                                    style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;">
                         </div>
                         <div>
@@ -124,24 +125,21 @@
                         </div>
                         <div>
                             <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.4rem;">
-                                Kecamatan
+                                Kode Pos
                             </label>
-                            <input type="text" name="kecamatan" placeholder="Kecamatan"
+                            <input type="text" name="kode_pos" placeholder="Kode Pos"
                                    style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;">
                         </div>
                     </div>
 
                     <div style="margin-bottom: 1rem;">
                         <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.4rem;">
-                            {% if has_physical_book %}
-                                Alamat Lengkap Pengiriman <span style="color: #ef4444;">*</span>
-                            {% else %}
-                                Alamat Domisili / Institusi (Opsional)
-                            {% endif %}
+                            Alamat Lengkap Pengiriman <span style="color: #ef4444;">*</span>
                         </label>
-                        <textarea name="alamat_pengiriman" rows="3" {% if has_physical_book %}required{% endif %} placeholder="{% if has_physical_book %}Nama jalan, nomor rumah, RT/RW, kelurahan, kecamatan...{% else %}Nama instansi / domisili peserta{% endif %}"
+                        <textarea name="alamat_pengiriman" rows="3" required placeholder="Nama jalan, nomor rumah, RT/RW, kelurahan, kecamatan..."
                                   style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;">{{ default_alamat }}</textarea>
                     </div>
+                    {% endif %}
 
                     <div>
                         <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.4rem;">

@@ -547,7 +547,7 @@ class CourseForm(forms.ModelForm):
             'name', 'slug', 'course_type', 'format', 'coaches',
             'start_date', 'end_date', 'registration_deadline',
             'max_participants', 'meeting_url', 'thumbnail',
-            'fee_type', 'price', 'harga', 'harga_potongan',
+            'fee_type', 'harga', 'harga_potongan',
             'is_active', 'description'
         ]
         widgets = {
@@ -589,7 +589,7 @@ class CourseForm(forms.ModelForm):
                 'accept': 'image/*'
             }),
             'fee_type': forms.Select(attrs={'class': 'form-control', 'id': 'id_fee_type'}),
-            'price': forms.NumberInput(attrs={
+            'harga': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'placeholder': '0 jika gratis',
                 'min': '0'

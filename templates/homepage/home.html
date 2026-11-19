@@ -667,10 +667,12 @@ function filterBookCategory(catId, btn) {
             </span>
 
             <!-- Badge Diskon jika ada -->
+            {% if c.fee_type == 'paid' %}
             {% if c.harga_potongan %}
               <span class="course-badge-discount">
                 HEMAT {{ c.persentase_diskon }}%
               </span>
+            {% endif %}
             {% endif %}
           </div>
 
@@ -713,11 +715,11 @@ function filterBookCategory(catId, btn) {
                 {% else %}
                   {% if c.harga_potongan %}
                     <div style="display: flex; flex-direction: column;">
-                      <span class="price-val">Rp {{ c.harga_potongan|floatformat:0 }}</span>
-                      <span class="price-slash" style="font-size: 0.78rem; text-decoration: line-through; color: #94a3b8;">Rp {{ c.price|floatformat:0 }}</span>
+                      <span class="price-val">Rp {{ c.harga_efektif|floatformat:0 }}</span>
+                      <span class="price-slash" style="font-size: 0.78rem; text-decoration: line-through; color: #94a3b8;">Rp {{ c.harga|floatformat:0 }}</span>
                     </div>
                   {% else %}
-                    <span class="price-val">Rp {{ c.formatted_price }}</span>
+                    <span class="price-val">Rp {{ c.harga }}</span>
                   {% endif %}
                 {% endif %}
               </div>

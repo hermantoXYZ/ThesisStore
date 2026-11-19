@@ -319,12 +319,10 @@
                             <i class="ri-refresh-line"></i> Sudah Bayar? Cek / Sinkronkan Status
                         </button>
                     </div>
-                    {% endif %}
-
-                    <!-- METODE 2: TRANSFER MANUAL (OPSIONAL / ALTERNATIF) -->
+                    {% else %}
                     <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem;">
                         <span style="display: block; font-size: 0.85rem; font-weight: 700; color: #b45309; margin-bottom: 0.5rem;">
-                            <i class="ri-bank-card-line"></i> Alternatif: Transfer Bank Manual
+                    Alternatif: Transfer Bank Manual
                         </span>
                         <p style="font-size: 0.82rem; color: #78350f; margin: 0 0 0.75rem 0; line-height: 1.4;">
                             Transfer sejumlah <strong>Rp{{ order.total_harga|floatformat:0 }}</strong> ke nomor rekening berikut:
@@ -335,7 +333,6 @@
                             <div style="font-size: 0.78rem; color: #64748b;">a.n. PT Thesis Edukasi Nusantara</div>
                         </div>
                     </div>
-
                     <form action="{% url 'app:upload_bukti_transfer' order.order_number %}" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
                         <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #334155; margin-bottom: 0.4rem;">
@@ -347,6 +344,7 @@
                             <i class="ri-upload-cloud-line"></i> Unggah Bukti Transfer
                         </button>
                     </form>
+                     {% endif %}
                 {% elif order.status in 'processing,paid,shipped,delivered' %}
                     <!-- PEMBAYARAN BERHASIL -->
                     <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 1.25rem; text-align: center;">

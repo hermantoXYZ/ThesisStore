@@ -28,7 +28,7 @@
                         <th style="white-space: nowrap;">Pemateri / Coach</th>
                         <th style="white-space: nowrap;">Jadwal</th>
                         <th style="white-space: nowrap;">Biaya</th>
-                        <th style="width: 80px; text-align: center;">Status</th>
+                        <th style="white-space: nowrap">Status</th>
                         <th style="width: 130px; text-align: center;">Aksi</th>
                     </tr>
                 </thead>
@@ -80,11 +80,14 @@
                                 <span style="color: #aaa;">Belum dijadwalkan</span>
                             {% endif %}
                         </td>
-                        <td style="white-space: nowrap;">
-                            {% if course.fee_type == 'free' or course.price == 0 %}
-                                <span style="color: #27ae60; font-weight: 600; font-size: 13px;">Gratis</span>
+                       <td style="vertical-align: middle; font-weight: 600;">
+                            {% if book.harga_potongan %}
+                                <span style="color: #e74c3c;">Rp {{ book.harga_efektif|floatformat:0 }}</span>
+                                <div style="font-size: 11px; color: #95a5a6; font-weight: normal; text-decoration: line-through;">
+                                    Rp {{ book.harga|floatformat:0 }}
+                                </div>
                             {% else %}
-                                <span style="color: #e67e22; font-weight: 600; font-size: 13px;">Rp {{ course.formatted_price }}</span>
+                                <span style="color: #27ae60;">Rp {{ book.harga|floatformat:0 }}</span>
                             {% endif %}
                         </td>
                         <td style="text-align: center; vertical-align: middle; white-space: nowrap;">
