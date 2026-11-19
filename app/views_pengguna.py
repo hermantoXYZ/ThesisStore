@@ -167,12 +167,29 @@ def cart_add_course(request, course_uuid):
         target_after_auth = reverse('app:checkout') if buy_now else reverse('app:cart_view')
         return redirect(f"{reverse('register')}?next={target_after_auth}")
 
+    # Cek apakah user sudah pernah order/daftar course ini (tidak boleh daftar ulang)
+    already_ordered = OrderCourseItem.objects.filter(
+        course=course,
+        order__user=request.user,
+    ).exclude(order__status='cancelled').exclude(order__payment_status='failed').exists()
+
+    if already_ordered:
+        messages.warning(request, f'Anda sudah terdaftar di pelatihan "{course.name}". Satu akun hanya dapat mendaftar satu kali.')
+        return redirect('course_detail', slug=course.slug or str(course.uuid))
+
     cart, _ = Cart.objects.get_or_create(user=request.user)
+
+    # Cek apakah course ini sudah ada di keranjang
     cart_item, created = CartItem.objects.get_or_create(
         cart=cart,
         course=course,
         defaults={'quantity': 1, 'book': None}
     )
+
+    if not created:
+        messages.info(request, f'Pelatihan "{course.name}" sudah ada di keranjang belanja Anda.')
+        return redirect('app:cart_view')
+
     cart_item.book = None
     cart_item.quantity = 1  # 1 kuota per pendaftaran akun (course tidak boleh > 1)
     cart_item.save()
@@ -248,7 +265,6 @@ def cart_remove(request, item_id):
 @check_userpengguna
 def checkout_view(request):
     cart, _ = Cart.objects.get_or_create(user=request.user)
-    # Bersihkan item rusak jika ada
     cart.items.filter(book__isnull=True, course__isnull=True).delete()
     cart.items.filter(book__isnull=False, course__isnull=False).delete()
 
@@ -262,7 +278,6 @@ def checkout_view(request):
     has_physical_book = items.filter(book__isnull=False).exists()
     has_course = items.filter(course__isnull=False).exists()
 
-    # Pastikan kuantitas course selalu 1
     for item in items:
         if item.course and item.quantity != 1:
             item.quantity = 1
@@ -278,6 +293,8 @@ def checkout_view(request):
         alamat_pengiriman = request.POST.get('alamat_pengiriman', '').strip()
         provinsi = request.POST.get('provinsi', '').strip()
         kota = request.POST.get('kota', '').strip()
+        kecamatan = request.POST.get('kecamatan', '').strip()
+        kelurahan = request.POST.get('kelurahan', '').strip()
         kode_pos = request.POST.get('kode_pos', '').strip()
         catatan = request.POST.get('catatan', '').strip()
         metode_pembayaran = request.POST.get('metode_pembayaran', 'Transfer Bank')
@@ -340,6 +357,8 @@ def checkout_view(request):
                     no_hp=no_hp,
                     provinsi=provinsi,
                     kota=kota,
+                    kecamatan=kecamatan,
+                    kelurahan=kelurahan,
                     kode_pos=kode_pos,
                     alamat_pengiriman=alamat_pengiriman,
                     ongkir=ongkir,

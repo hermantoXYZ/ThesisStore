@@ -4452,3 +4452,140 @@ textarea {
     padding: 3rem 0 3.5rem;
   }
 }
+
+
+
+
+/* CSS FOR ALERT/NOTIF */
+.alert {
+  padding: 15px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0px;
+}
+
+.alert-success {
+  background-color: #e6f4ea;
+  color: #1e7e34;
+  border: 1px solid #c3e6cb;
+}
+
+.alert-warning {
+  background-color: #f4f1e6;
+  color: #ea8227;
+  border: 1px solid #e6d9c3;
+}
+
+.alert-danger {
+  background-color: #fde7e9;
+  color: #dc3545;
+  border: 1px solid #f5c6cb;
+}
+
+.alert i {
+  font-size: 20px;
+  margin-right: 10px;
+}
+
+/* CLOSING CSS FOR NNOTIF */
+
+
+/* CSS FOR ALERT/NOTIF 002 */
+.alert2-container {
+  position: fixed;
+  top: 110px;
+  /* Tambah jarak dari header */
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.alert2 {
+  position: relative;
+  min-width: 280px;
+  max-width: 350px;
+  padding: 15px 20px 20px 20px;
+  /* beri ruang bawah untuk garis */
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: fadeIn 0.5s ease-out;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0.95;
+  overflow: hidden;
+}
+
+/* Garis loading di bawah */
+.alert2::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.7);
+  animation: alert2Progress 4s linear forwards;
+}
+
+@keyframes alert2Progress {
+  from {
+    width: 100%;
+  }
+
+  to {
+    width: 0%;
+  }
+}
+
+/* Tambahan jenis alert */
+
+.alert2-skripsi {
+  background-color: #1d84c6;
+}
+
+.alert2-chatpa {
+  background-color: #1c4ed8;
+}
+
+.alert2-acc_judul {
+  background-color: #28a745;
+}
+
+.alert2-success {
+  background-color: #28a745;
+}
+
+.alert2-danger {
+  background-color: #dc3545;
+}
+
+.alert2-error {
+  background-color: #d61124;
+}
+
+.alert2-warning {
+  background-color: #ffc107;
+  color: #333;
+}
+
+.alert2-info {
+  background-color: #17a2b8;
+}
+
+/* Animasi muncul */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 0.95;
+    transform: translateY(0);
+  }
+}

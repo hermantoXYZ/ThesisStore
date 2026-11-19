@@ -17,6 +17,16 @@
 <body>
   <header class="apb-navbar-wrapper" id="apbNavbar">
     <div class="apb-container">
+       <div class="alert2-container">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert2 alert2-{{ message.tags }}">
+                            <i class="{% if message.tags == 'success' %}ri-checkbox-circle-line{% elif message.tags == 'warning' %}ri-alert-line{% elif message.tags == 'info' %}ri-information-line{% else %}ri-error-warning-line{% endif %}"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
       <nav class="apb-navbar" aria-label="Main Navigation">
         <a href="{% url 'homepage' %}" class="apb-brand" aria-label="Kembali ke Beranda">
           {% if web_setting and web_setting.logo %}

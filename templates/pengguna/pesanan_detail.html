@@ -227,7 +227,7 @@
                         <p style="margin: 0; color: #334155; line-height: 1.5;">
                             {{ order.shipping.alamat_pengiriman }}
                             {% if order.shipping.kota or order.shipping.provinsi %}
-                                <br>{{ order.shipping.kota }}{% if order.shipping.kota and order.shipping.provinsi %}, {% endif %}{{ order.shipping.provinsi }} {{ order.shipping.kode_pos|default:'' }}
+                                <br>{{ order.shipping.kelurahan|default:'' }}, {{ order.shipping.kecamatan|default:'' }}, {{ order.shipping.kota }}{% if order.shipping.kota and order.shipping.provinsi %}, {% endif %}{{ order.shipping.provinsi }} {{ order.shipping.kode_pos|default:'' }}
                             {% endif %}
                         </p>
                     </div>

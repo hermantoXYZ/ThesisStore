@@ -22,7 +22,7 @@
                 <thead>
                     <tr>
                         <th style="text-align: center;">No</th>
-                        <th style="white-space: nowrap;">Judul & Informasi</th>
+                        <th style="white-space: nowrap;">Judul </th>
                         <th style="white-space: nowrap;">Harga</th>
                         <th style="width: 70px; text-align: center;">Stok</th>
                         <th style="white-space: nowrap;">Kategori</th>
@@ -48,7 +48,7 @@
                         </td>
                         <td style="vertical-align: middle; font-weight: 600;">
                             {% if book.harga_potongan %}
-                                <span style="color: #e74c3c;">Rp {{ book.harga_potongan|floatformat:0 }}</span>
+                                <span style="color: #e74c3c;">Rp {{ book.harga_efektif|floatformat:0 }}</span>
                                 <div style="font-size: 11px; color: #95a5a6; font-weight: normal; text-decoration: line-through;">
                                     Rp {{ book.harga|floatformat:0 }}
                                 </div>
