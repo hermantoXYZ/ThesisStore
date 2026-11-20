@@ -1,0 +1,243 @@
+{% extends "admin_super/base.html" %}
+{% block content1 %}
+<div class="dashboard-content">
+
+    <!-- HEADER & PENGATURAN KUESIONER -->
+    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; border-bottom: 2px solid #f0f0f0; padding-bottom: 14px;">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    Kuesioner Penelitian: {{ course.name }}
+                </h3>
+                <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                    Jika kuesioner berstatus <strong>Aktif</strong>, peserta wajib mengisinya sebelum dapat mengunduh e-sertifikat.
+                </p>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                {% if survey and responses %}
+                    <a href="{% url 'app:admin_survey_export_csv' course.uuid %}" class="btn success">
+                        <i class="ri-file-excel-2-line"></i> Export CSV ({{ responses.count }} Respon)
+                    </a>
+                {% endif %}
+                <a href="{% url 'app:admin_course_edit' course.uuid %}" class="btn secondary">
+                    <i class="ri-arrow-left-line"></i> Kembali ke Course
+                </a>
+            </div>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div style="display: grid; grid-template-columns: 1fr; gap: 14px;">
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #2c3e50; margin-bottom: 6px;">Judul Kuesioner *</label>
+                    <input type="text" name="judul" required value="{{ survey.judul|default:'' }}" placeholder="Contoh: Kuesioner Evaluasi & Riset Pemanfaatan AI" class="form-control" style="width: 100%; padding: 8px 12px; font-size: 13px;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #2c3e50; margin-bottom: 6px;">Pengantar / Petunjuk Pengisian</label>
+                    <textarea name="deskripsi" rows="3" placeholder="Tuliskan tujuan penelitian, kerahasiaan data responden, dan petunjuk skala penilaian..." class="form-control" style="width: 100%; padding: 8px 12px; font-size: 13px;">{{ survey.deskripsi|default:'' }}</textarea>
+                </div>
+                <div>
+                    <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #2c3e50; cursor: pointer;">
+                        <input type="checkbox" name="is_active" {% if not survey or survey.is_active %}checked{% endif %}>
+                        Aktifkan Kuesioner (Wajib diisi peserta sebelum unduh sertifikat)
+                    </label>
+                </div>
+                <div>
+                    <button type="submit" class="btn primary">
+                        <i class="ri-save-line"></i> {% if survey %}Simpan Pengaturan Kuesioner{% else %}Buat Kuesioner{% endif %}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% if survey %}
+    <!-- DAFTAR PERTANYAAN -->
+    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; border-bottom: 2px solid #f0f0f0; padding-bottom: 14px;">
+            <div>
+                <h3 style="font-size: 17px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    Daftar Pertanyaan ({{ questions.count }} Item)
+                </h3>
+                <p style="font-size: 12px; color: #7f8c8d; margin: 4px 0 0 0;">
+                    Susun butir pertanyaan kuesioner penelitian Anda.
+                </p>
+            </div>
+            <button type="button" class="btn primary" onclick="openModal('modalTambahPertanyaan')">
+                <i class="ri-add-line"></i> Tambah Pertanyaan
+            </button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="student-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="width: 60px; text-align: center;">No</th>
+                        <th>Pertanyaan</th>
+                        <th style="width: 190px;">Tipe Jawaban</th>
+                        <th style="width: 90px; text-align: center;">Wajib</th>
+                        <th style="width: 110px; text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for q in questions %}
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle; font-weight: 700;">{{ q.urutan }}</td>
+                        <td style="vertical-align: middle; white-space: normal;">
+                            <div style="color: #2c3e50; font-weight: 500;">{{ q.pertanyaan }}</div>
+                            {% if q.tipe == 'choice' and q.get_opsi_list %}
+                                <div style="margin-top: 6px; display: flex; gap: 4px; flex-wrap: wrap;">
+                                    {% for opt in q.get_opsi_list %}
+                                        <span style="background: #f1f5f9; color: #475569; padding: 2px 8px; border-radius: 4px; font-size: 11px;">{{ opt }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td style="vertical-align: middle;">
+                            <span style="display: inline-block; background: #e8f4fd; color: #2c4cf4; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">
+                                {{ q.get_tipe_display }}
+                            </span>
+                        </td>
+                        <td style="text-align: center; vertical-align: middle;">
+                            {% if q.is_required %}
+                                <span class="grade-badge a" style="background-color: #27ae60;">Ya</span>
+                            {% else %}
+                                <span class="grade-badge c" style="background-color: #95a5a6;">Opsional</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; vertical-align: middle; white-space: nowrap;">
+                            <button type="button" class="btn info small" title="Edit Pertanyaan"
+                                onclick="bukaModalEditPertanyaan('{{ q.id }}', '{{ q.urutan }}', '{{ q.pertanyaan|escapejs }}', '{{ q.tipe }}', '{{ q.opsi_pilihan|default:''|escapejs }}', {{ q.is_required|yesno:'true,false' }})">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                            <a href="{% url 'app:admin_survey_question_delete' q.id %}" class="btn danger small" title="Hapus Pertanyaan"
+                               onclick="return confirm('Yakin ingin menghapus pertanyaan nomor {{ q.urutan }}?');">
+                                <i class="ri-delete-bin-line"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 36px; color: #888;">
+                            Belum ada pertanyaan. Klik <strong>Tambah Pertanyaan</strong> untuk mulai menyusun instrumen.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if survey %}
+<!-- MODAL TAMBAH PERTANYAAN -->
+<div id="modalTambahPertanyaan" class="modal-edit">
+    <div class="modal-content-edit" style="max-width: 500px; text-align: left;">
+        <span class="close" onclick="closeModal('modalTambahPertanyaan')">&times;</span>
+        <h3 style="color: #2c3e50; margin-top: 0; margin-bottom: 16px; font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+            Tambah Pertanyaan Kuesioner
+        </h3>
+        <form method="post" action="{% url 'app:admin_survey_question_add' course.uuid %}">
+            {% csrf_token %}
+            <div style="display: grid; grid-template-columns: 100px 1fr; gap: 12px; margin-bottom: 14px;">
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #2c3e50; margin-bottom: 6px;">Urutan</label>
+                    <input type="number" name="urutan" value="{{ next_urutan }}" min="1" required class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #2c3e50; margin-bottom: 6px;">Tipe Jawaban</label>
+                    <select name="tipe" id="addTipePertanyaan" onchange="toggleOpsiField('addTipePertanyaan', 'wrapOpsiAdd')" class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px;">
+                        {% for val, label in question_types %}
+                            <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #2c3e50; margin-bottom: 6px;">Teks Pertanyaan *</label>
+                <textarea name="pertanyaan" rows="3" required placeholder="Tuliskan butir pernyataan atau pertanyaan..." class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px;"></textarea>
+            </div>
+            <div id="wrapOpsiAdd" style="margin-bottom: 14px; display: none;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #2c3e50; margin-bottom: 6px;">Opsi Pilihan Ganda (1 opsi per baris)</label>
+                <textarea name="opsi_pilihan" rows="4" placeholder="Sangat Setuju&#10;Setuju&#10;Netral&#10;Tidak Setuju" class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px;"></textarea>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #334155; cursor: pointer;">
+                    <input type="checkbox" name="is_required" checked>
+                    Pertanyaan wajib dijawab responden
+                </label>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn secondary" onclick="closeModal('modalTambahPertanyaan')">Batal</button>
+                <button type="submit" class="btn primary"><i class="ri-save-line"></i> Simpan Pertanyaan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL EDIT PERTANYAAN -->
+<div id="modalEditPertanyaan" class="modal-edit">
+    <div class="modal-content-edit" style="max-width: 500px; text-align: left;">
+        <span class="close" onclick="closeModal('modalEditPertanyaan')">&times;</span>
+        <h3 style="color: #2c3e50; margin-top: 0; margin-bottom: 16px; font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+            Edit Pertanyaan Kuesioner
+        </h3>
+        <form id="formEditPertanyaan" method="post" action="">
+            {% csrf_token %}
+            <div style="display: grid; grid-template-columns: 100px 1fr; gap: 12px; margin-bottom: 14px;">
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #2c3e50; margin-bottom: 6px;">Urutan</label>
+                    <input type="number" id="editUrutan" name="urutan" min="1" required class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #2c3e50; margin-bottom: 6px;">Tipe Jawaban</label>
+                    <select name="tipe" id="editTipePertanyaan" onchange="toggleOpsiField('editTipePertanyaan', 'wrapOpsiEdit')" class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px;">
+                        {% for val, label in question_types %}
+                            <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #2c3e50; margin-bottom: 6px;">Teks Pertanyaan *</label>
+                <textarea id="editPertanyaanTeks" name="pertanyaan" rows="3" required class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px;"></textarea>
+            </div>
+            <div id="wrapOpsiEdit" style="margin-bottom: 14px; display: none;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #2c3e50; margin-bottom: 6px;">Opsi Pilihan Ganda (1 opsi per baris)</label>
+                <textarea id="editOpsiPilihan" name="opsi_pilihan" rows="4" class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px;"></textarea>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #334155; cursor: pointer;">
+                    <input type="checkbox" id="editIsRequired" name="is_required">
+                    Pertanyaan wajib dijawab responden
+                </label>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn secondary" onclick="closeModal('modalEditPertanyaan')">Batal</button>
+                <button type="submit" class="btn primary"><i class="ri-save-line"></i> Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleOpsiField(selectId, wrapId) {
+    var tipe = document.getElementById(selectId).value;
+    document.getElementById(wrapId).style.display = (tipe === 'choice') ? 'block' : 'none';
+}
+
+function bukaModalEditPertanyaan(qId, urutan, pertanyaan, tipe, opsi, isRequired) {
+    var baseUrl = "{% url 'app:admin_survey_question_edit' '00000000-0000-0000-0000-000000000000' %}";
+    document.getElementById('formEditPertanyaan').setAttribute('action', baseUrl.replace('00000000-0000-0000-0000-000000000000', qId));
+    document.getElementById('editUrutan').value = urutan;
+    document.getElementById('editPertanyaanTeks').value = pertanyaan;
+    document.getElementById('editTipePertanyaan').value = tipe;
+    document.getElementById('editOpsiPilihan').value = opsi;
+    document.getElementById('editIsRequired').checked = isRequired;
+    toggleOpsiField('editTipePertanyaan', 'wrapOpsiEdit');
+    openModal('modalEditPertanyaan');
+}
+</script>
+{% endif %}
+{% endblock content1 %}

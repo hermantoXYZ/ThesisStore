@@ -92,6 +92,11 @@ class UserPengguna(models.Model):
             pass
         super().save(*args, **kwargs)
 
+    @property
+    def nama_lengkap(self):
+        full = f"{self.user.first_name} {self.user.last_name}".strip()
+        return full if full else self.user.username
+
     def __str__(self):
         return f"{self.user.first_name} ({self.user.username})" if self.user.first_name else self.user.username
 
@@ -281,6 +286,10 @@ class Course(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def title(self):
+        return self.name
+
     def save(self, *args, **kwargs):
         if not self.slug and self.name:
             base_slug = slugify(self.name)
@@ -336,6 +345,22 @@ class CourseAgenda(models.Model):
             return f"{self.course.name} - Sesi {self.session_number}: {self.title}"
         return f"{self.course.name} - {self.title}"
 
+
+class CourseMaterial(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    agenda = models.ForeignKey(CourseAgenda,on_delete=models.CASCADE,related_name='materials',verbose_name="Sesi Agenda")
+    uploaded_by = models.ForeignKey(UserPengguna,on_delete=models.SET_NULL,null=True,blank=True,related_name='uploaded_materials', verbose_name="Diunggah Oleh")
+    judul = models.CharField(max_length=255, verbose_name="Judul Materi")
+    url_materi = models.URLField(max_length=500,blank=True,null=True,verbose_name="Link Materi / Video")
+    is_visible = models.BooleanField(default=True, verbose_name="Tampilkan ke Peserta")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.agenda.course.name} - {self.judul}"
 
 class Cart(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -453,6 +478,33 @@ class Order(models.Model):
     @property
     def all_items(self):
         return list(self.book_items.all()) + list(self.course_items.all())
+
+    def sync_enrollments(self):
+        user_pengguna = getattr(self.user, 'anggota', None)
+        if not user_pengguna:
+            from .models import UserPengguna
+            user_pengguna = UserPengguna.objects.filter(user=self.user).first()
+        if not user_pengguna:
+            return
+
+        for c_item in self.course_items.filter(course__isnull=False):
+            if self.status == 'cancelled' or self.payment_status in ('failed', 'expired'):
+                enroll_status = 'cancelled'
+            elif self.status == 'completed':
+                enroll_status = 'completed'
+            elif self.payment_status in ('paid', 'not_required') or self.status in ('processing', 'completed'):
+                enroll_status = 'active'
+            else:
+                enroll_status = 'registered'
+
+            CourseEnrollment.objects.update_or_create(
+                user=user_pengguna,
+                course=c_item.course,
+                defaults={
+                    'order': self,
+                    'status': enroll_status,
+                }
+            )
 
 
 class OrderShipping(models.Model):
@@ -868,3 +920,89 @@ class CallForReviewer(models.Model):
 
     def __str__(self):
         return f"{self.applicant.user.first_name} - {self.role_applied}"
+
+
+class CourseEnrollment(models.Model):
+    STATUS_CHOICES = [
+        ('registered', 'Terdaftar'),
+        ('active', 'Sedang Berlangsung'),
+        ('completed', 'Selesai'),
+        ('cancelled', 'Dibatalkan'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(UserPengguna, on_delete=models.CASCADE, related_name='course_enrollments')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='enrollments')
+    order = models.ForeignKey('Order', on_delete=models.SET_NULL, null=True, blank=True, related_name='course_enrollments')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='registered')
+    enrolled_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Enrollment'
+        verbose_name_plural = 'Enrollments'
+        ordering = ['-enrolled_at']
+        unique_together = ('user', 'course')
+
+    @property
+    def is_active(self):
+        return self.status in ('registered', 'active')
+
+    def __str__(self):
+        return f"{self.user.nama_lengkap} - {self.course.title}"
+
+
+class CourseSurvey(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    course = models.OneToOneField(Course,on_delete=models.CASCADE,related_name='survey',verbose_name="Course / Pelatihan")
+    judul = models.CharField(max_length=255, verbose_name="Judul Kuesioner")
+    deskripsi = models.TextField(blank=True, null=True, verbose_name="Pengantar / Petunjuk Pengisian")
+    is_active = models.BooleanField(default=True, verbose_name="Aktif")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Kuesioner: {self.course.name}"
+
+
+class SurveyQuestion(models.Model):
+    QUESTION_TYPE_CHOICES = [
+        ('likert', 'Skala Likert (1 - 5)'),
+        ('choice', 'Pilihan Ganda (Satu Jawaban)'),
+        ('text', 'Isian Singkat'),
+        ('textarea', 'Isian Paragraf / Esai'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    survey = models.ForeignKey(CourseSurvey, on_delete=models.CASCADE,related_name='questions')
+    urutan = models.PositiveSmallIntegerField(default=1)
+    pertanyaan = models.TextField(verbose_name="Teks Pertanyaan")
+    tipe = models.CharField(max_length=20, choices=QUESTION_TYPE_CHOICES, default='likert')
+    opsi_pilihan = models.TextField(blank=True,null=True,help_text="Khusus Pilihan Ganda: pisahkan tiap opsi dengan baris baru (Enter).")
+    is_required = models.BooleanField(default=True, verbose_name="Wajib Dijawab")
+
+    class Meta:
+        ordering = ['urutan', 'id']
+
+    def get_opsi_list(self):
+        if self.opsi_pilihan:
+            return [opt.strip() for opt in self.opsi_pilihan.splitlines() if opt.strip()]
+        return []
+
+    def __str__(self):
+        return f"{self.urutan}. {self.pertanyaan[:50]}"
+
+
+class SurveyResponse(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    survey = models.ForeignKey(CourseSurvey,on_delete=models.CASCADE,related_name='responses')
+    user = models.ForeignKey(UserPengguna,on_delete=models.CASCADE,related_name='survey_responses')
+    answers = models.JSONField(default=dict)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('survey', 'user')
+        ordering = ['-submitted_at']
+
+    def __str__(self):
+        return f"Respon {self.user.nama_lengkap} - {self.survey.course.name}"

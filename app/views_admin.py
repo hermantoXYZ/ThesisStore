@@ -1,12 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib import messages
 from .midtrans import sync_order_status_from_midtrans
 from app.models import (
-    UserAdmin, Books, CategoryBooks, MediaBooks, Article, Page, Category,
+    UserAdmin, UserPengguna, Books, CategoryBooks, MediaBooks, Article, Page, Category,
     KerjaSama, WebSetting, HeroSlide, DokumentasiArticle, DokumentasiPage,
     Course, CourseAgenda, JurnalMaster, LoaJurnal, NoSuratThesis, KodeSurat,
-    Order, OrderBookItem, OrderCourseItem, CallForReviewer
+    Order, OrderBookItem, OrderCourseItem, CallForReviewer, CourseEnrollment, CourseSurvey, SurveyQuestion, SurveyResponse
 )
+
 from .form_admin import (
     formProfile, CategoryBooksForm, BooksForm, ArticleForm, PageForm, CategoryForm,
     WebSettingForm, KerjaSamaForm, HeroSlideForm, CourseForm, CourseAgendaForm,
@@ -18,6 +20,8 @@ from django.utils.text import slugify
 from .views_admin_set import profile_admin
 from django.utils import timezone
 from datetime import datetime
+import csv
+from django.http import HttpResponse
 
 def _get_admin_photo(request):
     useradmin = UserAdmin.objects.filter(username=request.user).first()
@@ -692,6 +696,10 @@ def course_edit(request, uuid):
         form = CourseForm(instance=course)
 
     agendas = course.agendas.select_related('pengajar__user').order_by('session_number', 'agenda_date')
+    enrollments = course.enrollments.select_related('user__user', 'order').order_by('-enrolled_at')
+    total_enrollments = enrollments.count()
+    survey = CourseSurvey.objects.filter(course=course).first()
+    total_survey_questions = survey.questions.count() if survey else 0
 
     context = {
         'title': 'Edit Course',
@@ -701,6 +709,8 @@ def course_edit(request, uuid):
         'agendas': agendas,
         'photo': _get_admin_photo(request),
         'is_edit': True,
+        'total_survey_questions': total_survey_questions,
+        'total_enrollments': total_enrollments,
     }
     return render(request, 'admin_super/course_form.html', context)
 
@@ -1316,6 +1326,7 @@ def admin_order_detail_course(request, order_number):
             if saved_order.payment_status == 'paid' and not saved_order.paid_at:
                 saved_order.paid_at = timezone.now()
             saved_order.save()
+            saved_order.sync_enrollments()
 
             messages.success(
                 request,
@@ -1396,3 +1407,226 @@ def reviewer_application_detail(request, app_id):
         'photo': _get_admin_photo(request),
     }
     return render(request, 'admin_super/reviewer_detail.html', context)
+
+
+@admin_required
+def admin_enrollment_list(request, course_uuid):
+    course = get_object_or_404(Course, uuid=course_uuid)
+    enrollments = CourseEnrollment.objects.filter(course=course).select_related(
+        'user__user',
+        'order'
+    ).order_by('-enrolled_at')
+
+    enrolled_user_ids = enrollments.values_list('user_id', flat=True)
+    users = UserPengguna.objects.exclude(pk__in=enrolled_user_ids).select_related('user').order_by('user__first_name', 'user__username')
+
+    context = {
+        'title': f'Peserta - {course.name}',
+        'heading': f'Daftar Peserta: {course.name}',
+        'course': course,
+        'enrollments': enrollments,
+        'users': users,
+        'status_choices': CourseEnrollment.STATUS_CHOICES,
+        'photo': _get_admin_photo(request),
+    }
+    return render(request, 'admin_super/enrollment_list.html', context)
+
+
+@admin_required
+def admin_enrollment_update_status(request, enrollment_id):
+    enrollment = get_object_or_404(CourseEnrollment, id=enrollment_id)
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        if new_status in dict(CourseEnrollment.STATUS_CHOICES):
+            enrollment.status = new_status
+            enrollment.save(update_fields=['status', 'updated_at'])
+            messages.success(request, f'Status enrollment peserta {enrollment.user.nama_lengkap} berhasil diubah menjadi "{enrollment.get_status_display()}".')
+        else:
+            messages.error(request, 'Status enrollment tidak valid.')
+    return redirect(request.META.get('HTTP_REFERER') or reverse('app:admin_course_edit', kwargs={'uuid': enrollment.course.uuid}))
+
+
+@admin_required
+def admin_enrollment_create(request):
+    course = None
+    if request.method == 'POST':
+        user_uuid = request.POST.get('user_uuid')
+        course_id = request.POST.get('course_id')
+        course_uuid = request.POST.get('course_uuid')
+        status = request.POST.get('status', 'active')
+
+        if not user_uuid or (not course_id and not course_uuid):
+            messages.error(request, 'Harap pilih peserta dan pelatihan.')
+            return redirect(request.META.get('HTTP_REFERER', 'app:admin_course_list'))
+
+        user_pengguna = get_object_or_404(UserPengguna, uuid=user_uuid)
+        if course_uuid:
+            course = get_object_or_404(Course, uuid=course_uuid)
+        else:
+            course = get_object_or_404(Course, id=course_id)
+
+        enrollment, created = CourseEnrollment.objects.update_or_create(
+            user=user_pengguna,
+            course=course,
+            defaults={'status': status}
+        )
+
+        action_msg = "didaftarkan" if created else "diperbarui statusnya"
+        messages.success(request, f'Peserta {user_pengguna.nama_lengkap} berhasil {action_msg} pada course "{course.name}".')
+
+    if course:
+        return redirect(request.META.get('HTTP_REFERER') or reverse('app:admin_course_edit', kwargs={'uuid': course.uuid}))
+    return redirect(request.META.get('HTTP_REFERER', 'app:admin_course_list'))
+
+
+
+@admin_required
+def admin_course_survey(request, course_uuid):
+    course = get_object_or_404(Course, uuid=course_uuid)
+    survey = CourseSurvey.objects.filter(course=course).first()
+
+    if request.method == 'POST':
+        judul = request.POST.get('judul', '').strip()
+        deskripsi = request.POST.get('deskripsi', '').strip()
+        is_active = request.POST.get('is_active') == 'on'
+
+        if not judul:
+            messages.error(request, 'Judul kuesioner wajib diisi.')
+            return redirect('app:admin_course_survey', course_uuid=course.uuid)
+
+        if survey:
+            survey.judul = judul
+            survey.deskripsi = deskripsi
+            survey.is_active = is_active
+            survey.save()
+            messages.success(request, 'Pengaturan kuesioner berhasil diperbarui!')
+        else:
+            CourseSurvey.objects.create(
+                course=course,
+                judul=judul,
+                deskripsi=deskripsi,
+                is_active=is_active
+            )
+            messages.success(request, 'Kuesioner berhasil dibuat! Silakan tambahkan daftar pertanyaan.')
+        return redirect('app:admin_course_survey', course_uuid=course.uuid)
+
+    questions = survey.questions.all().order_by('urutan', 'id') if survey else []
+    responses = survey.responses.select_related('user__user', 'user__bidang_keahlian').order_by('-submitted_at') if survey else []
+    next_urutan = (questions.last().urutan + 1) if questions else 1
+
+    context = {
+        'title': f'Kuesioner - {course.name}',
+        'heading': f'Kelola Kuesioner: {course.name}',
+        'course': course,
+        'survey': survey,
+        'questions': questions,
+        'responses': responses,
+        'next_urutan': next_urutan,
+        'question_types': SurveyQuestion.QUESTION_TYPE_CHOICES,
+        'photo': _get_admin_photo(request),
+    }
+    return render(request, 'admin_super/course_survey.html', context)
+
+
+@admin_required
+def admin_survey_question_add(request, course_uuid):
+    course = get_object_or_404(Course, uuid=course_uuid)
+    survey = get_object_or_404(CourseSurvey, course=course)
+
+    if request.method == 'POST':
+        urutan = int(request.POST.get('urutan') or 1)
+        pertanyaan = request.POST.get('pertanyaan', '').strip()
+        tipe = request.POST.get('tipe', 'likert')
+        opsi_pilihan = request.POST.get('opsi_pilihan', '').strip()
+        is_required = request.POST.get('is_required') == 'on'
+
+        if not pertanyaan:
+            messages.error(request, 'Teks pertanyaan tidak boleh kosong.')
+            return redirect('app:admin_course_survey', course_uuid=course.uuid)
+
+        SurveyQuestion.objects.create(
+            survey=survey,
+            urutan=urutan,
+            pertanyaan=pertanyaan,
+            tipe=tipe,
+            opsi_pilihan=opsi_pilihan if tipe == 'choice' else '',
+            is_required=is_required
+        )
+        messages.success(request, 'Pertanyaan berhasil ditambahkan!')
+
+    return redirect('app:admin_course_survey', course_uuid=course.uuid)
+
+
+@admin_required
+def admin_survey_question_edit(request, question_id):
+    question = get_object_or_404(SurveyQuestion, id=question_id)
+    course_uuid = question.survey.course.uuid
+
+    if request.method == 'POST':
+        urutan = int(request.POST.get('urutan') or question.urutan)
+        pertanyaan = request.POST.get('pertanyaan', '').strip()
+        tipe = request.POST.get('tipe', question.tipe)
+        opsi_pilihan = request.POST.get('opsi_pilihan', '').strip()
+        is_required = request.POST.get('is_required') == 'on'
+
+        if not pertanyaan:
+            messages.error(request, 'Teks pertanyaan tidak boleh kosong.')
+            return redirect('app:admin_course_survey', course_uuid=course_uuid)
+
+        question.urutan = urutan
+        question.pertanyaan = pertanyaan
+        question.tipe = tipe
+        question.opsi_pilihan = opsi_pilihan if tipe == 'choice' else ''
+        question.is_required = is_required
+        question.save()
+        messages.success(request, 'Pertanyaan berhasil diperbarui!')
+
+    return redirect('app:admin_course_survey', course_uuid=course_uuid)
+
+
+@admin_required
+def admin_survey_question_delete(request, question_id):
+    question = get_object_or_404(SurveyQuestion, id=question_id)
+    course_uuid = question.survey.course.uuid
+    question.delete()
+    messages.warning(request, 'Pertanyaan berhasil dihapus.')
+    return redirect('app:admin_course_survey', course_uuid=course_uuid)
+
+
+@admin_required
+def admin_survey_export_csv(request, course_uuid):
+    course = get_object_or_404(Course, uuid=course_uuid)
+    survey = get_object_or_404(CourseSurvey, course=course)
+    questions = list(survey.questions.all().order_by('urutan', 'id'))
+    responses = survey.responses.select_related('user__user', 'user__bidang_keahlian', 'user__provinsi_pengguna').order_by('submitted_at')
+
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="hasil_kuesioner_{course.slug or course.uuid}.csv"'
+    response.write('\ufeff')  # BOM agar rapi dibuka di Microsoft Excel
+
+    writer = csv.writer(response)
+    headers = [
+        'No', 'Nama Lengkap', 'Email', 'No. HP', 'Universitas',
+        'Program Studi', 'Jabatan Fungsional', 'Bidang Keahlian', 'Provinsi', 'Waktu Submit'
+    ] + [f"Q{q.urutan}. {q.pertanyaan}" for q in questions]
+    writer.writerow(headers)
+
+    for idx, res in enumerate(responses, start=1):
+        u = res.user
+        row = [
+            idx,
+            u.nama_lengkap,
+            u.user.email,
+            u.telp,
+            u.universitas or '-',
+            u.program_studi or '-',
+            u.jabatan_fungsional or '-',
+            u.bidang_keahlian.nama_bidang if u.bidang_keahlian else '-',
+            u.provinsi_pengguna.nama_provinsi if u.provinsi_pengguna else '-',
+            res.submitted_at.strftime('%Y-%m-%d %H:%M:%S'),
+        ]
+        for q in questions:
+            row.append(res.answers.get(str(q.id), ''))
+        writer.writerow(row)
+
+    return response

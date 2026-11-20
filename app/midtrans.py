@@ -191,6 +191,7 @@ def sync_order_status_from_midtrans(order):
         if transaction_id:
             order.transaction_id = transaction_id
         order.save(update_fields=['status', 'payment_status', 'paid_at', 'payment_type', 'transaction_id'])
+        order.sync_enrollments()
         return True, f"Pembayaran berhasil terverifikasi ({payment_type})."
 
     elif transaction_status in ('cancel', 'deny', 'expire'):
@@ -200,6 +201,7 @@ def sync_order_status_from_midtrans(order):
             order.payment_status = 'failed'
         order.status = 'cancelled'
         order.save(update_fields=['status', 'payment_status'])
+        order.sync_enrollments()
         return True, f"Status pesanan dibatalkan ({transaction_status})."
 
     elif transaction_status == 'pending':

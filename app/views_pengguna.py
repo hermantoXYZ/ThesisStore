@@ -12,7 +12,7 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from .form_pengguna import formProfile
-from .models import UserPengguna, Books, Course, CourseAgenda, Cart, CartItem, Order, OrderBookItem, OrderCourseItem, OrderShipping, CallForReviewer, JurnalMaster
+from .models import UserPengguna, Books, Course, CourseAgenda, Cart, CartItem, Order, OrderBookItem, OrderCourseItem, OrderShipping, CallForReviewer, JurnalMaster, CourseMaterial, CourseSurvey, SurveyQuestion, SurveyResponse
 from .midtrans import create_snap_transaction, get_snap_js_url, verify_signature, sync_order_status_from_midtrans
 from django.urls import reverse
 from app.decorators_pengguna import pengguna_required, check_userpengguna
@@ -399,6 +399,7 @@ def checkout_view(request):
                         item.book.save(update_fields=['stok', 'status'])
 
             items.delete()
+            order.sync_enrollments()
 
             if computed_total == 0:
                 messages.success(request, f'Pendaftaran pelatihan #{order.order_number} berhasil! Anda dapat langsung mengakses sesi pelatihan.')
@@ -714,37 +715,6 @@ def my_courses_list(request):
     return render(request, 'pengguna/my_courses_list.html', context)
 
 
-@pengguna_required
-@check_userpengguna
-def my_course_detail(request, order_item_id):
-    userpengguna = UserPengguna.objects.filter(user=request.user).first()
-    order_item = get_object_or_404(
-        OrderCourseItem.objects.select_related('order', 'course').prefetch_related('course__agendas', 'course__coaches__user', 'course__coaches__bidang_keahlian'),
-        id=order_item_id,
-        order__user=request.user,
-        course__isnull=False
-    )
-    course = order_item.course
-    order = order_item.order
-    agendas = course.agendas.all().order_by('session_number', 'agenda_date')
-    is_active = (
-        order.payment_status in ('paid', 'not_required') or
-        order.status in ('processing', 'completed')
-    ) and order.status != 'cancelled'
-
-    context = {
-        'title': 'Detail Academy',
-        'heading': f'Detail Academy',
-        'order_item': order_item,
-        'course': course,
-        'order': order,
-        'agendas': agendas,
-        'is_active': is_active,
-        'userpengguna': userpengguna,
-        'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
-    }
-    return render(request, 'pengguna/my_course_detail.html', context)
-
 
 @pengguna_required
 @check_userpengguna
@@ -847,3 +817,230 @@ def apply_journal(request):
         'sk_jurnal': sk_jurnal,
     }
     return render(request, 'pengguna/apply_journal.html', context)
+@pengguna_required
+@check_userpengguna
+def my_narasumber_list(request):
+    userpengguna = UserPengguna.objects.filter(user=request.user).first()
+    courses = Course.objects.filter(
+        coaches=userpengguna
+    ).prefetch_related('agendas', 'coaches__user').order_by('-start_date', '-created_at')
+
+    context = {
+        'title': 'Narasumber',
+        'heading': 'Kegiatan Sebagai Narasumber',
+        'courses': courses,
+        'userpengguna': userpengguna,
+        'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
+    }
+    return render(request, 'pengguna/my_narasumber_list.html', context)
+
+
+@pengguna_required
+@check_userpengguna
+def my_narasumber_detail(request, course_uuid):
+    userpengguna = UserPengguna.objects.filter(user=request.user).first()
+    course = get_object_or_404(
+        Course.objects.prefetch_related(
+            'agendas__pengajar__user',
+            'agendas__materials',
+            'coaches__user',
+            'coaches__bidang_keahlian'
+        ),
+        uuid=course_uuid,
+        coaches=userpengguna
+    )
+    agendas = course.agendas.all().order_by('session_number', 'agenda_date')
+
+    context = {
+        'title': f'Detail Narasumber - {course.name}',
+        'heading': 'Detail Kegiatan Narasumber',
+        'course': course,
+        'agendas': agendas,
+        'userpengguna': userpengguna,
+        'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
+    }
+    return render(request, 'pengguna/my_narasumber_detail.html', context)
+
+
+@pengguna_required
+@check_userpengguna
+@require_POST
+def narasumber_materi_add(request, agenda_id):
+    userpengguna = UserPengguna.objects.filter(user=request.user).first()
+    # Pastikan user adalah coaches di course DAN pengajar pada agenda ini
+    agenda = get_object_or_404(
+        CourseAgenda,
+        id=agenda_id,
+        course__coaches=userpengguna,
+        pengajar=userpengguna
+    )
+
+    judul = request.POST.get('judul', '').strip()
+    url_materi = request.POST.get('url_materi', '').strip()
+    is_visible = request.POST.get('is_visible') == 'on'
+
+    if not judul:
+        messages.error(request, 'Judul materi wajib diisi.')
+        return redirect('app:my_narasumber_detail', course_uuid=agenda.course.uuid)
+
+    CourseMaterial.objects.create(
+        agenda=agenda,
+        uploaded_by=userpengguna,
+        judul=judul,
+        url_materi=url_materi or None,
+        is_visible=is_visible,
+    )
+    messages.success(request, f'Materi "{judul}" berhasil ditambahkan ke Sesi #{agenda.session_number or ""}.')
+    return redirect('app:my_narasumber_detail', course_uuid=agenda.course.uuid)
+
+
+@pengguna_required
+@check_userpengguna
+@require_POST
+def narasumber_materi_edit(request, materi_id):
+    userpengguna = UserPengguna.objects.filter(user=request.user).first()
+    # Hanya izinkan edit jika user adalah pengajar pada agenda materi tersebut
+    materi = get_object_or_404(
+        CourseMaterial,
+        id=materi_id,
+        agenda__course__coaches=userpengguna,
+        agenda__pengajar=userpengguna
+    )
+
+    judul = request.POST.get('judul', '').strip()
+    url_materi = request.POST.get('url_materi', '').strip()
+    is_visible = request.POST.get('is_visible') == 'on'
+
+    if not judul:
+        messages.error(request, 'Judul materi wajib diisi.')
+        return redirect('app:my_narasumber_detail', course_uuid=materi.agenda.course.uuid)
+
+    materi.judul = judul
+    materi.url_materi = url_materi or None
+    materi.is_visible = is_visible
+    materi.save(update_fields=['judul', 'url_materi', 'is_visible', 'updated_at'])
+
+    messages.success(request, f'Materi "{judul}" berhasil diperbarui.')
+    return redirect('app:my_narasumber_detail', course_uuid=materi.agenda.course.uuid)
+
+
+@pengguna_required
+@check_userpengguna
+def narasumber_materi_delete(request, materi_id):
+    userpengguna = UserPengguna.objects.filter(user=request.user).first()
+    # Hanya izinkan hapus jika user adalah pengajar pada agenda materi tersebut
+    materi = get_object_or_404(
+        CourseMaterial,
+        id=materi_id,
+        agenda__course__coaches=userpengguna,
+        agenda__pengajar=userpengguna
+    )
+    course_uuid = materi.agenda.course.uuid
+    judul = materi.judul
+    materi.delete()
+
+    messages.success(request, f'Materi "{judul}" berhasil dihapus.')
+    return redirect('app:my_narasumber_detail', course_uuid=course_uuid)
+
+@pengguna_required
+@check_userpengguna
+def my_course_detail(request, order_item_id):
+    userpengguna = UserPengguna.objects.filter(user=request.user).first()
+    order_item = get_object_or_404(
+        OrderCourseItem.objects.select_related('order', 'course').prefetch_related(
+            'course__agendas__materials',
+            'course__coaches__user',
+            'course__coaches__bidang_keahlian'
+        ),
+        id=order_item_id,
+        order__user=request.user,
+        course__isnull=False
+    )
+    course = order_item.course
+    order = order_item.order
+    agendas = course.agendas.all().order_by('session_number', 'agenda_date')
+    is_active = (
+        order.payment_status in ('paid', 'not_required') or
+        order.status in ('processing', 'completed')
+    ) and order.status != 'cancelled'
+
+    survey = CourseSurvey.objects.filter(course=course, is_active=True).first()
+    wajib_kuesioner = CourseSurvey.objects.filter( course=course, is_active=True, questions__isnull=False ).exclude( responses__user=userpengguna ).exists()
+
+    context = {
+        'title': 'Detail Academy',
+        'heading': 'Detail Academy',
+        'order_item': order_item,
+        'course': course,
+        'order': order,
+        'agendas': agendas,
+        'is_active': is_active,
+        'wajib_kuesioner': wajib_kuesioner,
+        'userpengguna': userpengguna,
+        'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
+    }
+    return render(request, 'pengguna/my_course_detail.html', context)
+
+@pengguna_required
+@check_userpengguna
+def my_course_survey(request, order_item_id):
+    userpengguna = UserPengguna.objects.filter(user=request.user).first()
+    order_item = get_object_or_404(
+        OrderCourseItem.objects.select_related('order', 'course'),
+        id=order_item_id,
+        order__user=request.user,
+        course__isnull=False
+    )
+    course = order_item.course
+    order = order_item.order
+
+    is_active = (
+        order.payment_status in ('paid', 'not_required') or
+        order.status in ('processing', 'completed')
+    ) and order.status != 'cancelled'
+
+    if not is_active:
+        messages.error(request, 'Selesaikan pembayaran terlebih dahulu sebelum mengisi kuesioner.')
+        return redirect('app:my_course_detail', order_item_id=order_item.id)
+
+    survey = get_object_or_404(CourseSurvey, course=course, is_active=True)
+    questions = survey.questions.all().order_by('urutan', 'id')
+    existing_response = SurveyResponse.objects.filter(survey=survey, user=userpengguna).first()
+
+    if request.method == 'POST':
+        if existing_response:
+            messages.info(request, 'Anda sudah mengisi kuesioner ini sebelumnya.')
+            return redirect('app:my_course_detail', order_item_id=order_item.id)
+
+        answers = {}
+        missing_required = False
+        for q in questions:
+            val = request.POST.get(f'question_{q.id}', '').strip()
+            if q.is_required and not val:
+                missing_required = True
+            answers[str(q.id)] = val
+
+        if missing_required:
+            messages.error(request, 'Harap lengkapi semua pertanyaan yang bertanda wajib (*).')
+            return redirect('app:my_course_survey', order_item_id=order_item.id)
+
+        SurveyResponse.objects.create(
+            survey=survey,
+            user=userpengguna,
+            answers=answers
+        )
+        messages.success(request, 'Terima kasih! Kuesioner berhasil dikirim dan E-Sertifikat Anda kini sudah terbuka.')
+        return redirect('app:my_course_detail', order_item_id=order_item.id)
+
+    context = {
+        'title': f'Kuesioner - {course.name}',
+        'heading': 'Kuesioner Evaluasi & Penelitian',
+        'order_item': order_item,
+        'course': course,
+        'survey': survey,
+        'questions': questions,
+        'existing_response': existing_response,
+        'userpengguna': userpengguna,
+        'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
+    }
+    return render(request, 'pengguna/my_course_survey.html', context)

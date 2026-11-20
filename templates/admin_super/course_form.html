@@ -1,13 +1,53 @@
 {% extends "admin_super/base.html" %}
-
 {% block extra_head %}
-<!-- Summernote WYSIWYG CSS -->
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
 {% endblock extra_head %}
-
 {% block content1 %}
 <div class="dashboard-content">
-    <!-- FORM COURSE -->
+<div class="stats-cards" style="margin-top: 20px;">
+        <div class="stat-card blue">          
+            <i class="ri-group-line"></i>
+            <div class="stat-info">
+                <p>Peserta</p>
+                <h1>{{ total_enrollments|default:0 }}</h1>
+                <a href="{% url 'app:admin_enrollment_list' course.uuid %}"><button class="btn primary x-small">Lihat Detail Peserta</button></a>
+            </div>          
+        </div>      
+        <div class="stat-card green">
+            <i class="ri-map-pin-2-line"></i>
+            <div class="stat-info">
+                <p>Total Agenda</p>
+                <h3>{{ agendas.count|default:0 }}</h3>
+                {% if is_edit and course %}
+                    <a href="#Agenda"
+                    onclick="event.preventDefault(); document.getElementById('Agenda')?.scrollIntoView({ behavior: 'smooth', block: 'start' });"
+                    class="btn primary x-small"
+                    style="display: inline-block; text-decoration: none;">
+                        Lihat Detail Agenda
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+       <div class="stat-card orange" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: #fff;">
+    <i class="ri-questionnaire-line" style="color: #fff;"></i>
+    <div class="stat-info">
+        <p style="color: rgba(255,255,255,0.85);">Kuesioner</p>
+        <h1 style="color: #fff;">{{ total_survey_questions|default:0 }}</h1>
+        {% if is_edit and course %}
+            <a href="{% url 'app:admin_course_survey' course.uuid %}" style="display: inline-block; margin-top: 6px; background: rgba(255,255,255,0.92); color: #d35400; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none;">
+                Kelola Kuesioner
+            </a>
+        {% endif %}
+    </div>
+</div>
+        <div class="stat-card purple" style="background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%); color: #fff;">   
+            <i class="ri-price-tag-3-line" style="color: #fff;"></i>
+            <div class="stat-info">
+                <p style="color: rgba(255,255,255,0.85);">Total Kategori</p>
+                <h1 style="color: #fff;">{{ total_kategori|default:0 }}</h1>
+            </div>
+        </div>
+    </div>
     <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
         <div style="margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <div>
@@ -18,9 +58,11 @@
                     Silakan isi rincian kegiatan pelatihan, narasumber, biaya, serta agenda kegiatan.
                 </p>
             </div>
-            <a href="{% url 'app:admin_course_list' %}" class="btn secondary">
-                <i class="ri-arrow-left-line"></i> Kembali ke Daftar
-            </a>
+            <div style="display: flex; gap: 10px;">
+                <a href="{% url 'app:admin_course_list' %}" class="btn secondary">
+                    <i class="ri-arrow-left-line"></i> Kembali ke Daftar
+                </a>
+            </div>
         </div>
 
         <form method="post" enctype="multipart/form-data">
@@ -244,75 +286,70 @@
             </div>
         </form>
     </div>
-
-    <!-- ======================================================== -->
-    <!-- SECTION AGENDAS / SESI KEGIATAN (Hanya Tampil Saat Edit) -->
-    <!-- ======================================================== -->
     {% if is_edit and course %}
-    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); margin-top: 25px;">
-        <div style="margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 12px;">
-            <h3 style="font-size: 17px; font-weight: 600; color: #2c3e50; margin: 0;">
-                Jadwal Sesi / Agenda Course
-            </h3>
-            <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
-                Kelola rincian setiap sesi perkuliahan/pelatihan, jam pelaksanaan, jumlah Jam Pelajaran (JP), dan pengajar per sesi.
-            </p>
-        </div>
-
-<!-- Form Tambah Agenda Sesi -->
-<form method="post"
-      action="{% url 'app:admin_course_agenda_add' course.uuid %}"
-      style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px 22px; margin-bottom: 24px;">
-
-    {% csrf_token %}
-
-    <h5 style="font-size: 15px; font-weight: 700; color: #1e293b; margin: 0 0 20px 0;">
-        <i class="ri-add-circle-line" style="color: #3155f5; margin-right: 6px;"></i>
-        Tambah Sesi Agenda Baru
-    </h5>
-
-    <div class="form-row" style="display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px;">
-
-        <div class="form-group" style="flex: 0 0 95px; min-width: 85px; margin-bottom: 0;">
-            <label style="font-weight: 600; font-size: 13px; color: #475569; margin-bottom: 7px; display: block;">No. Sesi</label>
-            <input type="number" name="session_number" class="form-control" placeholder="1" min="1" style="width: 100%; height: 46px; box-sizing: border-box;">
-        </div>
-
-        <div class="form-group" style="flex: 2 1 200px; min-width: 180px; margin-bottom: 0;">
-            <label style="font-weight: 600; font-size: 13px; color: #475569; margin-bottom: 7px; display: block;">Judul Sesi <span style="color: red;">*</span></label>
-            <input type="text" name="title" class="form-control" placeholder="Topik atau judul sesi pelatihan" required style="width: 100%; height: 46px; box-sizing: border-box;">
-        </div>
-
-        <div class="form-group" style="flex: 1.5 1 190px; min-width: 170px; margin-bottom: 0;">
-            <label style="font-weight: 600; font-size: 13px; color: #475569; margin-bottom: 7px; display: block;">Waktu Sesi <span style="color: red;">*</span></label>
-            <input type="datetime-local" name="agenda_date" class="form-control" required style="width: 100%; height: 46px; box-sizing: border-box;">
-        </div>
-
-        <div class="form-group" style="flex: 1.5 1 170px; min-width: 150px; margin-bottom: 0;">
-            <label style="font-weight: 600; font-size: 13px; color: #475569; margin-bottom: 7px; display: block;">Dosen / Pengajar</label>
-            <select name="pengajar" class="form-control" style="width: 100%; height: 46px; box-sizing: border-box;">
-                <option value="">-- Pilih Pengajar --</option>
-                {% for coach in course.coaches.all %}
-                <option value="{{ coach.user_id }}">{{ coach.user.first_name|default:coach.user.username }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="form-group" style="flex: 0 0 100px; min-width: 85px; margin-bottom: 0;">
-            <label style="font-weight: 600; font-size: 13px; color: #475569; margin-bottom: 7px; display: block;">Jumlah JP <span style="color: red;">*</span></label>
-            <input type="number" name="jp_count" class="form-control" placeholder="2" min="1" required style="width: 100%; height: 46px; box-sizing: border-box;">
-        </div>
-
-        <div class="form-group" style="flex: 0 0 auto; margin-bottom: 0;">
-            <label style="display: block; visibility: hidden; margin-bottom: 7px;">Tombol</label>
-            <button type="submit" class="btn primary" style="height: 46px; padding: 0 22px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; border-radius: 8px; margin: 0;">
-                <i class="ri-add-line"></i>
-                Simpan Sesi
-            </button>
-        </div>
-
+   <div id="Agenda" class="agenda-section" style="background: #ffffff; border-radius: 12px; padding: clamp(16px, 3vw, 24px); box-shadow: 0 2px 10px rgba(0,0,0,0.04); margin-top: 25px;">
+    <div style="margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 12px;">
+        <h3 style="font-size: 17px; font-weight: 600; color: #2c3e50; margin: 0;">
+            Jadwal Sesi / Agenda Course
+        </h3>
+        <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+            Kelola rincian setiap sesi perkuliahan/pelatihan, jam pelaksanaan, jumlah Jam Pelajaran (JP), dan pengajar per sesi.
+        </p>
     </div>
-</form>
+
+    <!-- Form Tambah Agenda Sesi -->
+    <form method="post"
+          action="{% url 'app:admin_course_agenda_add' course.uuid %}"
+          style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: clamp(16px, 2.5vw, 22px); margin-bottom: 24px;">
+
+        {% csrf_token %}
+
+        <h5 style="font-size: 15px; font-weight: 700; color: #1e293b; margin: 0 0 18px 0; display: flex; align-items: center;">
+            Tambah Sesi Agenda Baru
+        </h5>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 155px), 1fr)); gap: 12px; align-items: end;">
+
+            <div style="margin-bottom: 0;">
+                <label for="id_session_number" style="font-weight: 600; font-size: 13px; color: #475569; margin-bottom: 7px; display: block;">No. Sesi</label>
+                <input type="number" id="id_session_number" name="session_number" class="form-control" placeholder="1" min="1" style="width: 100%; height: 44px; padding: 8px 12px; font-size: 13.5px; border-radius: 8px; border: 1px solid #cbd5e1; background-color: #ffffff; box-sizing: border-box;">
+            </div>
+
+            <div style="grid-column: span 2 / auto; margin-bottom: 0;">
+                <label for="id_agenda_title" style="font-weight: 600; font-size: 13px; color: #475569; margin-bottom: 7px; display: block;">Judul Sesi <span style="color: #ef4444;">*</span></label>
+                <input type="text" id="id_agenda_title" name="title" class="form-control" placeholder="Topik atau judul sesi pelatihan" required style="width: 100%; height: 44px; padding: 8px 12px; font-size: 13.5px; border-radius: 8px; border: 1px solid #cbd5e1; background-color: #ffffff; box-sizing: border-box;">
+            </div>
+
+            <div style="margin-bottom: 0;">
+                <label for="id_agenda_date" style="font-weight: 600; font-size: 13px; color: #475569; margin-bottom: 7px; display: block;">Waktu Sesi <span style="color: #ef4444;">*</span></label>
+                <input type="datetime-local" id="id_agenda_date" name="agenda_date" class="form-control" required style="width: 100%; height: 44px; padding: 8px 12px; font-size: 13.5px; border-radius: 8px; border: 1px solid #cbd5e1; background-color: #ffffff; box-sizing: border-box;">
+            </div>
+
+            <div style="margin-bottom: 0;">
+                <label for="id_agenda_pengajar" style="font-weight: 600; font-size: 13px; color: #475569; margin-bottom: 7px; display: block;">Dosen / Pengajar</label>
+                <select id="id_agenda_pengajar" name="pengajar" class="form-control" style="width: 100%; height: 44px; padding: 8px 12px; font-size: 13.5px; border-radius: 8px; border: 1px solid #cbd5e1; background-color: #ffffff; box-sizing: border-box;">
+                    <option value="">-- Pilih Pengajar --</option>
+                    {% for coach in course.coaches.all %}
+                    <option value="{{ coach.user_id }}">{{ coach.user.first_name|default:coach.user.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="margin-bottom: 0;">
+                <label for="id_agenda_jp" style="font-weight: 600; font-size: 13px; color: #475569; margin-bottom: 7px; display: block;">Jumlah JP <span style="color: #ef4444;">*</span></label>
+                <input type="number" id="id_agenda_jp" name="jp_count" class="form-control" placeholder="2" min="1" required style="width: 100%; height: 44px; padding: 8px 12px; font-size: 13.5px; border-radius: 8px; border: 1px solid #cbd5e1; background-color: #ffffff; box-sizing: border-box;">
+            </div>
+
+            <div style="margin-bottom: 0;">
+                <button type="submit" class="btn primary" style="width: 100%; height: 44px; padding: 0 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; border-radius: 8px; font-weight: 600; font-size: 13.5px; margin: 0; box-sizing: border-box;">
+                    <i class="ri-add-line"></i>
+                    Simpan Sesi
+                </button>
+            </div>
+
+        </div>
+    </form>
+
 
         <!-- Tabel Daftar Agenda Sesi -->
         {% if agendas %}
@@ -524,4 +561,3 @@ function closeEditAgendaModal() {
 }
 </script>
 {% endblock script_costum %}
-

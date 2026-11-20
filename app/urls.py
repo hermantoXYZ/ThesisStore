@@ -71,6 +71,11 @@ urlpatterns = [
     path('admin/course/agenda/<int:agenda_id>/edit', views_admin.course_agenda_edit, name='admin_course_agenda_edit'),
     path('admin/course/agenda/<int:agenda_id>/delete', views_admin.course_agenda_delete, name='admin_course_agenda_delete'),
 
+    ###### KELOLA ENROLLMENT / PESERTA COURSE ######
+    path('admin/course/<uuid:course_uuid>/enrollment/', views_admin.admin_enrollment_list, name='admin_enrollment_list'),
+    path('admin/enrollment/create', views_admin.admin_enrollment_create, name='admin_enrollment_create'),
+    path('admin/enrollment/<uuid:enrollment_id>/status', views_admin.admin_enrollment_update_status, name='admin_enrollment_update_status'),
+
     ###### MASTER JURNAL ILMIAH ######
     path('admin/jurnal', views_admin.jurnal_list, name='admin_jurnal_list'),
     path('admin/jurnal/tambah', views_admin.jurnal_tambah, name='admin_jurnal_tambah'),
@@ -95,6 +100,16 @@ urlpatterns = [
     path('admin/kode-surat', views_admin.kode_surat_list, name='admin_kode_surat_list'),
     path('admin/kode-surat/<uuid:uuid>/edit', views_admin.kode_surat_edit, name='admin_kode_surat_edit'),
     path('admin/kode-surat/<uuid:uuid>/hapus', views_admin.kode_surat_hapus, name='admin_kode_surat_hapus'),
+
+    ###### KELOLA KUESIONER / SURVEY COURSE (ADMIN) ######
+    path('admin/course/<uuid:course_uuid>/survey/', views_admin.admin_course_survey, name='admin_course_survey'),
+    path('admin/course/<uuid:course_uuid>/survey/question/add/', views_admin.admin_survey_question_add, name='admin_survey_question_add'),
+    path('admin/survey/question/<uuid:question_id>/edit/', views_admin.admin_survey_question_edit, name='admin_survey_question_edit'),
+    path('admin/survey/question/<uuid:question_id>/delete/', views_admin.admin_survey_question_delete, name='admin_survey_question_delete'),
+    path('admin/course/<uuid:course_uuid>/survey/export/', views_admin.admin_survey_export_csv, name='admin_survey_export_csv'),
+
+    ###### KUESIONER PENELITIAN (PENGGUNA) ######
+    path('academy/<uuid:order_item_id>/kuesioner/', views_pengguna.my_course_survey, name='my_course_survey'),
     
     ###### PENGUNA/CLIENTS #######
     path('profile/pengguna', views_pengguna.profile_pengguna, name='profile_pengguna'),
@@ -126,6 +141,11 @@ urlpatterns = [
 
 
     ###### PELATIHAN SAYA (COURSE ENROLLED) ######
+    path('narasumber/', views_pengguna.my_narasumber_list, name='my_narasumber'),
+    path('narasumber/<uuid:course_uuid>/', views_pengguna.my_narasumber_detail, name='my_narasumber_detail'),
+    path('narasumber/agenda/<int:agenda_id>/materi/tambah/', views_pengguna.narasumber_materi_add, name='narasumber_materi_add'),
+    path('narasumber/materi/<uuid:materi_id>/edit/', views_pengguna.narasumber_materi_edit, name='narasumber_materi_edit'),
+    path('narasumber/materi/<uuid:materi_id>/hapus/', views_pengguna.narasumber_materi_delete, name='narasumber_materi_delete'),
     path('academy/', views_pengguna.my_courses_list, name='my_courses'),
     path('academy/<uuid:order_item_id>/', views_pengguna.my_course_detail, name='my_course_detail'),
     path('print/sertifikat/peserta/<uuid:order_item_id>/', print_sertifikat_pengguna.sertifikat_pengguna, name='sertifikat_pengguna'),

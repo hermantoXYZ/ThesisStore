@@ -67,6 +67,12 @@
                     <li class="{% if 'Pelatihan' in title or 'Course' in title or 'Sertifikat' in title %}active{% endif %}">
                         <a href="{% url 'app:my_courses' %}"><i class="ri-video-line"></i> Pelatihan & Course</a>
                     </li>
+                  {% if request.user.anggota.coached_courses.exists %}
+                <li class="{% if 'Narasumber' in title %}active{% endif %}">
+                    <a href="{% url 'app:my_narasumber' %}"><i class="ri-mic-line"></i> Narasumber</a>
+                </li>
+                {% endif %}
+                    
 
                     <li class="nav-section-label"><span>My Journal</span></li>
                     <li class="{% if title == 'Review & Editor Journal' %}active{% endif %}">

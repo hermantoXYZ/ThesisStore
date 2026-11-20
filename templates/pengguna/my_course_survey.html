@@ -1,0 +1,91 @@
+{% extends "pengguna/base.html" %}
+{% block content1 %}
+<div class="dashboard-content">
+    <div style="max-width: 820px; margin: 0 auto; background: #ffffff; border-radius: 14px; padding: 28px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); border: 1px solid #eef2f6;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; border-bottom: 2px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 20px;">
+            <div>
+                <span style="background: #eef2ff; color: #2c4cf4; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;">
+                    {{ course.name }}
+                </span>
+                <h3 style="font-size: 20px; font-weight: 700; color: #1e293b; margin: 8px 0 4px 0;">
+                    {{ survey.judul }}
+                </h3>
+                {% if survey.deskripsi %}
+                    <p style="font-size: 13px; color: #64748b; margin: 0; line-height: 1.6;">
+                        {{ survey.deskripsi|linebreaksbr }}
+                    </p>
+                {% endif %}
+            </div>
+            <a href="{% url 'app:my_course_detail' order_item.id %}" class="btn secondary small">
+                <i class="ri-arrow-left-line"></i> Kembali
+            </a>
+        </div>
+
+        {% if existing_response %}
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 20px; text-align: center;">
+                <i class="ri-checkbox-circle-fill" style="font-size: 36px; color: #16a34a; display: block; margin-bottom: 8px;"></i>
+                <h4 style="color: #166534; margin: 0 0 6px 0;">Kuesioner Telah Diisi</h4>
+                <p style="font-size: 13px; color: #15803d; margin: 0 0 16px 0;">
+                    Anda telah mengirimkan jawaban pada {{ existing_response.submitted_at|date:"d M Y H:i" }}. E-Sertifikat Anda sudah siap diunduh.
+                </p>
+                <a href="{% url 'app:sertifikat_pengguna' order_item.id %}" target="_blank" class="btn primary">
+                    <i class="ri-download-2-line"></i> Lihat & Unduh E-Sertifikat
+                </a>
+            </div>
+        {% else %}
+            <form method="post">
+                {% csrf_token %}
+                <div style="display: flex; flex-direction: column; gap: 18px;">
+                    {% for q in questions %}
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px;">
+                        <label style="display: block; font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 12px; line-height: 1.5;">
+                            {{ forloop.counter }}. {{ q.pertanyaan }}
+                            {% if q.is_required %}<span style="color: #ef4444;">*</span>{% endif %}
+                        </label>
+
+                        {% if q.tipe == 'likert' %}
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: #ffffff; padding: 12px 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <span style="font-size: 11px; color: #64748b; font-weight: 600;">Sangat Tidak Setuju</span>
+                                <div style="display: flex; gap: 16px; align-items: center;">
+                                    {% for skala in "12345" %}
+                                    <label style="display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; font-size: 13px; font-weight: 700; color: #334155;">
+                                        <input type="radio" name="question_{{ q.id }}" value="{{ skala }}" {% if q.is_required %}required{% endif %} style="width: 18px; height: 18px; accent-color: #2c4cf4;">
+                                        <span>{{ skala }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                                <span style="font-size: 11px; color: #64748b; font-weight: 600;">Sangat Setuju</span>
+                            </div>
+
+                        {% elif q.tipe == 'choice' %}
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                {% for opt in q.get_opsi_list %}
+                                <label style="display: flex; align-items: center; gap: 10px; background: #ffffff; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; font-size: 13px; color: #334155;">
+                                    <input type="radio" name="question_{{ q.id }}" value="{{ opt }}" {% if q.is_required %}required{% endif %} style="accent-color: #2c4cf4;">
+                                    <span>{{ opt }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+
+                        {% elif q.tipe == 'text' %}
+                            <input type="text" name="question_{{ q.id }}" {% if q.is_required %}required{% endif %} placeholder="Tuliskan jawaban singkat Anda..." class="form-control" style="width: 100%; padding: 10px 12px; font-size: 13px; background: #ffffff;">
+
+                        {% elif q.tipe == 'textarea' %}
+                            <textarea name="question_{{ q.id }}" rows="3" {% if q.is_required %}required{% endif %} placeholder="Tuliskan pendapat atau masukan Anda..." class="form-control" style="width: 100%; padding: 10px 12px; font-size: 13px; background: #ffffff;"></textarea>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 10px;">
+                    <a href="{% url 'app:my_course_detail' order_item.id %}" class="btn secondary">Batal</a>
+                    <button type="submit" class="btn primary">
+                        <i class="ri-send-plane-fill"></i> Kirim Jawaban & Buka Sertifikat
+                    </button>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock content1 %}

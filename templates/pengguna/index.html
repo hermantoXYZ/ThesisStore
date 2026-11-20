@@ -36,8 +36,126 @@
                         <i class="ri-user-settings-line"></i> Edit Profil
                     </button>
                 </a>
+                <a href="{% url 'app:my_courses' %}">
+                    <button class="btn primary medium" style="background: #2c4cf4; color: #fff;">
+                        <i class="ri-graduation-cap-line"></i> Pelatihan Saya
+                    </button>
+                </a>
             </div> 
         </div>
+    </div>
+
+    <!-- STATS CARDS -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-top: 1.5rem;">
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+            <div style="width: 48px; height: 48px; border-radius: 12px; background: #eff6ff; color: #2c4cf4; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                <i class="ri-book-open-line"></i>
+            </div>
+            <div>
+                <span style="font-size: 0.82rem; color: #64748b; font-weight: 600;">Total Pelatihan</span>
+                <h3 style="margin: 0; font-size: 1.4rem; font-weight: 700; color: #1e293b;">{{ count_my_courses|default:0 }}</h3>
+            </div>
+        </div>
+
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+            <div style="width: 48px; height: 48px; border-radius: 12px; background: #ecfdf5; color: #059669; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                <i class="ri-play-circle-line"></i>
+            </div>
+            <div>
+                <span style="font-size: 0.82rem; color: #64748b; font-weight: 600;">Sedang Aktif</span>
+                <h3 style="margin: 0; font-size: 1.4rem; font-weight: 700; color: #059669;">{{ count_active_courses|default:0 }}</h3>
+            </div>
+        </div>
+
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+            <div style="width: 48px; height: 48px; border-radius: 12px; background: #f5f3ff; color: #7c3aed; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                <i class="ri-award-line"></i>
+            </div>
+            <div>
+                <span style="font-size: 0.82rem; color: #64748b; font-weight: 600;">Selesai (Graduated)</span>
+                <h3 style="margin: 0; font-size: 1.4rem; font-weight: 700; color: #7c3aed;">{{ count_completed_courses|default:0 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- PELATIHAN YANG DIIKUTI (ENROLLED COURSES) -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; margin-top: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-graduation-cap-line" style="color: #2c4cf4;"></i> Pelatihan &amp; Kegiatan yang Anda Ikuti
+                </h3>
+                <p style="font-size: 0.82rem; color: #64748b; margin: 4px 0 0 0;">
+                    Akses materi, jadwal agenda, dan tautan live meeting pelatihan yang telah Anda daftarkan.
+                </p>
+            </div>
+            <a href="{% url 'app:my_courses' %}" style="font-size: 0.85rem; font-weight: 700; color: #2c4cf4; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+                Lihat Seluruh Pelatihan <i class="ri-arrow-right-line"></i>
+            </a>
+        </div>
+
+        {% if my_enrollments %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem;">
+                {% for enroll in my_enrollments %}
+                <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 1px 3px rgba(0,0,0,0.03); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <div style="height: 140px; background: #f1f5f9; position: relative; overflow: hidden;">
+                        {% if enroll.course.thumbnail %}
+                            <img src="{{ enroll.course.thumbnail.url }}" alt="{{ enroll.course.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 2.5rem;">
+                                <i class="ri-graduation-cap-line"></i>
+                            </div>
+                        {% endif %}
+
+                        <span style="position: absolute; top: 10px; left: 10px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 2px 7px; border-radius: 4px;">
+                            {{ enroll.course.get_course_type_display }}
+                        </span>
+
+                        <span style="position: absolute; top: 10px; right: 10px; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; 
+                            {% if enroll.status == 'active' %}background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;
+                            {% elif enroll.status == 'completed' %}background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe;
+                            {% elif enroll.status == 'cancelled' %}background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;
+                            {% else %}background: #fffbeb; color: #d97706; border: 1px solid #fde68a;{% endif %}">
+                            {{ enroll.get_status_display }}
+                        </span>
+                    </div>
+
+                    <div style="padding: 1rem; flex: 1; display: flex; flex-direction: column;">
+                        <span style="font-size: 0.75rem; color: #8c54fc; background: #f3e8ff; padding: 2px 6px; border-radius: 4px; font-weight: 600; align-self: flex-start; margin-bottom: 0.4rem;">
+                            {{ enroll.course.get_format_display }}
+                        </span>
+
+                        <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; font-weight: 700; color: #1e293b; line-height: 1.35; flex: 1;">
+                            {{ enroll.course.name }}
+                        </h4>
+
+                        <div style="font-size: 0.78rem; color: #64748b; margin-bottom: 0.75rem;">
+                            <i class="ri-calendar-line"></i> 
+                            {% if enroll.course.start_date %}
+                                {{ enroll.course.start_date|date:"d M Y" }}
+                            {% else %}
+                                Terdaftar: {{ enroll.enrolled_at|date:"d M Y" }}
+                            {% endif %}
+                        </div>
+
+                        <a href="{% url 'app:my_courses' %}" class="btn primary small" style="text-align: center; text-decoration: none; padding: 7px; border-radius: 6px; font-weight: 700; font-size: 0.82rem;">
+                            Buka Ruang Pelatihan <i class="ri-arrow-right-line"></i>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 2.5rem 1rem; background: #f8fafc; border-radius: 8px;">
+                <i class="ri-graduation-cap-line" style="font-size: 2.8rem; color: #cbd5e1; display: block; margin-bottom: 0.75rem;"></i>
+                <p style="margin: 0 0 0.75rem 0; font-weight: 600; color: #475569; font-size: 0.95rem;">
+                    Anda belum terdaftar pada pelatihan atau course manapun.
+                </p>
+                <a href="{% url 'katalog_pelatihan' %}" class="btn primary small" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px;">
+                    <i class="ri-search-line"></i> Jelajahi Katalog Pelatihan
+                </a>
+            </div>
+        {% endif %}
     </div>
 </div>
 

@@ -72,22 +72,22 @@
                         </td>
                         <td style="white-space: nowrap">
                             {% if course.start_date %}
-                                <div>{{ course.start_date|date:"d M Y" }}</div>
+                                <div style="font-size: 11px;">{{ course.start_date|date:"d M Y" }}</div>
                                 {% if course.end_date and course.end_date != course.start_date %}
-                                    <div style="color: #7f8c8d;">s/d {{ course.end_date|date:"d M Y" }}</div>
+                                    <div style="color: #7f8c8d; font-size: 11px;">s/d {{ course.end_date|date:"d M Y" }}</div>
                                 {% endif %}
                             {% else %}
                                 <span style="color: #aaa;">Belum dijadwalkan</span>
                             {% endif %}
                         </td>
-                       <td style="vertical-align: middle; font-weight: 600;">
-                            {% if book.harga_potongan %}
-                                <span style="color: #e74c3c;">Rp {{ book.harga_efektif|floatformat:0 }}</span>
+                       <td style="white-space: nowrap;">
+                            {% if course.harga_potongan %}
+                                <span style="color: #e74c3c;">Rp {{ course.harga_efektif|floatformat:0 }}</span>
                                 <div style="font-size: 11px; color: #95a5a6; font-weight: normal; text-decoration: line-through;">
-                                    Rp {{ book.harga|floatformat:0 }}
+                                    Rp {{ course.harga|floatformat:0 }}
                                 </div>
                             {% else %}
-                                <span style="color: #27ae60;">Rp {{ book.harga|floatformat:0 }}</span>
+                                <span style="color: #27ae60;">Rp {{ course.harga|floatformat:0 }}</span>
                             {% endif %}
                         </td>
                         <td style="text-align: center; vertical-align: middle; white-space: nowrap;">

@@ -1,0 +1,184 @@
+{% extends "admin_super/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content">
+    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; border-bottom: 2px solid #f0f0f0; padding-bottom: 14px;">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    Peserta: {{ course.name }}
+                </h3>
+                <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                    Kelola daftar peserta yang terdaftar pada kegiatan pelatihan ini.
+                </p>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="btn primary" onclick="openModal('modalTambahEnrollment')">
+                    <i class="ri-add-line"></i> Tambah Peserta
+                </button>
+                <a href="{% url 'app:admin_course_edit' course.uuid %}" class="btn secondary">
+                    <i class="ri-arrow-left-line"></i> Kembali
+                </a>
+            </div>
+        </div>
+
+        <div class="table-responsive" style="margin-top: 15px;">
+            <table id="layananTable" class="student-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="width: 50px; text-align: center;">No</th>
+                        <th>Nama Peserta</th>
+                        <th>Institusi / Prodi</th>
+                        <th style="white-space: nowrap;">No. Order</th>
+                        <th style="width: 120px; text-align: center;">Status</th>
+                        <th style="width: 140px; white-space: nowrap;">Tanggal Daftar</th>
+                        <th style="width: 110px; text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in enrollments %}
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle;">{{ forloop.counter }}</td>
+                        <td style="vertical-align: middle; max-width: 240px; white-space: normal;">
+                            <strong style="color: #2c3e50;">{{ item.user.nama_lengkap }}</strong>
+                            <div style="font-size: 12px; color: #7f8c8d; margin-top: 2px;">
+                                {{ item.user.user.email|default:item.user.user.username }}
+                                {% if item.user.telp %} &bull; {{ item.user.telp }}{% endif %}
+                            </div>
+                        </td>
+                        <td style="vertical-align: middle; max-width: 220px; white-space: normal;">
+                            {% if item.user.universitas %}
+                                <div style="font-size: 13px; color: #2c3e50; font-weight: 500;">{{ item.user.universitas }}</div>
+                            {% endif %}
+                            {% if item.user.program_studi %}
+                                <span style="display: inline-block; background: #e8f4fd; color: #2c4cf4; padding: 2px 8px; border-radius: 4px; margin-top: 2px; font-size: 11px; font-weight: 600;">
+                                    {{ item.user.program_studi }}
+                                </span>
+                            {% endif %}
+                            {% if not item.user.universitas and not item.user.program_studi %}
+                                <span style="color: #aaa;">-</span>
+                            {% endif %}
+                        </td>
+                        <td style="vertical-align: middle; white-space: nowrap;">
+                            {% if item.order %}
+                                <a href="{% url 'app:admin_order_detail_course' item.order.order_number %}" style="font-family: monospace; font-weight: 600; color: #2c4cf4; text-decoration: none;">
+                                    {{ item.order.order_number }}
+                                </a>
+                            {% else %}
+                                <span style="display: inline-block; background: #f0f0f0; color: #666; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">
+                                    Manual Admin
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; vertical-align: middle;">
+                            {% if item.status == 'active' %}
+                                <span class="grade-badge a" style="background-color: #27ae60;">{{ item.get_status_display }}</span>
+                            {% elif item.status == 'completed' %}
+                                <span class="grade-badge a" style="background-color: #2980b9;">{{ item.get_status_display }}</span>
+                            {% elif item.status == 'registered' %}
+                                <span class="grade-badge b" style="background-color: #f39c12;">{{ item.get_status_display }}</span>
+                            {% else %}
+                                <span class="grade-badge d" style="background-color: #e74c3c;">{{ item.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="vertical-align: middle; font-size: 12px; color: #666; white-space: nowrap;">
+                            {{ item.enrolled_at|date:"d M Y H:i" }}
+                        </td>
+                        <td style="text-align: center; vertical-align: middle; white-space: nowrap;">
+                            <button type="button" class="btn info small" title="Ubah Status" onclick="bukaModalStatus('{{ item.id }}', '{{ item.user.nama_lengkap|escapejs }}', '{{ item.status }}')">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #888;">
+                            <i class="ri-user-unfollow-line" style="font-size: 36px; display: block; margin-bottom: 10px; color: #bdc3c7;"></i>
+                            Belum ada peserta yang terdaftar pada kegiatan ini. Klik <strong>Tambah Peserta</strong> untuk menambahkan.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL UBAH STATUS ENROLLMENT -->
+<div id="modalUbahStatus" class="modal-edit">
+    <div class="modal-content-edit" style="max-width: 420px; text-align: left;">
+        <span class="close" onclick="closeModal('modalUbahStatus')">&times;</span>
+        <h3 style="color: #2c3e50; margin-top: 0; margin-bottom: 12px; font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+            Ubah Status Peserta
+        </h3>
+        <p id="namaPesertaStatus" style="font-size: 13px; color: #555; margin-bottom: 16px;"></p>
+        <form id="formUbahStatus" method="post" action="">
+            {% csrf_token %}
+            <div style="margin-bottom: 20px;">
+                <select id="selectStatusEnrollment" name="status" class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px;">
+                    {% for val, label in status_choices %}
+                        <option value="{{ val }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn secondary" onclick="closeModal('modalUbahStatus')">Batal</button>
+                <button type="submit" class="btn primary">
+                    <i class="ri-save-line"></i> Simpan Perubahan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL TAMBAH PESERTA MANUAL -->
+<div id="modalTambahEnrollment" class="modal-edit">
+    <div class="modal-content-edit" style="max-width: 440px; text-align: left;">
+        <span class="close" onclick="closeModal('modalTambahEnrollment')">&times;</span>
+        <h3 style="color: #2c3e50; margin-top: 0; margin-bottom: 16px; font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+            Tambah Peserta Manual
+        </h3>
+        <form method="post" action="{% url 'app:admin_enrollment_create' %}">
+            {% csrf_token %}
+            <input type="hidden" name="course_uuid" value="{{ course.uuid }}">
+            
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #2c3e50; margin-bottom: 6px;">Pilih Peserta</label>
+                <select name="user_uuid" class="form-control" required style="width: 100%; padding: 8px 10px; font-size: 13px;">
+                    <option value="">-- Pilih Anggota / Peserta --</option>
+                    {% for u in users %}
+                        <option value="{{ u.uuid }}">{{ u.nama_lengkap }} ({{ u.user.username }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #2c3e50; margin-bottom: 6px;">Status Awal</label>
+                <select name="status" class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px;">
+                    {% for val, label in status_choices %}
+                        <option value="{{ val }}" {% if val == 'active' %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn secondary" onclick="closeModal('modalTambahEnrollment')">Batal</button>
+                <button type="submit" class="btn primary">
+                    <i class="ri-save-line"></i> Simpan Peserta
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function bukaModalStatus(enrollmentId, namaPeserta, currentStatus) {
+    var baseUrl = "{% url 'app:admin_enrollment_update_status' '00000000-0000-0000-0000-000000000000' %}";
+    var actionUrl = baseUrl.replace('00000000-0000-0000-0000-000000000000', enrollmentId);
+    
+    document.getElementById('formUbahStatus').setAttribute('action', actionUrl);
+    document.getElementById('namaPesertaStatus').innerHTML = 'Peserta: <strong>' + namaPeserta + '</strong>';
+    document.getElementById('selectStatusEnrollment').value = currentStatus;
+    
+    openModal('modalUbahStatus');
+}
+</script>
+{% endblock content1 %}

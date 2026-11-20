@@ -26,6 +26,10 @@ from .models import (
     OrderShipping,
     OrderBookItem,
     OrderCourseItem,
+    CourseEnrollment,
+    CourseSurvey,
+    SurveyResponse,
+    SurveyQuestion,
 )
 
 admin.site.register(CategoryBooks)
@@ -54,4 +58,8 @@ admin.site.register(Order)
 admin.site.register(OrderShipping)
 admin.site.register(OrderBookItem)
 admin.site.register(OrderCourseItem)
+admin.site.register(CourseEnrollment)
+admin.site.register(CourseSurvey)
+admin.site.register(SurveyResponse)
+admin.site.register(SurveyQuestion)
 

@@ -1,0 +1,87 @@
+{% extends "pengguna/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content">
+    <div style="background: #ffffff; border-radius: 14px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); border: 1px solid #eef2f6;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9;">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0;">
+                    Daftar Kegiatan Sebagai Narasumber
+                </h3>
+                <p style="font-size: 13px; color: #64748b; margin: 4px 0 0 0;">
+                    Pelatihan, seminar, atau workshop di mana Anda terdaftar sebagai instruktur & pemateri.
+                </p>
+            </div>
+            <span style="background: #eef2ff; color: #2c4cf4; padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 600;">
+                Total: {{ courses.count }} Kegiatan
+            </span>
+        </div>
+
+        {% if courses %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 20px;">
+            {% for course in courses %}
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: box-shadow 0.2s;">
+                {% if course.thumbnail %}
+                    <img src="{{ course.thumbnail.url }}" alt="{{ course.name }}" style="width: 100%; height: 165px; object-fit: cover;">
+                {% else %}
+                    <div style="width: 100%; height: 165px; background: linear-gradient(135deg, #1e3a8a, #2c4cf4); display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 40px;">
+                        <i class="ri-mic-line"></i>
+                    </div>
+                {% endif %}
+
+                <div style="padding: 18px; flex: 1; display: flex; flex-direction: column;">
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;">
+                        <span style="background: #e0f2fe; color: #0284c7; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600;">
+                            {{ course.get_course_type_display }}
+                        </span>
+                        <span style="background: #f3e8ff; color: #7e22ce; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600;">
+                            {{ course.get_format_display }}
+                        </span>
+                        {% if course.is_active %}
+                            <span style="background: #dcfce7; color: #15803d; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600;">
+                                Aktif
+                            </span>
+                        {% else %}
+                            <span style="background: #fee2e2; color: #b91c1c; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600;">
+                                Selesai / Nonaktif
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <h4 style="font-size: 16px; font-weight: 700; color: #1e293b; margin: 0 0 8px 0; line-height: 1.4;">
+                        {{ course.name }}
+                    </h4>
+                    <div style="border-top: 1px solid #f1f5f9; padding-top: 12px; margin-bottom: 14px; font-size: 12px; color: #475569; display: flex; flex-direction: column; gap: 6px;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <i class="ri-calendar-event-line" style="color: #2c4cf4;"></i>
+                            <span>
+                                {% if course.start_date %}
+                                    {{ course.start_date|date:"d M Y" }}{% if course.end_date %} - {{ course.end_date|date:"d M Y" }}{% endif %}
+                                {% else %}
+                                    Jadwal menyusul
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <i class="ri-list-check-2" style="color: #2c4cf4;"></i>
+                            <span>{{ course.agendas.count }} Sesi Materi</span>
+                        </div>
+                    </div>
+
+                    <a href="{% url 'app:my_narasumber_detail' course.uuid %}" class="btn primary" style="width: 100%; text-align: center; justify-content: center; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="ri-eye-line"></i> Lihat Detail & Jadwal
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 48px 20px; color: #94a3b8;">
+            <i class="ri-mic-off-line" style="font-size: 42px; display: block; margin-bottom: 12px; color: #cbd5e1;"></i>
+            <h4 style="color: #475569; margin: 0 0 6px 0;">Belum Ada Penugasan Narasumber</h4>
+            <p style="font-size: 13px; margin: 0;">Anda belum terdaftar sebagai narasumber pada kegiatan pelatihan mana pun.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock content1 %}
