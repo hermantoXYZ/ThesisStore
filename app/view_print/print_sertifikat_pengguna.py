@@ -1,9 +1,13 @@
 import io
 import os
 import urllib.request
-
+from datetime import datetime
 from django.conf import settings
+from django.contrib import messages
+from django.db.models import Sum
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
 from django.utils.timezone import now
 
 from reportlab.lib.pagesizes import A4
@@ -14,6 +18,16 @@ from reportlab.lib.enums import TA_CENTER
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 
+from app.models import (
+    CourseEnrollment,
+    CourseSurvey,
+    OrderCourseItem,
+    SurveyResponse,
+    UserPengguna,
+    KodeSurat,
+    NoSuratThesis,
+)
+
 # Palette warna pendukung
 DGRAY  = colors.HexColor("#1a1a2e")
 MGRAY  = colors.HexColor("#7a7a8c")
@@ -21,17 +35,24 @@ NAVY   = colors.HexColor("#0a1628")
 GOLD   = colors.HexColor("#c9a227")
 WHITE  = colors.white
 
+
 def _bulan_indo(n):
     BULAN = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
              'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
     return BULAN[n]
+
+def _bulan_romawi(n):
+    ROMAWI = ['', 'I', 'II', 'III', 'IV', 'V', 'VI',
+              'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
+    return ROMAWI[n]
 
 def _fmt_date(d):
     if not d:
         return '–'
     return f"{d.day} {_bulan_indo(d.month)} {d.year}"
 
-def _qr_image(url: str, size_px: int = 200) -> ImageReader | None:
+
+def _qr_image(url: str, size_px: int = 200):
     api = (
         f"https://api.qrserver.com/v1/create-qr-code/"
         f"?size={size_px}x{size_px}&data={urllib.request.quote(url, safe='')}"
@@ -43,14 +64,104 @@ def _qr_image(url: str, size_px: int = 200) -> ImageReader | None:
     except Exception:
         return None
 
-def sertifikat_pengguna(request, course, mahasiswa, nama_mahasiswa,
-                             total_jp, agendas, cert_number,
-                             verify_url, tanggal_str):
-    """
-    Generate PDF sertifikat peserta berbasis background image (A4 Portrait).
-    """
+
+def sertifikat_pengguna(request, order_item_id):
+    userpengguna = get_object_or_404(UserPengguna, user=request.user)
+    order_item = get_object_or_404(
+        OrderCourseItem.objects.select_related('order', 'course').prefetch_related(
+            'course__agendas__pengajar__user',
+            'course__agendas__pengajar__bidang_keahlian',
+            'course__coaches__user',
+            'course__coaches__bidang_keahlian',
+        ),
+        id=order_item_id,
+        order__user=request.user,
+        course__isnull=False,
+    )
+
+    course = order_item.course
+    order = order_item.order
+
+    # 1. Validasi status pesanan aktif
+    is_active = (
+        order.payment_status in ('paid', 'not_required') or
+        order.status in ('processing', 'completed')
+    ) and order.status != 'cancelled'
+
+    if not is_active:
+        messages.error(request, 'Sertifikat belum tersedia karena pembayaran belum terverifikasi.')
+        return redirect('app:my_course_detail', order_item_id=order_item.id)
+
+    # 2. Validasi kuesioner wajib (SEBELUM generate nomor surat)
+    wajib_kuesioner = CourseSurvey.objects.filter(
+        course=course,
+        is_active=True,
+        questions__isnull=False,
+    ).exclude(
+        responses__user=userpengguna
+    ).exists()
+
+    if wajib_kuesioner:
+        messages.warning(request, 'Silakan isi kuesioner penelitian terlebih dahulu sebelum mengunduh sertifikat.')
+        return redirect('app:my_course_survey', order_item_id=order_item.id)
+
+
+    kodesurat = KodeSurat.objects.get(jenis='Pendidikan dan Pelatihan')
+    tahun = str(datetime.now().year)
+    tgl_reg = course.end_date or course.start_date
+    bulan_romawi = _bulan_romawi(tgl_reg.month)
+
+    enrollment, created = CourseEnrollment.objects.get_or_create(
+        user=userpengguna,
+        course=course,
+        defaults={
+            'order': order,
+            'status': 'active',
+        }
+    )
+
+    if not enrollment.no_surat:
+        nosurat_cek = NoSuratThesis.objects.filter(tahun=tahun).order_by('-nomor').first()
+        if nosurat_cek:
+            nosurat_baru = nosurat_cek.nomor + 1
+        else:
+            nosurat_baru = 1
+
+        NoSuratThesis.objects.create(
+            adminp=request.user,
+            tahun=tahun,
+            nomor=nosurat_baru,
+            perihal='Sertifikat Peserta ' + str(course.name),
+            tujuan=str(userpengguna.user.first_name),
+            kode=kodesurat.kode,
+        )
+
+        enrollment.no_surat = str(nosurat_baru)
+        enrollment.save()
+
+    tahun_surat = str(enrollment.enrolled_at.year) if enrollment.enrolled_at else tahun
+    cert_number = f"{enrollment.no_surat}/{kodesurat.kode}/{bulan_romawi}/{tahun_surat}"
+
+
+    # 4. Siapkan data sertifikat
+    agendas = course.agendas.all().order_by('session_number', 'agenda_date')
+    total_jp = agendas.aggregate(total=Sum('jp_count'))['total'] or 0
+
+    if course.start_date and course.end_date and course.start_date != course.end_date:
+        tanggal_str = f"{_fmt_date(course.start_date)} s.d. {_fmt_date(course.end_date)}"
+    elif course.start_date:
+        tanggal_str = _fmt_date(course.start_date)
+    else:
+        tanggal_str = _fmt_date(order.created_at)
+
+    try:
+        verify_path = reverse('app:my_course_detail', kwargs={'order_item_id': order_item.id})
+    except Exception:
+        verify_path = '/'
+    verify_url = request.build_absolute_uri(verify_path)
+
     response = HttpResponse(content_type="application/pdf")
-    fname = f"Sertifikat_Peserta_{course.uuid.hex[:8].upper()}_{mahasiswa.nim.username}.pdf"
+    fname = f"Sertifikat_Peserta_{course.uuid.hex[:8].upper()}_{request.user.username}.pdf"
     response["Content-Disposition"] = f'inline; filename="{fname}"'
 
     # Dimensi A4 Portrait (595.27 x 841.89)
@@ -64,7 +175,6 @@ def sertifikat_pengguna(request, course, mahasiswa, nama_mahasiswa,
     if os.path.isfile(bg_path):
         p.drawImage(bg_path, 0, 0, width=W, height=H)
     else:
-        # Fallback jika background image tidak ditemukan
         p.setFillColor(WHITE)
         p.rect(0, 0, W, H, fill=1, stroke=0)
         p.setStrokeColor(GOLD)
@@ -86,12 +196,12 @@ def sertifikat_pengguna(request, course, mahasiswa, nama_mahasiswa,
     p.setFont("Helvetica", 10)
     p.drawCentredString(W / 2, 560, "Diberikan kepada:")
 
-    # 5. NAMA MAHASISWA / PESERTA
+    # 5. NAMA PESERTA
     p.setFillColor(NAVY)
     p.setFont("Helvetica-Bold", 20)
-    p.drawCentredString(W / 2, 530, str(f"{mahasiswa.nim.first_name}"))
+    p.drawCentredString(W / 2, 530, userpengguna.nama_lengkap)
 
-    # 6. DETAIL NIM & EMAIL
+    # 6. DETAIL USERNAME & EMAIL
     align_x_lbl = 160
     align_x_val = 265
     p.setFillColor(colors.black)
@@ -100,19 +210,19 @@ def sertifikat_pengguna(request, course, mahasiswa, nama_mahasiswa,
     p.drawString(align_x_lbl, 502, "Username")
     p.drawString(align_x_val - 15, 502, ":")
     p.setFont("Helvetica", 9)
-    p.drawString(align_x_val, 502, str(f"@{mahasiswa.nim.username}"))
+    p.drawString(align_x_val, 502, f"@{request.user.username}")
 
     p.setFont("Helvetica-Bold", 9)
     p.drawString(align_x_lbl, 484, "Email")
     p.drawString(align_x_val - 15, 484, ":")
     p.setFont("Helvetica", 9)
-    p.drawString(align_x_val, 484, str(mahasiswa.nim.email))
+    p.drawString(align_x_val, 484, str(request.user.email or "-"))
 
     # 7. PARAGRAF DESKRIPSI
     desc_html = (
-        f"Telah berperan aktif sebagai <b>Peserta</b> dalam kegiatan <b>{course.course_type.lower()}</b> "
+        f"Telah berperan aktif sebagai <b>Peserta</b> dalam kegiatan <b>{course.get_course_type_display().lower()}</b> "
         f"berjudul <b>\"{course.name}\"</b> yang diselenggarakan oleh <b>ThesisEdu</b> dari "
-        f"CV Thesis Edukasi Nusantara secara daring pada tanggal <b>{tanggal_str}</b>."
+        f"CV Thesis Edukasi Nusantara secara {course.get_format_display().lower()} pada tanggal <b>{tanggal_str}</b>."
     )
     style_desc = ParagraphStyle(
         name='DescStyle',
@@ -161,6 +271,7 @@ def sertifikat_pengguna(request, course, mahasiswa, nama_mahasiswa,
     # Data Rows
     y_row = y_table - 20
     agendas_list = list(agendas)
+    default_coach = course.coaches.first()
 
     p.setFont("Helvetica", 8)
     if agendas_list:
@@ -176,17 +287,20 @@ def sertifikat_pengguna(request, course, mahasiswa, nama_mahasiswa,
             # Materi Title Wrapping via Paragraph
             materi_prg = Paragraph(ag.title, style_table_cell)
             _, cell_h = materi_prg.wrap(215, 26)
-            materi_prg.drawOn(p, margin_x + 35, y_row - 13 - cell_h/2)
+            materi_prg.drawOn(p, margin_x + 35, y_row - 13 - cell_h / 2)
 
             # JP
             jp_val = f"{ag.jp_count} JP" if ag.jp_count else "–"
             p.drawCentredString(margin_x + 260 + 20, y_row - 16, jp_val)
 
-            # Narasumber
-            coach = course.coaches.first()
-            nama_coach = coach.nip.first_name + " " if coach else "Fasilitator"
-            coach_bidang_obj = getattr(coach, 'bidang_penelitian', None) if coach else None
-            bidang_coach = str(coach_bidang_obj) if coach_bidang_obj else "Coach"
+            # Narasumber per sesi (fallback ke coach utama course)
+            pemateri = ag.pengajar or default_coach
+            nama_coach = pemateri.nama_lengkap if pemateri else "Fasilitator"
+            bidang_coach = (
+                pemateri.bidang_keahlian.nama_bidang
+                if pemateri and pemateri.bidang_keahlian
+                else (pemateri.universitas if pemateri and pemateri.universitas else "Coach")
+            )
 
             p.setFont("Helvetica-Bold", 7.5)
             p.drawString(margin_x + 305, y_row - 11, nama_coach)
@@ -197,22 +311,18 @@ def sertifikat_pengguna(request, course, mahasiswa, nama_mahasiswa,
 
             y_row -= 26
     else:
-        # Fallback row if no agenda
         p.setFillColor(WHITE)
         p.rect(margin_x, y_row - 26, total_w, 26, fill=1, stroke=1)
         p.setFillColor(colors.black)
         p.drawCentredString(margin_x + 15, y_row - 16, "1")
 
-        # Materi Title Wrapping via Paragraph
         materi_prg = Paragraph(course.name, style_table_cell)
         _, cell_h = materi_prg.wrap(215, 26)
-        materi_prg.drawOn(p, margin_x + 35, y_row - 13 - cell_h/2)
+        materi_prg.drawOn(p, margin_x + 35, y_row - 13 - cell_h / 2)
 
         p.drawCentredString(margin_x + 260 + 20, y_row - 16, "–")
-        
-        coach = course.coaches.first()
-        nama_coach = coach.nip.get_full_name() if coach else "Fasilitator"
-        
+
+        nama_coach = default_coach.nama_lengkap if default_coach else "Fasilitator"
         p.setFont("Helvetica-Bold", 7.5)
         p.drawString(margin_x + 305, y_row - 11, nama_coach)
         p.setFont("Helvetica-Oblique", 6.5)
@@ -229,7 +339,6 @@ def sertifikat_pengguna(request, course, mahasiswa, nama_mahasiswa,
     y_row -= 20
 
     # 9. FOOTER SECTION: QR CODE & SIGNATURE
-    # QR Code on Bottom Left
     p.setFillColor(MGRAY)
     p.setFont("Helvetica", 7.5)
     p.drawString(50, 160, "Scan untuk Verifikasi Keaslian Sertifikat")
@@ -252,7 +361,6 @@ def sertifikat_pengguna(request, course, mahasiswa, nama_mahasiswa,
     p.drawString(380, 150, f"Jombang, {tgl_cetak}")
     p.drawString(380, 138, "Direktur CV Thesis Edukasi Nusantara")
 
-    # Signature Image
     sig_path = os.path.join(settings.MEDIA_ROOT, 'template_sertifikat', 'signature.png')
     if os.path.isfile(sig_path):
         p.drawImage(sig_path, 370, 90, width=90, height=55, mask='auto')
@@ -261,7 +369,6 @@ def sertifikat_pengguna(request, course, mahasiswa, nama_mahasiswa,
     p.setFont("Helvetica-Bold", 9)
     p.drawString(380, 80, "Arpiah")
 
-    # Signature Digital stamp / graphic label
     p.setFillColor(colors.HexColor("#7c3aed"))
     p.setFont("Helvetica-Bold", 8)
     p.drawString(380, 68, "Ditandatangani Secara Digital")

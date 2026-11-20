@@ -935,6 +935,7 @@ class CourseEnrollment(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='enrollments')
     order = models.ForeignKey('Order', on_delete=models.SET_NULL, null=True, blank=True, related_name='course_enrollments')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='registered')
+    no_surat = models.CharField(max_length=100, blank=True, null=True, verbose_name="Nomor Sertifikat")
     enrolled_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -951,6 +952,19 @@ class CourseEnrollment(models.Model):
     def __str__(self):
         return f"{self.user.nama_lengkap} - {self.course.title}"
 
+class CourseCoachCertificate(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='coach_certificates')
+    coach = models.ForeignKey(UserPengguna, on_delete=models.CASCADE, related_name='coach_certificates')
+    no_surat = models.CharField(max_length=100, blank=True, null=True, verbose_name="Nomor Urut Sertifikat")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('course', 'coach')
+
+    def __str__(self):
+        return f"Sertifikat Narasumber: {self.coach.nama_lengkap} - {self.course.name}"
 
 class CourseSurvey(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
