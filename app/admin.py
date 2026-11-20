@@ -30,6 +30,7 @@ from .models import (
     CourseSurvey,
     SurveyResponse,
     SurveyQuestion,
+    CallForReviewer
 )
 
 admin.site.register(CategoryBooks)
@@ -62,4 +63,5 @@ admin.site.register(CourseEnrollment)
 admin.site.register(CourseSurvey)
 admin.site.register(SurveyResponse)
 admin.site.register(SurveyQuestion)
+admin.site.register(CallForReviewer)
 

@@ -1,0 +1,159 @@
+{% extends "admin_super/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content">
+    <div class="settings-section" style="background: #ffffff; border-radius: 12px; padding: clamp(16px, 3vw, 24px); box-shadow: 0 2px 10px rgba(0,0,0,0.04); margin-top: 20px;">
+        
+        <!-- Header Section -->
+        <div style="margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 600; color: #2c3e50; margin: 0;">
+                    Tambah Reviewer / Editor Jurnal
+                </h3>
+                <p style="font-size: 13px; color: #7f8c8d; margin-top: 4px; margin-bottom: 0;">
+                    Pilih satu atau banyak anggota terdaftar sekaligus untuk ditugaskan sebagai Reviewer atau Editor jurnal.
+                </p>
+            </div>
+            <div>
+                <a href="{% url 'app:admin_reviewer_list' %}" class="btn secondary">
+                    <i class="ri-arrow-left-line"></i> Kembali ke Daftar
+                </a>
+            </div>
+        </div>
+
+        <!-- Form Batch Tambah Reviewer/Editor -->
+        <form method="post">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div style="background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 12px 16px; border-radius: 8px; margin-bottom: 18px; font-size: 13.5px;">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <!-- Multi-Select Pengguna -->
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label for="id_applicants" style="font-weight: 600; font-size: 14px; color: #1e293b; margin-bottom: 6px; display: block;">
+                    Pilih Pengguna Terdaftar <span style="color: #ef4444;">*</span>
+                </label>
+                {{ form.applicants }}
+                <small style="color: #7f8c8d; display: block; margin-top: 4px;">
+                    Dapat memilih banyak pengguna sekaligus. Ketik nama lengkap, username, email, atau instansi untuk mencari.
+                </small>
+                {% if form.applicants.errors %}
+                    <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.applicants.errors.0 }}</small>
+                {% endif %}
+            </div>
+
+            <!-- Baris Peran & Status -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 16px; margin-bottom: 18px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="id_role_applied" style="font-weight: 600; font-size: 14px; color: #1e293b; margin-bottom: 6px; display: block;">
+                        Peran yang Diberikan <span style="color: #ef4444;">*</span>
+                    </label>
+                    {{ form.role_applied }}
+                    {% if form.role_applied.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.role_applied.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="id_status" style="font-weight: 600; font-size: 14px; color: #1e293b; margin-bottom: 6px; display: block;">
+                        Status Verifikasi <span style="color: #ef4444;">*</span>
+                    </label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                        <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.status.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Multi-Select Jurnal -->
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label for="id_journal_interests" style="font-weight: 600; font-size: 14px; color: #1e293b; margin-bottom: 6px; display: block;">
+                    Pilih Jurnal <span style="color: #ef4444;">*</span>
+                </label>
+                {{ form.journal_interests }}
+                <small style="color: #7f8c8d; display: block; margin-top: 4px;">
+                    Seluruh pengguna yang dipilih di atas akan otomatis ditugaskan ke jurnal-jurnal ini.
+                </small>
+                {% if form.journal_interests.errors %}
+                    <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.journal_interests.errors.0 }}</small>
+                {% endif %}
+            </div>
+
+            <!-- Catatan Verifikasi -->
+            <div class="form-group" style="margin-bottom: 22px;">
+                <label for="id_verification_notes" style="font-weight: 600; font-size: 14px; color: #1e293b; margin-bottom: 6px; display: block;">
+                    Catatan Verifikasi / SK (Opsional)
+                </label>
+                {{ form.verification_notes }}
+                {% if form.verification_notes.errors %}
+                    <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ form.verification_notes.errors.0 }}</small>
+                {% endif %}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-actions" style="display: flex; gap: 10px; flex-wrap: wrap; padding-top: 15px; border-top: 1px solid #eee;">
+                <button type="submit" class="btn primary">
+                    <i class="ri-user-add-line"></i> Simpan Penugasan
+                </button>
+                <a href="{% url 'app:admin_reviewer_list' %}" class="btn secondary">
+                    Batal
+                </a>
+            </div>
+        </form>
+
+    </div>
+</div>
+{% endblock content1 %}
+
+{% block script_costum %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Multi-select Pengguna Terdaftar
+    const applicantsEl = document.getElementById('id_applicants');
+    if (applicantsEl) {
+        new Choices(applicantsEl, {
+            removeItemButton: true,
+            searchEnabled: true,
+            searchPlaceholderValue: 'Cari nama, username, email, atau instansi...',
+            placeholderValue: 'Pilih satu atau beberapa anggota...',
+            noResultsText: 'Pengguna tidak ditemukan',
+            noChoicesText: 'Semua pengguna sudah dipilih',
+            itemSelectText: '',
+            shouldSort: false,
+        });
+    }
+
+    // Multi-select Jurnal
+    const journalsEl = document.getElementById('id_journal_interests');
+    if (journalsEl) {
+        new Choices(journalsEl, {
+            removeItemButton: true,
+            searchEnabled: true,
+            searchPlaceholderValue: 'Cari nama jurnal...',
+            placeholderValue: 'Pilih satu atau beberapa jurnal...',
+            noResultsText: 'Jurnal tidak ditemukan',
+            noChoicesText: 'Semua jurnal sudah dipilih',
+            itemSelectText: '',
+            shouldSort: false,
+        });
+    }
+
+    // Single select Peran & Status
+    ['id_role_applied', 'id_status'].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) {
+            new Choices(el, {
+                searchEnabled: false,
+                itemSelectText: '',
+                shouldSort: false,
+            });
+        }
+    });
+});
+</script>
+{% endblock script_costum %}

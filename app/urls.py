@@ -136,6 +136,7 @@ urlpatterns = [
 
     ###### ADMIN: PENDAFTARAN REVIEWER ######
     path('admin/reviewer/', views_admin.reviewer_application_list, name='admin_reviewer_list'),
+    path('admin/reviewer/add/', views_admin.admin_reviewer_add, name='admin_reviewer_add'),
     path('admin/reviewer/<uuid:app_id>/', views_admin.reviewer_application_detail, name='admin_reviewer_detail'),
 
 

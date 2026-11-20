@@ -3,7 +3,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.utils.text import slugify
 import uuid
-from .models import (UserAdmin, Provinsi, BidangPenelitian, CategoryBooks, MediaBooks, Books, UserPengguna, Article, Category, Page, KerjaSama, HeroSlide, WebSetting, Course, CourseAgenda, JurnalMaster, LoaJurnal, NoSuratThesis, KodeSurat, Order)
+from .models import (UserAdmin, Provinsi, BidangPenelitian, CategoryBooks, MediaBooks, Books, UserPengguna, Article, Category, Page, KerjaSama, HeroSlide, WebSetting, Course, CourseAgenda, JurnalMaster, LoaJurnal, NoSuratThesis, KodeSurat, Order, CallForReviewer)
 
 
 class formProfile(forms.ModelForm):
@@ -880,3 +880,52 @@ class CourseOrderStatusForm(forms.ModelForm):
     class Meta:
         model = Order
         fields = ['status', 'payment_status']
+
+
+class AdminAddReviewerForm(forms.Form):
+    ROLE_CHOICES = [
+        ('reviewer', 'Reviewer'),
+        ('editor', 'Editor'),
+    ]
+
+    STATUS_CHOICES = [
+        ('approved', 'Disetujui / Aktif (Approved)'),
+        ('pending', 'Menunggu Verifikasi (Pending)'),
+    ]
+
+    applicants = forms.ModelMultipleChoiceField(
+        queryset=UserPengguna.objects.select_related('user').order_by('user__first_name', 'user__username'),
+        label="Pilih Pengguna (Bisa Lebih dari Satu)",
+        widget=forms.SelectMultiple(attrs={'class': 'form-control', 'id': 'id_applicants'}),
+    )
+    role_applied = forms.ChoiceField(
+        choices=ROLE_CHOICES,
+        label="Peran di Jurnal",
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_role_applied'}),
+    )
+    journal_interests = forms.ModelMultipleChoiceField(
+        queryset=JurnalMaster.objects.filter(is_active=True).order_by('nama'),
+        label="Jurnal yang Ditugaskan / Diminati",
+        widget=forms.SelectMultiple(attrs={'class': 'form-control', 'id': 'id_journal_interests'}),
+    )
+    status = forms.ChoiceField(
+        choices=STATUS_CHOICES,
+        initial='approved',
+        label="Status Verifikasi",
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_status'}),
+    )
+    verification_notes = forms.CharField(
+        required=False,
+        label="Catatan Admin (Opsional)",
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 3,
+            'placeholder': 'Misal: Penugasan batch oleh Dewan Redaksi / Migrasi data lama...'
+        }),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['applicants'].label_from_instance = (
+            lambda obj: f"{obj.nama_lengkap} (@{obj.user.username}) - {obj.universitas or obj.user.email}"
+        )

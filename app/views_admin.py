@@ -12,7 +12,7 @@ from app.models import (
 from .form_admin import (
     formProfile, CategoryBooksForm, BooksForm, ArticleForm, PageForm, CategoryForm,
     WebSettingForm, KerjaSamaForm, HeroSlideForm, CourseForm, CourseAgendaForm,
-    JurnalMasterForm, LoaJurnalForm, KodeSuratForm, NoSuratThesisForm, CourseOrderStatusForm
+    JurnalMasterForm, LoaJurnalForm, KodeSuratForm, NoSuratThesisForm, CourseOrderStatusForm, AdminAddReviewerForm
 )
 from app.decorators_admin import admin_required
 from django.db.models import Q
@@ -22,6 +22,7 @@ from django.utils import timezone
 from datetime import datetime
 import csv
 from django.http import HttpResponse
+from django.db import transaction
 
 def _get_admin_photo(request):
     useradmin = UserAdmin.objects.filter(username=request.user).first()
@@ -1630,3 +1631,55 @@ def admin_survey_export_csv(request, course_uuid):
         writer.writerow(row)
 
     return response
+
+@admin_required
+def admin_reviewer_add(request):
+    if request.method == 'POST':
+        form = AdminAddReviewerForm(request.POST)
+        if form.is_valid():
+            applicants = form.cleaned_data['applicants']
+            role_applied = form.cleaned_data['role_applied']
+            journals = form.cleaned_data['journal_interests']
+            status = form.cleaned_data['status']
+            notes = form.cleaned_data['verification_notes']
+
+            added_count = 0
+            updated_count = 0
+
+            with transaction.atomic():
+                for applicant in applicants:
+                    defaults = {'status': status}
+                    if notes:
+                        defaults['verification_notes'] = notes
+
+                    obj, created = CallForReviewer.objects.update_or_create(
+                        applicant=applicant,
+                        role_applied=role_applied,
+                        defaults=defaults,
+                    )
+                    obj.journal_interests.add(*journals)
+
+                    if created:
+                        added_count += 1
+                    else:
+                        updated_count += 1
+
+            messages.success(
+                request,
+                f"Proses selesai: {added_count} {role_applied} baru ditambahkan dan {updated_count} data diperbarui."
+            )
+            return redirect('app:admin_reviewer_list')
+    else:
+        initial_data = {}
+        user_uuid = request.GET.get('user_uuid')
+        if user_uuid:
+            pengguna = UserPengguna.objects.filter(uuid=user_uuid).first()
+            if pengguna:
+                initial_data['applicants'] = [pengguna]
+        form = AdminAddReviewerForm(initial=initial_data)
+
+    context = {
+        'form': form,
+        'title': 'Tambah Reviewer / Editor Jurnal',
+    }
+    return render(request, 'admin_super/reviewer_add.html', context)
