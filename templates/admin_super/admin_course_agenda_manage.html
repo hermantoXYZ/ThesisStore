@@ -1,0 +1,228 @@
+{% extends "admin_super/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content">
+
+    <!-- HEADER & BREADCRUMB -->
+    <div style="background: #ffffff; border-radius: 12px; padding: 20px 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div>
+            <div style="font-size: 12.5px; color: #64748b; margin-bottom: 4px;">
+                <a href="{% url 'app:admin_course_list' %}" style="color: #2c4cf4; text-decoration: none;">Daftar Course</a>
+                <span style="margin: 0 6px;">&rsaquo;</span>
+                <a href="{% url 'app:admin_course_edit' course.uuid %}" style="color: #2c4cf4; text-decoration: none;">{{ course.name|truncatewords:5 }}</a>
+                <span style="margin: 0 6px;">&rsaquo;</span>
+                <span>Agenda, Materi &amp; Quiz</span>
+            </div>
+            <h3 style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0;">
+                Jadwal Sesi, Materi &amp; Quiz: {{ course.name|truncatewords:6 }}
+            </h3>
+            <p style="font-size: 13px; color: #64748b; margin: 4px 0 0 0;">
+                Kelola setiap sesi pertemuan, tautan materi pembelajaran, dan Pre-Test/Quiz per sesi.
+            </p>
+        </div>
+
+        <a href="{% url 'app:admin_course_edit' course.uuid %}" class="btn secondary">
+            <i class="ri-arrow-left-line"></i> Kembali ke Edit Course
+        </a>
+    </div>
+
+    <!-- FORM & TABEL AGENDA -->
+    <div style="background: #ffffff; border-radius: 12px; padding: clamp(16px, 3vw, 24px); box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+        <form method="post"
+              action="{% url 'app:admin_course_agenda_add' course.uuid %}"
+              style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: clamp(16px, 2.5vw, 22px); margin-bottom: 24px;">
+            {% csrf_token %}
+
+            <h5 style="font-size: 15px; font-weight: 700; color: #1e293b; margin: 0 0 18px 0;">
+                Tambah Sesi Agenda Baru
+            </h5>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 155px), 1fr)); gap: 12px; align-items: end;">
+                <div>
+                    <label style="font-weight: 600; font-size: 13px; color: #475569; margin-bottom: 7px; display: block;">No. Sesi</label>
+                    <input type="number" name="session_number" class="form-control" placeholder="Contoh: 1" min="1" style="width: 100%; height: 44px; padding: 8px 12px; font-size: 13.5px; border-radius: 8px; border: 1px solid #cbd5e1; background-color: #ffffff; box-sizing: border-box;">
+                </div>
+
+                <div style="grid-column: span 2 / auto;">
+                    <label style="font-weight: 600; font-size: 13px; color: #475569; margin-bottom: 7px; display: block;">Judul Sesi <span style="color: #ef4444;">*</span></label>
+                    <input type="text" name="title" class="form-control" placeholder="Topik atau judul sesi pelatihan" required style="width: 100%; height: 44px; padding: 8px 12px; font-size: 13.5px; border-radius: 8px; border: 1px solid #cbd5e1; background-color: #ffffff; box-sizing: border-box;">
+                </div>
+
+                <div>
+                    <label style="font-weight: 600; font-size: 13px; color: #475569; margin-bottom: 7px; display: block;">Waktu Sesi</label>
+                    <input type="datetime-local" name="agenda_date" class="form-control" style="width: 100%; height: 44px; padding: 8px 12px; font-size: 13.5px; border-radius: 8px; border: 1px solid #cbd5e1; background-color: #ffffff; box-sizing: border-box;">
+                </div>
+
+                <div>
+                    <label style="font-weight: 600; font-size: 13px; color: #475569; margin-bottom: 7px; display: block;">Dosen / Pengajar</label>
+                    <select name="pengajar" class="form-control" style="width: 100%; height: 44px; padding: 8px 12px; font-size: 13.5px; border-radius: 8px; border: 1px solid #cbd5e1; background-color: #ffffff; box-sizing: border-box;">
+                        <option value="">-- Pilih Pengajar --</option>
+                        {% for coach in course.coaches.all %}
+                        <option value="{{ coach.user_id }}">{{ coach.user.first_name|default:coach.user.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label style="font-weight: 600; font-size: 13px; color: #475569; margin-bottom: 7px; display: block;">Jumlah JP <span style="color: #ef4444;">*</span></label>
+                    <input type="number" name="jp_count" class="form-control" placeholder="Contoh: 2" min="1" required style="width: 100%; height: 44px; padding: 8px 12px; font-size: 13.5px; border-radius: 8px; border: 1px solid #cbd5e1; background-color: #ffffff; box-sizing: border-box;">
+                </div>
+
+                <div>
+                    <button type="submit" class="btn primary" style="width: 100%; height: 44px; padding: 0 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; border-radius: 8px; font-weight: 600; font-size: 13.5px; box-sizing: border-box;">
+                        <i class="ri-add-line"></i> Simpan Sesi
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        {% if agendas %}
+        <div class="table-responsive">
+            <table class="student-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="white-space: nowrap; text-align: center;">Sesi</th>
+                        <th style="white-space: nowrap;">Topik Agenda</th>
+                        <th style="white-space: nowrap;">Date</th>
+                        <th style="white-space: nowrap;">Pengajar</th>
+                        <th style="white-space: nowrap;">JP</th>
+                        <th style="width: 240px; text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for agenda in agendas %}
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle; font-weight: 600;">
+                            {% if agenda.session_number %}Sesi {{ agenda.session_number }}{% else %}-{% endif %}
+                        </td>
+                        <td style="vertical-align: middle;">
+                            <strong>{{ agenda.title|truncatechars:40 }}</strong>
+                        </td>
+                        <td style="vertical-align: middle; font-size: 13px;">
+                            {% if agenda.agenda_date %}
+                                <div><i class="ri-calendar-line"></i> {{ agenda.agenda_date|date:"d M Y" }}</div>
+                                <div style="color: #7f8c8d;"><i class="ri-time-line"></i> {{ agenda.agenda_date|time:"H:i" }} WIB</div>
+                            {% else %}
+                                <span style="color: #aaa;">-</span>
+                            {% endif %}
+                        </td>
+                        <td style="vertical-align: middle; font-size: 13px;">
+                            {% if agenda.pengajar %}
+                                <span style="display: inline-block; background: #e8f4fd; color: #2c4cf4; padding: 2px 8px; border-radius: 4px; font-weight: 500;">
+                                    {{ agenda.pengajar.user.first_name|default:agenda.pengajar.user.username }}
+                                </span>
+                            {% else %}
+                                <span style="color: #aaa;">-</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; vertical-align: middle; font-weight: 600;">
+                            {{ agenda.jp_count }} JP
+                        </td>
+                        <td style="text-align: center; vertical-align: middle; white-space: nowrap;">
+                            <a href="{% url 'app:admin_agenda_material' agenda.uuid %}"
+                               class="btn info small"
+                               title="Kelola Materi Sesi">
+                                <i class="ri-folder-open-line"></i> Materi ({{ agenda.materials.count }})
+                            </a>
+                            <a href="{% url 'app:admin_agenda_quiz' agenda.uuid %}"
+                               class="btn primary small"
+                               title="Kelola Pre-Test &amp; Quiz">
+                                <i class="ri-questionnaire-line"></i> Quiz ({{ agenda.quizzes.count }})
+                            </a>
+                            <button type="button" class="btn warning small" title="Edit Sesi"
+                                data-action-url="{% url 'app:admin_course_agenda_edit' agenda.uuid %}"
+                                onclick="openEditAgendaModal(this, '{{ agenda.session_number|default:'' }}', '{{ agenda.title|escapejs }}', '{{ agenda.agenda_date|date:'Y-m-d' }}T{{ agenda.agenda_date|time:'H:i' }}', '{{ agenda.pengajar_id|default:'' }}', '{{ agenda.jp_count }}')">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                            <a href="{% url 'app:admin_course_agenda_delete' agenda.uuid %}"
+                               class="btn danger small"
+                               title="Hapus Sesi"
+                               onclick="return confirm('Yakin ingin menghapus sesi &quot;{{ agenda.title|escapejs }}&quot;?');">
+                                <i class="ri-delete-bin-line"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 30px; color: #888; background: #fbfbfb; border-radius: 8px; border: 1px dashed #ddd;">
+            <i class="ri-calendar-line" style="font-size: 32px; display: block; margin-bottom: 8px; color: #bdc3c7;"></i>
+            Belum ada agenda sesi yang ditambahkan. Gunakan form di atas untuk menambahkan sesi baru.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- MODAL EDIT AGENDA -->
+    <div id="modal-edit-agenda" class="modal-edit" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999;">
+        <div class="modal-content-edit" style="background: #fff; border-radius: 12px; padding: 24px; max-width: 600px; width: 92%; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <span class="close" onclick="closeEditAgendaModal()" style="position: absolute; top: 16px; right: 20px; font-size: 24px; cursor: pointer; color: #7f8c8d;">&times;</span>
+            <form method="post" id="form-edit-agenda">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group" style="flex: 0 0 110px; min-width: 90px; margin-bottom: 14px;">
+                        <label style="font-weight: 600; font-size: 13px; margin-bottom: 5px; display: block;">No. Sesi</label>
+                        <input type="number" name="session_number" id="edit_session_number" class="form-control" min="1">
+                    </div>
+                    <div class="form-group" style="flex: 2; min-width: 200px; margin-bottom: 14px;">
+                        <label style="font-weight: 600; font-size: 13px; margin-bottom: 5px; display: block;">Judul Sesi <span style="color:red;">*</span></label>
+                        <input type="text" name="title" id="edit_title" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1.5; min-width: 200px; margin-bottom: 14px;">
+                        <label style="font-weight: 600; font-size: 13px; margin-bottom: 5px; display: block;">Tanggal &amp; Waktu</label>
+                        <input type="datetime-local" name="agenda_date" id="edit_agenda_date" class="form-control">
+                    </div>
+                    <div class="form-group" style="flex: 0 0 110px; min-width: 90px; margin-bottom: 14px;">
+                        <label style="font-weight: 600; font-size: 13px; margin-bottom: 5px; display: block;">Jumlah JP <span style="color:red;">*</span></label>
+                        <input type="number" name="jp_count" id="edit_jp_count" class="form-control" min="1" required>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="font-weight: 600; font-size: 13px; margin-bottom: 5px; display: block;">Dosen / Pengajar</label>
+                    <select name="pengajar" id="edit_pengajar" class="form-control">
+                        <option value="">-- Pilih Pengajar --</option>
+                        {% for coach in course.coaches.all %}
+                        <option value="{{ coach.user_id }}">{{ coach.user.first_name|default:coach.user.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 14px;">
+                    <button type="button" class="btn secondary" onclick="closeEditAgendaModal()">Batal</button>
+                    <button type="submit" class="btn primary">
+                        <i class="ri-save-line"></i> Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock content1 %}
+
+{% block script_costum %}
+<script>
+function openEditAgendaModal(btn, sessionNumber, title, agendaDate, pengajarId, jpCount) {
+    document.getElementById('edit_session_number').value = sessionNumber;
+    document.getElementById('edit_title').value = title;
+    document.getElementById('edit_agenda_date').value = agendaDate;
+    document.getElementById('edit_jp_count').value = jpCount;
+
+    const pengajarEl = document.getElementById('edit_pengajar');
+    if (pengajarEl) {
+        pengajarEl.value = pengajarId || '';
+    }
+
+    const form = document.getElementById('form-edit-agenda');
+    form.action = btn.getAttribute('data-action-url');
+
+    document.getElementById('modal-edit-agenda').style.display = 'flex';
+}
+
+function closeEditAgendaModal() {
+    document.getElementById('modal-edit-agenda').style.display = 'none';
+}
+</script>
+{% endblock script_costum %}

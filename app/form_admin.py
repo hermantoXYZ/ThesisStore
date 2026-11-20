@@ -657,7 +657,7 @@ class CourseAgendaForm(forms.ModelForm):
             }),
             'agenda_date': forms.DateTimeInput(
                 format='%Y-%m-%dT%H:%M',
-                attrs={'class': 'form-control', 'type': 'datetime-local', 'required': True}
+                attrs={'class': 'form-control', 'type': 'datetime-local'}
             ),
             'pengajar': forms.Select(attrs={'class': 'form-control'}),
             'jp_count': forms.NumberInput(attrs={

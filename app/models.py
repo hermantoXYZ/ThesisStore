@@ -327,13 +327,13 @@ class Course(models.Model):
 
 
 class CourseAgenda(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     course = models.ForeignKey(Course, related_name='agendas', on_delete=models.CASCADE)
     session_number = models.PositiveSmallIntegerField(null=True, blank=True) 
     title = models.CharField(max_length=255)
-    agenda_date = models.DateTimeField(null=True, blank=False, help_text="Tanggal & jam pelaksanaan")
+    agenda_date = models.DateTimeField(null=True, blank=True, help_text="Tanggal & jam pelaksanaan")
     pengajar = models.ForeignKey(UserPengguna, on_delete=models.SET_NULL, null=True, blank=True, related_name='teaching_agendas', help_text="Dosen pengampu sesi ini (bisa berbeda dari pembuat)")
     jp_count = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name="Jumlah JP", help_text="Jumlah Jam Pelajaran (JP) pada sesi ini")
-
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -348,19 +348,62 @@ class CourseAgenda(models.Model):
 
 class CourseMaterial(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    agenda = models.ForeignKey(CourseAgenda,on_delete=models.CASCADE,related_name='materials',verbose_name="Sesi Agenda")
-    uploaded_by = models.ForeignKey(UserPengguna,on_delete=models.SET_NULL,null=True,blank=True,related_name='uploaded_materials', verbose_name="Diunggah Oleh")
+    agenda = models.ForeignKey(CourseAgenda, on_delete=models.CASCADE, related_name='materials', verbose_name="Sesi Agenda")
+    uploaded_by = models.ForeignKey(UserPengguna, on_delete=models.SET_NULL, null=True, blank=True, related_name='uploaded_materials', verbose_name="Diunggah Oleh")
+    urutan = models.PositiveSmallIntegerField(default=1, verbose_name="Urutan Tampil")
     judul = models.CharField(max_length=255, verbose_name="Judul Materi")
-    url_materi = models.URLField(max_length=500,blank=True,null=True,verbose_name="Link Materi / Video")
+    url_materi = models.URLField(max_length=500, blank=True, null=True, verbose_name="Link Materi / Video")
     is_visible = models.BooleanField(default=True, verbose_name="Tampilkan ke Peserta")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['created_at']
+        ordering = ['urutan', 'created_at']
 
     def __str__(self):
-        return f"{self.agenda.course.name} - {self.judul}"
+        return f"{self.urutan}. {self.agenda.course.name} - {self.judul}"
+
+
+class CourseQuiz(models.Model):
+    TIPE_TES_CHOICES = [
+        ('pretest', 'Pre-Test'),
+        ('quiz', 'Quiz / Evaluasi'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    agenda = models.ForeignKey(CourseAgenda, on_delete=models.CASCADE, related_name='quizzes', verbose_name="Sesi Agenda")
+    created_by = models.ForeignKey(UserPengguna, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_quizzes')
+    urutan = models.PositiveSmallIntegerField(default=1, verbose_name="Urutan Tampil")
+    tipe_tes = models.CharField(max_length=15, choices=TIPE_TES_CHOICES, default='quiz', verbose_name="Jenis Tes")
+    judul = models.CharField(max_length=255, verbose_name="Judul Pre-Test / Quiz")
+    passing_score = models.PositiveSmallIntegerField(default=70, verbose_name="Passing Grade (%)")
+    is_visible = models.BooleanField(default=True, verbose_name="Tampilkan ke Peserta")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['urutan', 'created_at']
+
+    def __str__(self):
+        return f"{self.urutan}. [{self.get_tipe_tes_display()}] {self.judul}"
+
+
+class CourseQuizQuestion(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    quiz = models.ForeignKey(CourseQuiz, on_delete=models.CASCADE, related_name='questions')
+    urutan = models.PositiveSmallIntegerField(default=1, verbose_name="No. Soal")
+    pertanyaan = models.TextField(verbose_name="Pertanyaan")
+    opsi_a = models.CharField(max_length=255, verbose_name="Opsi A")
+    opsi_b = models.CharField(max_length=255, verbose_name="Opsi B")
+    opsi_c = models.CharField(max_length=255, blank=True, null=True, verbose_name="Opsi C")
+    opsi_d = models.CharField(max_length=255, blank=True, null=True, verbose_name="Opsi D")
+    kunci_jawaban = models.CharField(max_length=1,choices=[('A', 'A'), ('B', 'B'), ('C', 'C'), ('D', 'D')], verbose_name="Kunci Jawaban")
+
+    class Meta:
+        ordering = ['urutan', 'id']
+
+    def __str__(self):
+        return f"No.{self.urutan} - {self.pertanyaan[:40]}"
 
 class Cart(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -1020,3 +1063,21 @@ class SurveyResponse(models.Model):
 
     def __str__(self):
         return f"Respon {self.user.nama_lengkap} - {self.survey.course.name}"
+
+
+class CourseQuizAttempt(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    quiz = models.ForeignKey(CourseQuiz, on_delete=models.CASCADE, related_name='attempts')
+    user = models.ForeignKey(UserPengguna, on_delete=models.CASCADE, related_name='quiz_attempts')
+    answers = models.JSONField(default=dict)
+    score = models.PositiveSmallIntegerField(default=0, verbose_name="Nilai (%)")
+    correct_count = models.PositiveSmallIntegerField(default=0, verbose_name="Jumlah Benar")
+    total_questions = models.PositiveSmallIntegerField(default=0, verbose_name="Total Soal")
+    is_passed = models.BooleanField(default=False, verbose_name="Lulus Passing Grade")
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-submitted_at']
+
+    def __str__(self):
+        return f"{self.user.nama_lengkap} - {self.quiz.judul} ({self.score}%)"

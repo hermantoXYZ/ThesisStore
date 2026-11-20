@@ -12,7 +12,7 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from .form_pengguna import formProfile
-from .models import UserPengguna, Books, Course, CourseAgenda, Cart, CartItem, Order, OrderBookItem, OrderCourseItem, OrderShipping, CallForReviewer, JurnalMaster, CourseMaterial, CourseSurvey, SurveyQuestion, SurveyResponse
+from .models import UserPengguna, Books, Course, CourseAgenda, Cart, CartItem, Order, OrderBookItem, OrderCourseItem, OrderShipping, CallForReviewer, JurnalMaster, CourseMaterial, CourseSurvey, SurveyQuestion, SurveyResponse, CourseQuiz, CourseQuizAttempt, CourseQuizQuestion
 from .midtrans import create_snap_transaction, get_snap_js_url, verify_signature, sync_order_status_from_midtrans
 from django.urls import reverse
 from app.decorators_pengguna import pengguna_required, check_userpengguna
@@ -949,6 +949,7 @@ def my_course_detail(request, order_item_id):
     order_item = get_object_or_404(
         OrderCourseItem.objects.select_related('order', 'course').prefetch_related(
             'course__agendas__materials',
+            'course__agendas__quizzes__questions',
             'course__coaches__user',
             'course__coaches__bidang_keahlian'
         ),
@@ -958,14 +959,50 @@ def my_course_detail(request, order_item_id):
     )
     course = order_item.course
     order = order_item.order
-    agendas = course.agendas.all().order_by('session_number', 'agenda_date')
+    agendas = list(course.agendas.all().order_by('session_number', 'agenda_date'))
+
     is_active = (
         order.payment_status in ('paid', 'not_required') or
         order.status in ('processing', 'completed')
     ) and order.status != 'cancelled'
 
+    # Pemetaan riwayat percobaan & nilai tertinggi Pre-Test / Quiz peserta
+    attempt_map = {}
+    if userpengguna:
+        attempts = CourseQuizAttempt.objects.filter(
+            user=userpengguna,
+            quiz__agenda__course=course,
+        )
+        for att in attempts:
+            qid = att.quiz_id
+            if qid not in attempt_map:
+                attempt_map[qid] = {
+                    'best_score': att.score,
+                    'has_passed': att.is_passed,
+                }
+            else:
+                if att.score > attempt_map[qid]['best_score']:
+                    attempt_map[qid]['best_score'] = att.score
+                if att.is_passed:
+                    attempt_map[qid]['has_passed'] = True
+
+    wajib_quiz = False
+    for ag in agendas:
+        for qz in ag.quizzes.all():
+            info = attempt_map.get(qz.id)
+            qz.user_best_score = info['best_score'] if info else None
+            qz.user_passed = info['has_passed'] if info else False
+            if qz.is_visible and qz.questions.exists() and not qz.user_passed:
+                wajib_quiz = True
+
     survey = CourseSurvey.objects.filter(course=course, is_active=True).first()
-    wajib_kuesioner = CourseSurvey.objects.filter( course=course, is_active=True, questions__isnull=False ).exclude( responses__user=userpengguna ).exists()
+    wajib_kuesioner = CourseSurvey.objects.filter(
+        course=course,
+        is_active=True,
+        questions__isnull=False
+    ).exclude(
+        responses__user=userpengguna
+    ).exists()
 
     context = {
         'title': 'Detail Academy',
@@ -975,11 +1012,12 @@ def my_course_detail(request, order_item_id):
         'order': order,
         'agendas': agendas,
         'is_active': is_active,
+        'wajib_quiz': wajib_quiz,
         'wajib_kuesioner': wajib_kuesioner,
         'userpengguna': userpengguna,
         'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
     }
-    return render(request, 'pengguna/my_course_detail.html', context)
+    return render(request, 'pengguna/my_academy.html', context)
 
 @pengguna_required
 @check_userpengguna
@@ -1044,3 +1082,79 @@ def my_course_survey(request, order_item_id):
         'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
     }
     return render(request, 'pengguna/my_course_survey.html', context)
+
+
+
+@pengguna_required
+@check_userpengguna
+def my_course_quiz(request, order_item_id, quiz_id):
+    userpengguna = get_object_or_404(UserPengguna, user=request.user)
+    order_item = get_object_or_404(
+        OrderCourseItem,
+        id=order_item_id,
+        order__user=request.user,
+        course__isnull=False,
+    )
+    course = order_item.course
+
+    quiz = get_object_or_404(
+        CourseQuiz.objects.select_related('agenda').prefetch_related('questions'),
+        id=quiz_id,
+        agenda__course=course,
+        is_visible=True,
+    )
+    questions = quiz.questions.order_by('urutan', 'id')
+
+    if request.method == 'POST':
+        total_soal = questions.count()
+        benar = 0
+        user_answers = {}
+
+        for q in questions:
+            jawaban = request.POST.get(f'question_{q.id}', '').strip().upper()
+            user_answers[str(q.id)] = jawaban
+            if jawaban and jawaban == q.kunci_jawaban:
+                benar += 1
+
+        score = round((benar / total_soal) * 100) if total_soal > 0 else 0
+        is_passed = score >= quiz.passing_score
+
+        CourseQuizAttempt.objects.create(
+            quiz=quiz,
+            user=userpengguna,
+            answers=user_answers,
+            score=score,
+            correct_count=benar,
+            total_questions=total_soal,
+            is_passed=is_passed,
+        )
+
+        if is_passed:
+            messages.success(
+                request,
+                f'Selamat! Anda lulus "{quiz.judul}" dengan nilai {score}% ({benar}/{total_soal} benar).'
+            )
+        else:
+            messages.warning(
+                request,
+                f'Nilai Anda {score}% ({benar}/{total_soal} benar). Minimal lulus adalah {quiz.passing_score}%. Silakan ulangi kembali.'
+            )
+
+        return redirect('app:my_course_detail', order_item_id=order_item.id)
+
+    riwayat = CourseQuizAttempt.objects.filter(
+        quiz=quiz,
+        user=userpengguna,
+    ).order_by('-submitted_at')
+
+    return render(request, 'pengguna/my_course_quiz.html', {
+        'title': quiz.judul,
+        'heading': quiz.get_tipe_tes_display(),
+        'order_item': order_item,
+        'course': course,
+        'quiz': quiz,
+        'questions': questions,
+        'riwayat': riwayat,
+        'userpengguna': userpengguna,
+        'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
+    })

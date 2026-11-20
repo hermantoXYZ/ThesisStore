@@ -232,12 +232,6 @@
                         <a href="{% url 'app:my_course_detail' item.id %}" class="btn primary small" style="flex: 1; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 8px 12px; font-weight: 700; font-size: 0.85rem; border-radius: 8px;">
                             <i class="ri-book-open-line"></i> Ruang Belajar
                         </a>
-
-                        {% if item.course.meeting_url %}
-                            <a href="{{ item.course.meeting_url }}" target="_blank" rel="noopener noreferrer" class="btn secondary small" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 8px 10px; font-weight: 700; font-size: 0.85rem; border-radius: 8px; color: #2c4cf4;" title="Masuk Link Meeting">
-                                <i class="ri-video-chat-line"></i> Link
-                            </a>
-                        {% endif %}
                     {% elif item.order.payment_status in 'unpaid pending' or item.order.status == 'pending' %}
                         <a href="{% url 'app:pesanan_detail' item.order.order_number %}" class="btn primary small" style="flex: 1; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 8px 12px; font-weight: 700; font-size: 0.85rem; border-radius: 8px; background: #f59e0b; border-color: #f59e0b;">
                             <i class="ri-bank-card-line"></i> Selesaikan Bayar
@@ -267,7 +261,7 @@
                 <i class="ri-search-line"></i> Cari Pelatihan Sekarang
             </a>
         </div>
-    {% endif %}
+    {% endif %} 
 
 </div>
 {% endblock content1 %}

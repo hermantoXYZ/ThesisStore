@@ -1,0 +1,309 @@
+{% extends "pengguna/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content">
+
+    <!-- BREADCRUMB & HEADER -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
+        <div>
+            <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">
+                <a href="{% url 'app:my_narasumber' %}" style="color: #2c4cf4; text-decoration: none; font-weight: 500;">Narasumber</a>
+                <span style="margin: 0 6px;">&rsaquo;</span>
+                <a href="{% url 'app:my_narasumber_detail' course.uuid %}" style="color: #2c4cf4; text-decoration: none; font-weight: 500;">{{ course.name|truncatewords:5 }}</a>
+                <span style="margin: 0 6px;">&rsaquo;</span>
+                <span>Pre-Test &amp; Quiz</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px;">
+                <span style="background: #eef2ff; color: #2c4cf4; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;">
+                    Sesi #{{ agenda.session_number|default:"-" }}
+                </span>
+                <span style="font-size: 12px; color: #64748b;">
+                    {{ course.name }}
+                </span>
+            </div>
+            <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin: 6px 0 0 0;">
+                Kelola Pre-Test &amp; Quiz: {{ agenda.title }}
+            </h2>
+        </div>
+        <a href="{% url 'app:my_narasumber_detail' course.uuid %}" class="btn secondary" style="display: inline-flex; align-items: center; gap: 6px;">
+            <i class="ri-arrow-left-line"></i> Kembali ke Sesi
+        </a>
+    </div>
+
+    <!-- MAIN 2-COLUMN GRID -->
+    <div class="checkout-layout-grid" style="display: grid; grid-template-columns: 360px 1fr; gap: 22px; align-items: start;">
+
+        <!-- KOLOM KIRI: FORM BUAT PAKET PRE-TEST / QUIZ -->
+        <div style="background: #ffffff; border-radius: 14px; padding: 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); border: 1px solid #eef2f6;">
+            <h3 style="font-size: 16px; font-weight: 700; color: #1e293b; margin: 0 0 16px 0; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 8px;">
+                <i class="ri-add-circle-line" style="color: #2c4cf4;"></i> Tambah Pre-Test / Quiz
+            </h3>
+
+            <form method="post" action="">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_quiz">
+
+                <div style="display: grid; grid-template-columns: 95px 1fr; gap: 10px; margin-bottom: 14px;">
+                    <div>
+                        <label style="display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 5px;">Urutan *</label>
+                        <input type="number" name="urutan" value="{{ quizzes.count|add:1 }}" min="1" required class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 5px;">Jenis Tes *</label>
+                        <select name="tipe_tes" class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                            <option value="pretest">Pre-Test (Awal Sesi)</option>
+                            <option value="quiz" selected>Quiz / Evaluasi (Akhir Sesi)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 5px;">Judul Tes *</label>
+                    <input type="text" name="judul" required placeholder="Contoh: Pre-Test Sesi 1 / Quiz Evaluasi" class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 5px;">Passing Grade (%) *</label>
+                    <input type="number" name="passing_score" value="70" min="0" max="100" required class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                    <small style="font-size: 11px; color: #64748b;">Nilai minimal agar peserta dapat lanjut ke tahap berikutnya.</small>
+                </div>
+
+                <div style="margin-bottom: 18px;">
+                    <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #334155; cursor: pointer;">
+                        <input type="checkbox" name="is_visible" checked>
+                        Tampilkan tes ini ke peserta
+                    </label>
+                </div>
+
+                <button type="submit" class="btn primary" style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="ri-save-line"></i> Simpan Paket Tes
+                </button>
+            </form>
+        </div>
+
+        <!-- KOLOM KANAN: DAFTAR PAKET TES & SOAL -->
+        <div style="display: flex; flex-direction: column; gap: 18px;">
+
+            {% for quiz in quizzes %}
+            <div style="background: #ffffff; border-radius: 14px; padding: 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); border: 1px solid #eef2f6;">
+                <!-- HEADER PAKET QUIZ -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid #f1f5f9;">
+                    <div style="display: flex; align-items: flex-start; gap: 10px; flex: 1; min-width: 220px;">
+                        <span style="background: #7e22ce; color: #ffffff; font-weight: 700; font-size: 12px; padding: 4px 10px; border-radius: 8px; flex-shrink: 0;">
+                            #{{ quiz.urutan }}
+                        </span>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 4px;">
+                                <span style="background: #f3e8ff; color: #7e22ce; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 700;">
+                                    {{ quiz.get_tipe_tes_display }}
+                                </span>
+                                <span style="background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600;">
+                                    Passing Grade: {{ quiz.passing_score }}%
+                                </span>
+                                {% if quiz.is_visible %}
+                                    <span style="background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600;">Tampil</span>
+                                {% else %}
+                                    <span style="background: #f1f5f9; color: #64748b; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600;">Tersembunyi</span>
+                                {% endif %}
+                            </div>
+                            <h3 style="font-size: 16px; font-weight: 700; color: #1e293b; margin: 0;">
+                                {{ quiz.judul }}
+                            </h3>
+                        </div>
+                    </div>
+
+                    <!-- AKSI PAKET QUIZ -->
+                    <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                        <button type="button" class="btn secondary small" style="font-size: 11.5px; padding: 5px 10px;"
+                            onclick="togglePanel('editQuizForm-{{ quiz.id }}')">
+                            <i class="ri-settings-3-line"></i> Pengaturan
+                        </button>
+                        <button type="button" class="btn primary small" style="font-size: 11.5px; padding: 5px 10px;"
+                            onclick="togglePanel('addQuestionForm-{{ quiz.id }}')">
+                            <i class="ri-add-line"></i> Tambah Soal
+                        </button>
+                        <form method="post" action="" style="display: inline;" onsubmit="return confirm('Yakin ingin menghapus &quot;{{ quiz.judul|escapejs }}&quot; beserta seluruh soalnya?');">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete_quiz">
+                            <input type="hidden" name="quiz_id" value="{{ quiz.id }}">
+                            <button type="submit" class="btn danger small" style="padding: 5px 8px;" title="Hapus Paket Tes">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- INLINE PANEL: EDIT PENGATURAN PAKET QUIZ -->
+                <div id="editQuizForm-{{ quiz.id }}" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-top: 14px;">
+                    <h4 style="font-size: 13.5px; font-weight: 700; color: #1e293b; margin: 0 0 12px 0;">Edit Pengaturan Tes</h4>
+                    <form method="post" action="">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="edit_quiz">
+                        <input type="hidden" name="quiz_id" value="{{ quiz.id }}">
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px; margin-bottom: 10px;">
+                            <div>
+                                <label style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px;">Urutan *</label>
+                                <input type="number" name="urutan" value="{{ quiz.urutan }}" min="1" required class="form-control" style="width: 100%; padding: 6px 10px; font-size: 13px;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px;">Jenis Tes *</label>
+                                <select name="tipe_tes" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 13px;">
+                                    <option value="pretest" {% if quiz.tipe_tes == 'pretest' %}selected{% endif %}>Pre-Test (Awal Sesi)</option>
+                                    <option value="quiz" {% if quiz.tipe_tes == 'quiz' %}selected{% endif %}>Quiz / Evaluasi (Akhir Sesi)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px;">Passing Grade (%) *</label>
+                                <input type="number" name="passing_score" value="{{ quiz.passing_score }}" min="0" max="100" required class="form-control" style="width: 100%; padding: 6px 10px; font-size: 13px;">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px;">Judul Tes *</label>
+                            <input type="text" name="judul" value="{{ quiz.judul }}" required class="form-control" style="width: 100%; padding: 6px 10px; font-size: 13px;">
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: #334155; cursor: pointer;">
+                                <input type="checkbox" name="is_visible" {% if quiz.is_visible %}checked{% endif %}>
+                                Tampilkan ke peserta
+                            </label>
+                            <div style="display: flex; gap: 6px;">
+                                <button type="button" class="btn secondary small" onclick="togglePanel('editQuizForm-{{ quiz.id }}')">Tutup</button>
+                                <button type="submit" class="btn primary small"><i class="ri-save-line"></i> Simpan</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- INLINE PANEL: TAMBAH SOAL KE PAKET QUIZ INI -->
+                <div id="addQuestionForm-{{ quiz.id }}" style="display: {% if not quiz.questions.all %}block{% else %}none{% endif %}; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 14px; margin-top: 14px;">
+                    <h4 style="font-size: 13.5px; font-weight: 700; color: #2c4cf4; margin: 0 0 12px 0;">
+                        <i class="ri-edit-2-line"></i> Tambah Pertanyaan Baru ({{ quiz.judul }})
+                    </h4>
+                    <form method="post" action="">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="add_question">
+                        <input type="hidden" name="quiz_id" value="{{ quiz.id }}">
+
+                        <div style="display: grid; grid-template-columns: 100px 1fr; gap: 10px; margin-bottom: 10px;">
+                            <div>
+                                <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">No. Soal *</label>
+                                <input type="number" name="urutan" value="{{ quiz.questions.count|add:1 }}" min="1" required class="form-control" style="width: 100%; padding: 6px 10px; font-size: 13px;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">Kunci Jawaban *</label>
+                                <select name="kunci_jawaban" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 13px;">
+                                    <option value="A">Pilihan A</option>
+                                    <option value="B">Pilihan B</option>
+                                    <option value="C">Pilihan C</option>
+                                    <option value="D">Pilihan D</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">Pertanyaan *</label>
+                            <textarea name="pertanyaan" rows="2" required placeholder="Tuliskan pertanyaan pilihan ganda..." class="form-control" style="width: 100%; padding: 7px 10px; font-size: 13px;"></textarea>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 8px; margin-bottom: 12px;">
+                            <div>
+                                <label style="display: block; font-size: 11.5px; font-weight: 600; color: #475569; margin-bottom: 3px;">Opsi A *</label>
+                                <input type="text" name="opsi_a" required class="form-control" style="width: 100%; padding: 6px 10px; font-size: 12.5px;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 11.5px; font-weight: 600; color: #475569; margin-bottom: 3px;">Opsi B *</label>
+                                <input type="text" name="opsi_b" required class="form-control" style="width: 100%; padding: 6px 10px; font-size: 12.5px;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 11.5px; font-weight: 600; color: #475569; margin-bottom: 3px;">Opsi C (Opsional)</label>
+                                <input type="text" name="opsi_c" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 12.5px;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 11.5px; font-weight: 600; color: #475569; margin-bottom: 3px;">Opsi D (Opsional)</label>
+                                <input type="text" name="opsi_d" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 12.5px;">
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                            {% if quiz.questions.all %}
+                                <button type="button" class="btn secondary small" onclick="togglePanel('addQuestionForm-{{ quiz.id }}')">Tutup</button>
+                            {% endif %}
+                            <button type="submit" class="btn primary small">
+                                <i class="ri-save-line"></i> Simpan Pertanyaan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- DAFTAR SOAL DALAM PAKET QUIZ INI -->
+                <div style="margin-top: 14px;">
+                    {% if quiz.questions.all %}
+                        <div style="font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 8px;">
+                            Daftar Pertanyaan ({{ quiz.questions.count }} Soal):
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            {% for q in quiz.questions.all %}
+                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px;">
+                                    <div style="font-size: 13px; color: #1e293b; line-height: 1.5;">
+                                        <strong style="color: #2c4cf4;">#{{ q.urutan }}.</strong>
+                                        <strong>{{ q.pertanyaan }}</strong>
+                                    </div>
+                                    <form method="post" action="" style="display: inline; flex-shrink: 0;" onsubmit="return confirm('Hapus soal nomor {{ q.urutan }}?');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="delete_question">
+                                        <input type="hidden" name="question_id" value="{{ q.id }}">
+                                        <button type="submit" class="btn danger small" style="padding: 3px 7px;" title="Hapus Soal">
+                                            <i class="ri-delete-bin-line"></i>
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 6px; font-size: 12px;">
+                                    <div style="padding: 5px 9px; border-radius: 6px; {% if q.kunci_jawaban == 'A' %}background: #dcfce7; color: #166534; font-weight: 600; border: 1px solid #bbf7d0;{% else %}background: #ffffff; color: #475569; border: 1px solid #e2e8f0;{% endif %}">
+                                        A. {{ q.opsi_a }} {% if q.kunci_jawaban == 'A' %}<i class="ri-check-line"></i>{% endif %}
+                                    </div>
+                                    <div style="padding: 5px 9px; border-radius: 6px; {% if q.kunci_jawaban == 'B' %}background: #dcfce7; color: #166534; font-weight: 600; border: 1px solid #bbf7d0;{% else %}background: #ffffff; color: #475569; border: 1px solid #e2e8f0;{% endif %}">
+                                        B. {{ q.opsi_b }} {% if q.kunci_jawaban == 'B' %}<i class="ri-check-line"></i>{% endif %}
+                                    </div>
+                                    {% if q.opsi_c %}
+                                    <div style="padding: 5px 9px; border-radius: 6px; {% if q.kunci_jawaban == 'C' %}background: #dcfce7; color: #166534; font-weight: 600; border: 1px solid #bbf7d0;{% else %}background: #ffffff; color: #475569; border: 1px solid #e2e8f0;{% endif %}">
+                                        C. {{ q.opsi_c }} {% if q.kunci_jawaban == 'C' %}<i class="ri-check-line"></i>{% endif %}
+                                    </div>
+                                    {% endif %}
+                                    {% if q.opsi_d %}
+                                    <div style="padding: 5px 9px; border-radius: 6px; {% if q.kunci_jawaban == 'D' %}background: #dcfce7; color: #166534; font-weight: 600; border: 1px solid #bbf7d0;{% else %}background: #ffffff; color: #475569; border: 1px solid #e2e8f0;{% endif %}">
+                                        D. {{ q.opsi_d }} {% if q.kunci_jawaban == 'D' %}<i class="ri-check-line"></i>{% endif %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div style="background: #ffffff; border-radius: 14px; padding: 36px 20px; text-align: center; color: #94a3b8; border: 1px dashed #cbd5e1;">
+                <i class="ri-questionnaire-line" style="font-size: 34px; display: block; margin-bottom: 8px; color: #cbd5e1;"></i>
+                <strong style="color: #475569; display: block; margin-bottom: 4px;">Belum ada Pre-Test / Quiz pada sesi ini</strong>
+                <span style="font-size: 12.5px;">Gunakan formulir di sebelah kiri untuk membuat Pre-Test (awal sesi) atau Quiz Evaluasi (akhir sesi).</span>
+            </div>
+            {% endfor %}
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+function togglePanel(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
+}
+</script>
+{% endblock content1 %}

@@ -5,10 +5,10 @@ from .midtrans import sync_order_status_from_midtrans
 from app.models import (
     UserAdmin, UserPengguna, Books, CategoryBooks, MediaBooks, Article, Page, Category,
     KerjaSama, WebSetting, HeroSlide, DokumentasiArticle, DokumentasiPage,
-    Course, CourseAgenda, JurnalMaster, LoaJurnal, NoSuratThesis, KodeSurat,
-    Order, OrderBookItem, OrderCourseItem, CallForReviewer, CourseEnrollment, CourseSurvey, SurveyQuestion, SurveyResponse
+    Course, CourseAgenda, JurnalMaster, LoaJurnal, NoSuratThesis, KodeSurat, 
+    Order, OrderBookItem, OrderCourseItem, CallForReviewer, CourseEnrollment, CourseSurvey, SurveyQuestion, SurveyResponse, CourseMaterial
 )
-
+from app.models import CourseQuiz, CourseQuizQuestion
 from .form_admin import (
     formProfile, CategoryBooksForm, BooksForm, ArticleForm, PageForm, CategoryForm,
     WebSettingForm, KerjaSamaForm, HeroSlideForm, CourseForm, CourseAgendaForm,
@@ -22,7 +22,7 @@ from django.utils import timezone
 from datetime import datetime
 import csv
 from django.http import HttpResponse
-from django.db import transaction
+from django.db import transaction, IntegrityError
 
 def _get_admin_photo(request):
     useradmin = UserAdmin.objects.filter(username=request.user).first()
@@ -701,6 +701,7 @@ def course_edit(request, uuid):
     total_enrollments = enrollments.count()
     survey = CourseSurvey.objects.filter(course=course).first()
     total_survey_questions = survey.questions.count() if survey else 0
+    total_quizzes = CourseQuiz.objects.filter(agenda__course=course).count()
 
     context = {
         'title': 'Edit Course',
@@ -709,6 +710,7 @@ def course_edit(request, uuid):
         'course': course,
         'agendas': agendas,
         'photo': _get_admin_photo(request),
+        'total_quizzes': total_quizzes,
         'is_edit': True,
         'total_survey_questions': total_survey_questions,
         'total_enrollments': total_enrollments,
@@ -731,18 +733,21 @@ def course_agenda_add(request, course_uuid):
     if request.method == 'POST':
         form = CourseAgendaForm(request.POST)
         if form.is_valid():
-            agenda = form.save(commit=False)
-            agenda.course = course
-            agenda.save()
-            messages.success(request, f'Agenda sesi "{agenda.title}" berhasil ditambahkan!')
+            try:
+                agenda = form.save(commit=False)
+                agenda.course = course
+                agenda.save()
+                messages.success(request, f'Agenda sesi "{agenda.title}" berhasil ditambahkan!')
+            except IntegrityError:
+                messages.error(request, 'Gagal menambahkan agenda. Session number sudah digunakan!')
         else:
             messages.error(request, 'Gagal menambahkan agenda. Periksa isian form.')
-    return redirect('app:admin_course_edit', uuid=course_uuid)
+    return redirect('app:admin_course_agenda_manage', course_uuid=course_uuid)
 
 
 @admin_required
-def course_agenda_edit(request, agenda_id):
-    agenda = get_object_or_404(CourseAgenda, id=agenda_id)
+def course_agenda_edit(request, agenda_uuid):
+    agenda = get_object_or_404(CourseAgenda, uuid=agenda_uuid)
     course_uuid = agenda.course.uuid
     if request.method == 'POST':
         form = CourseAgendaForm(request.POST, instance=agenda)
@@ -751,17 +756,17 @@ def course_agenda_edit(request, agenda_id):
             messages.success(request, f'Agenda "{agenda.title}" berhasil diperbarui!')
         else:
             messages.error(request, 'Gagal memperbarui agenda.')
-    return redirect('app:admin_course_edit', uuid=course_uuid)
+    return redirect('app:admin_course_agenda_manage', course_uuid=course_uuid)
 
 
 @admin_required
-def course_agenda_delete(request, agenda_id):
-    agenda = get_object_or_404(CourseAgenda, id=agenda_id)
+def course_agenda_delete(request, agenda_uuid):
+    agenda = get_object_or_404(CourseAgenda, uuid=agenda_uuid)
     course_uuid = agenda.course.uuid
     title = agenda.title
     agenda.delete()
     messages.warning(request, f'Agenda "{title}" berhasil dihapus.')
-    return redirect('app:admin_course_edit', uuid=course_uuid)
+    return redirect('app:admin_course_agenda_manage', course_uuid=course_uuid)
 
 
 @admin_required
@@ -1683,3 +1688,217 @@ def admin_reviewer_add(request):
         'title': 'Tambah Reviewer / Editor Jurnal',
     }
     return render(request, 'admin_super/reviewer_add.html', context)
+
+@admin_required  # sesuaikan dengan decorator admin yang ada di views_admin.py Anda
+def admin_agenda_quiz(request, agenda_uuid):
+    agenda = get_object_or_404(
+        CourseAgenda.objects.select_related('course').prefetch_related('quizzes__questions'),
+        uuid=agenda_uuid,
+    )
+    userpengguna = UserPengguna.objects.filter(user=request.user).first()
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'add_quiz':
+            CourseQuiz.objects.create(
+                agenda=agenda,
+                created_by=userpengguna,
+                urutan=int(request.POST.get('urutan') or 1),
+                tipe_tes=request.POST.get('tipe_tes', 'quiz'),
+                judul=request.POST.get('judul', '').strip(),
+                passing_score=int(request.POST.get('passing_score') or 70),
+                is_visible=request.POST.get('is_visible') == 'on',
+            )
+            messages.success(request, 'Pre-Test / Quiz berhasil ditambahkan.')
+        elif action == 'edit_quiz':
+            quiz = get_object_or_404(CourseQuiz, id=request.POST.get('quiz_id'), agenda=agenda)
+            quiz.urutan = int(request.POST.get('urutan') or 1)
+            quiz.tipe_tes = request.POST.get('tipe_tes', 'quiz')
+            quiz.judul = request.POST.get('judul', '').strip()
+            quiz.passing_score = int(request.POST.get('passing_score') or 70)
+            quiz.is_visible = request.POST.get('is_visible') == 'on'
+            quiz.save()
+            messages.success(request, 'Pengaturan tes berhasil diperbarui.')
+        elif action == 'delete_quiz':
+            quiz = get_object_or_404(CourseQuiz, id=request.POST.get('quiz_id'), agenda=agenda)
+            quiz.delete()
+            messages.success(request, 'Pre-Test / Quiz berhasil dihapus.')
+
+        # 4. Tambah Pertanyaan ke Paket Quiz Tertentu
+        elif action == 'add_question':
+            quiz = get_object_or_404(CourseQuiz, id=request.POST.get('quiz_id'), agenda=agenda)
+            CourseQuizQuestion.objects.create(
+                quiz=quiz,
+                urutan=int(request.POST.get('urutan') or (quiz.questions.count() + 1)),
+                pertanyaan=request.POST.get('pertanyaan', '').strip(),
+                opsi_a=request.POST.get('opsi_a', '').strip(),
+                opsi_b=request.POST.get('opsi_b', '').strip(),
+                opsi_c=request.POST.get('opsi_c', '').strip() or None,
+                opsi_d=request.POST.get('opsi_d', '').strip() or None,
+                kunci_jawaban=request.POST.get('kunci_jawaban', 'A'),
+            )
+            messages.success(request, 'Pertanyaan berhasil ditambahkan.')
+
+        # 5. Hapus Pertanyaan
+        elif action == 'delete_question':
+            soal = get_object_or_404(CourseQuizQuestion, id=request.POST.get('question_id'), quiz__agenda=agenda)
+            soal.delete()
+            messages.success(request, 'Pertanyaan berhasil dihapus.')
+
+        return redirect('app:admin_agenda_quiz', agenda_uuid=agenda.uuid)
+
+    return render(request, 'admin_super/admin_agenda_quiz.html', {
+        'title': 'Pre-Test / Quiz',
+        'heading': 'Pre-Test / Quiz',
+        'agenda': agenda,
+        'course': agenda.course,
+        'quizzes': agenda.quizzes.all(),
+    })
+
+
+@admin_required
+def admin_course_materi_add(request, agenda_uuid):
+    agenda = get_object_or_404(CourseAgenda, uuid=agenda_uuid)
+    if request.method == 'POST':
+        urutan = request.POST.get('urutan') or 1
+        judul = request.POST.get('judul', '').strip()
+        url_materi = request.POST.get('url_materi', '').strip()
+        is_visible = request.POST.get('is_visible') == 'on'
+
+        if judul:
+            CourseMaterial.objects.create(
+                agenda=agenda,
+                urutan=int(urutan),
+                judul=judul,
+                url_materi=url_materi or None,
+                is_visible=is_visible,
+            )
+            messages.success(request, f'Materi "{judul}" berhasil ditambahkan ke {agenda.title}.')
+        else:
+            messages.error(request, 'Judul materi wajib diisi.')
+
+    return redirect(f"{reverse('app:admin_course_edit', args=[agenda.course.uuid])}#Agenda")
+
+
+@admin_required
+def admin_course_materi_edit(request, materi_id):
+    materi = get_object_or_404(CourseMaterial, id=materi_id)
+    course_uuid = materi.agenda.course.uuid
+
+    if request.method == 'POST':
+        urutan = request.POST.get('urutan') or 1
+        judul = request.POST.get('judul', '').strip()
+        url_materi = request.POST.get('url_materi', '').strip()
+        is_visible = request.POST.get('is_visible') == 'on'
+
+        if judul:
+            materi.urutan = int(urutan)
+            materi.judul = judul
+            materi.url_materi = url_materi or None
+            materi.is_visible = is_visible
+            materi.save()
+            messages.success(request, f'Materi "{judul}" berhasil diperbarui.')
+        else:
+            messages.error(request, 'Judul materi wajib diisi.')
+
+    return redirect(f"{reverse('app:admin_course_edit', args=[course_uuid])}#Agenda")
+
+
+@admin_required
+def admin_course_materi_delete(request, materi_id):
+    materi = get_object_or_404(CourseMaterial, id=materi_id)
+    course_uuid = materi.agenda.course.uuid
+    judul = materi.judul
+    materi.delete()
+    messages.success(request, f'Materi "{judul}" berhasil dihapus.')
+    return redirect(f"{reverse('app:admin_course_edit', args=[course_uuid])}#Agenda")
+
+
+
+@admin_required
+def admin_agenda_material(request, agenda_uuid):
+    agenda = get_object_or_404(
+        CourseAgenda.objects.select_related('course', 'pengajar__user'),
+        uuid=agenda_uuid,
+    )
+    course = agenda.course
+
+    if request.method == 'POST':
+        urutan = request.POST.get('urutan') or 1
+        judul = request.POST.get('judul', '').strip()
+        url_materi = request.POST.get('url_materi', '').strip()
+        is_visible = request.POST.get('is_visible') == 'on'
+
+        if judul:
+            CourseMaterial.objects.create(
+                agenda=agenda,
+                urutan=int(urutan),
+                judul=judul,
+                url_materi=url_materi or None,
+                is_visible=is_visible,
+            )
+            messages.success(request, f'Materi "{judul}" berhasil ditambahkan.')
+        else:
+            messages.error(request, 'Judul materi wajib diisi.')
+
+        return redirect('app:admin_agenda_material', agenda_uuid=agenda.uuid)
+
+    materials = agenda.materials.order_by('urutan', 'id')
+
+    return render(request, 'admin_super/admin_agenda_material.html', {
+        'title': f'Kelola Materi - {agenda.title}',
+        'heading': 'Kelola Materi Sesi',
+        'course': course,
+        'agenda': agenda,
+        'materials': materials,
+    })
+
+
+@admin_required
+def admin_agenda_material_edit(request, materi_id):
+    materi = get_object_or_404(CourseMaterial, id=materi_id)
+    agenda_uuid = materi.agenda.uuid
+
+    if request.method == 'POST':
+        urutan = request.POST.get('urutan') or 1
+        judul = request.POST.get('judul', '').strip()
+        url_materi = request.POST.get('url_materi', '').strip()
+        is_visible = request.POST.get('is_visible') == 'on'
+
+        if judul:
+            materi.urutan = int(urutan)
+            materi.judul = judul
+            materi.url_materi = url_materi or None
+            materi.is_visible = is_visible
+            materi.save()
+            messages.success(request, f'Materi "{judul}" berhasil diperbarui.')
+        else:
+            messages.error(request, 'Judul materi wajib diisi.')
+
+    return redirect('app:admin_agenda_material', agenda_uuid=agenda_uuid)
+
+
+@admin_required
+def admin_agenda_material_delete(request, materi_id):
+    materi = get_object_or_404(CourseMaterial, id=materi_id)
+    agenda_uuid = materi.agenda.uuid
+    judul = materi.judul
+    materi.delete()
+    messages.success(request, f'Materi "{judul}" berhasil dihapus.')
+    return redirect('app:admin_agenda_material', agenda_uuid=agenda_uuid)
+
+
+@admin_required
+def admin_course_agenda_manage(request, course_uuid):
+    course = get_object_or_404(Course, uuid=course_uuid)
+    agendas = course.agendas.select_related('pengajar__user').prefetch_related(
+        'materials',
+        'quizzes',
+    ).order_by('session_number', 'agenda_date')
+
+    return render(request, 'admin_super/admin_course_agenda_manage.html', {
+        'title': f'Kelola Agenda, Materi & Quiz - {course.name}',
+        'heading': 'Kelola Agenda, Materi & Quiz',
+        'course': course,
+        'agendas': agendas,
+    })

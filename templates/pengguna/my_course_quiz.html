@@ -1,0 +1,101 @@
+{% extends "pengguna/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content">
+
+    <!-- HEADER -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
+        <div>
+            <div style="font-size: 0.82rem; color: #64748b; margin-bottom: 4px;">
+                <a href="{% url 'app:my_courses' %}" style="color: #2c4cf4; text-decoration: none;">Pelatihan Saya</a>
+                <span style="margin: 0 6px;">&rsaquo;</span>
+                <a href="{% url 'app:my_course_detail' order_item.id %}" style="color: #2c4cf4; text-decoration: none;">{{ course.name|truncatewords:5 }}</a>
+                <span style="margin: 0 6px;">&rsaquo;</span>
+                <span>{{ quiz.get_tipe_tes_display }}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px;">
+                <span style="background: #f3e8ff; color: #7e22ce; padding: 3px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700;">
+                    {{ quiz.get_tipe_tes_display }} &bull; Sesi #{{ quiz.agenda.session_number|default:"-" }}
+                </span>
+                <span style="background: #fef3c7; color: #b45309; padding: 3px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700;">
+                    Passing Grade: {{ quiz.passing_score }}%
+                </span>
+            </div>
+            <h2 style="font-size: 1.35rem; font-weight: 700; color: #1e293b; margin: 6px 0 0 0;">
+                {{ quiz.judul }}
+            </h2>
+        </div>
+
+        <a href="{% url 'app:my_course_detail' order_item.id %}" class="btn secondary" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
+            <i class="ri-arrow-left-line"></i> Kembali ke Pelatihan
+        </a>
+    </div>
+
+    <!-- RIWAYAT PENGERJAAN (JIKA PERNAH MENGERJAKAN) -->
+    {% if riwayat %}
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px;">
+        <strong style="font-size: 0.85rem; color: #334155; display: block; margin-bottom: 8px;">
+            <i class="ri-history-line"></i> Riwayat Pengerjaan Anda:
+        </strong>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            {% for r in riwayat %}
+            <span style="background: {% if r.is_passed %}#dcfce7; color: #166534; border: 1px solid #bbf7d0;{% else %}#fef3c7; color: #92400e; border: 1px solid #fde68a;{% endif %} padding: 4px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 600;">
+                Nilai: {{ r.score }}% ({{ r.correct_count }}/{{ r.total_questions }}) &bull; {{ r.submitted_at|date:"d M Y H:i" }}
+            </span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- FORM SOAL PILIHAN GANDA -->
+    {% if questions %}
+    <form method="post" action="" onsubmit="return confirm('Kirim semua jawaban sekarang?');">
+        {% csrf_token %}
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            {% for q in questions %}
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                <div style="font-size: 0.95rem; font-weight: 700; color: #1e293b; margin-bottom: 12px; line-height: 1.5;">
+                    <span style="color: #2c4cf4;">{{ forloop.counter }}.</span> {{ q.pertanyaan }}
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 0.88rem; color: #334155;">
+                        <input type="radio" name="question_{{ q.id }}" value="A" required>
+                        <span><strong>A.</strong> {{ q.opsi_a }}</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 0.88rem; color: #334155;">
+                        <input type="radio" name="question_{{ q.id }}" value="B" required>
+                        <span><strong>B.</strong> {{ q.opsi_b }}</span>
+                    </label>
+                    {% if q.opsi_c %}
+                    <label style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 0.88rem; color: #334155;">
+                        <input type="radio" name="question_{{ q.id }}" value="C" required>
+                        <span><strong>C.</strong> {{ q.opsi_c }}</span>
+                    </label>
+                    {% endif %}
+                    {% if q.opsi_d %}
+                    <label style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 0.88rem; color: #334155;">
+                        <input type="radio" name="question_{{ q.id }}" value="D" required>
+                        <span><strong>D.</strong> {{ q.opsi_d }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div style="margin-top: 22px; display: flex; justify-content: flex-end; gap: 10px;">
+            <a href="{% url 'app:my_course_detail' order_item.id %}" class="btn secondary" style="text-decoration: none;">Batal</a>
+            <button type="submit" class="btn primary" style="padding: 10px 22px; font-weight: 700;">
+                <i class="ri-send-plane-fill"></i> Kirim Jawaban
+            </button>
+        </div>
+    </form>
+    {% else %}
+    <div style="background: #ffffff; border-radius: 12px; padding: 36px 20px; text-align: center; color: #64748b; border: 1px dashed #cbd5e1;">
+        Belum ada butir soal pada tes ini.
+    </div>
+    {% endif %}
+
+</div>
+{% endblock content1 %}

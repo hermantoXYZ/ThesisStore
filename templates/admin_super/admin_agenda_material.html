@@ -1,0 +1,192 @@
+{% extends "admin_super/base.html" %}
+
+{% block content1 %}
+<div class="dashboard-content">
+
+    <!-- HEADER & BREADCRUMB -->
+    <div style="background: #ffffff; border-radius: 12px; padding: 20px 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div>
+            <div style="font-size: 12.5px; color: #64748b; margin-bottom: 4px;">
+                <a href="{% url 'app:admin_course_list' %}" style="color: #2c4cf4; text-decoration: none;">Daftar Course</a>
+                <span style="margin: 0 6px;">&rsaquo;</span>
+                <a href="{% url 'app:admin_course_edit' course.uuid %}#Agenda" style="color: #2c4cf4; text-decoration: none;">{{ course.name|truncatewords:5 }}</a>
+                <span style="margin: 0 6px;">&rsaquo;</span>
+                <span>Materi Sesi</span>
+            </div>
+            <h3 style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0;">
+                Kelola Materi: {% if agenda.session_number %}Sesi {{ agenda.session_number }} - {% endif %}{{ agenda.title }}
+            </h3>
+            <p style="font-size: 13px; color: #64748b; margin: 4px 0 0 0;">
+                Tambahkan tautan slide presentasi, modul PDF, dataset praktik, atau rekaman video untuk sesi ini.
+            </p>
+        </div>
+
+        <a href="{% url 'app:admin_course_edit' course.uuid %}#Agenda" class="btn secondary">
+            <i class="ri-arrow-left-line"></i> Kembali ke Course
+        </a>
+    </div>
+
+    <!-- FORM TAMBAH MATERI -->
+    <div style="background: #ffffff; border-radius: 12px; padding: 22px 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); margin-bottom: 22px;">
+        <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin: 0 0 16px 0; border-left: 4px solid #2c4cf4; padding-left: 10px;">
+            Tambah Materi Sesi Baru
+        </h4>
+
+        <form method="post" action="">
+            {% csrf_token %}
+            <div style="display: grid; grid-template-columns: 100px 1.4fr 1.6fr; gap: 14px; margin-bottom: 14px;">
+                <div>
+                    <label style="font-weight: 600; font-size: 13px; color: #334155; display: block; margin-bottom: 6px;">Urutan <span style="color: red;">*</span></label>
+                    <input type="number" name="urutan" value="{{ materials.count|add:1 }}" min="1" required class="form-control">
+                </div>
+                <div>
+                    <label style="font-weight: 600; font-size: 13px; color: #334155; display: block; margin-bottom: 6px;">Judul Materi <span style="color: red;">*</span></label>
+                    <input type="text" name="judul" required placeholder="Contoh: Slide Presentasi Sesi 1 / Modul Praktik" class="form-control">
+                </div>
+                <div>
+                    <label style="font-weight: 600; font-size: 13px; color: #334155; display: block; margin-bottom: 6px;">Link Materi / Video (Google Drive / YouTube)</label>
+                    <input type="url" name="url_materi" placeholder="https://drive.google.com/..." class="form-control">
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding-top: 8px;">
+                <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: #334155; cursor: pointer; margin: 0;">
+                    <input type="checkbox" name="is_visible" checked>
+                    Tampilkan materi ini kepada peserta terdaftar
+                </label>
+
+                <button type="submit" class="btn primary">
+                    <i class="ri-add-line"></i> Simpan Materi
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- DAFTAR MATERI SESI -->
+    <div style="background: #ffffff; border-radius: 12px; padding: 22px 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin: 0;">
+                Daftar Materi Sesi ({{ materials.count }})
+            </h4>
+        </div>
+
+        {% if materials %}
+        <div class="table-responsive">
+            <table class="student-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="white-space: nowrap;">Urutan</th>
+                        <th style="white-space: nowrap;">Judul Materi</th>
+                        <th style="white-space: nowrap;">Tautan Materi</th>
+                        <th style="white-space: nowrap; text-align: center;">Status</th>
+                        <th style="white-space: nowrap; text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for materi in materials %}
+                    <tr>
+                        <td style="text-align: center; font-weight: 700; color: #2c4cf4;">#{{ materi.urutan }}</td>
+                        <td style="font-weight: 600; color: #1e293b;">{{ materi.judul|truncatechars:40 }}</td>
+                        <td style="font-size: 13px;">
+                            {% if materi.url_materi %}
+                                <a href="{{ materi.url_materi }}" target="_blank" rel="noopener noreferrer" style="color: #2c4cf4; text-decoration: none; word-break: break-all;">
+                                    LINK<i class="ri-external-link-line"></i>
+                                </a>
+                            {% else %}
+                                <span style="color: #94a3b8;">-</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            {% if materi.is_visible %}
+                                <span style="background: #dcfce7; color: #15803d; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;">Tampil</span>
+                            {% else %}
+                                <span style="background: #f1f5f9; color: #64748b; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;">Tersembunyi</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; white-space: nowrap;">
+                            <button type="button"
+                                    class="btn warning small"
+                                    title="Edit Materi"
+                                    data-action-url="{% url 'app:admin_agenda_material_edit' materi.id %}"
+                                    onclick="openEditMateriModal(this, '{{ materi.urutan }}', '{{ materi.judul|escapejs }}', '{{ materi.url_materi|default:''|escapejs }}', {{ materi.is_visible|yesno:'true,false' }})">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                            <a href="{% url 'app:admin_agenda_material_delete' materi.id %}"
+                               class="btn danger small"
+                               title="Hapus Materi"
+                               onclick="return confirm('Yakin ingin menghapus materi &quot;{{ materi.judul|escapejs }}&quot;?');">
+                                <i class="ri-delete-bin-line"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 32px; color: #94a3b8; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1;">
+            <i class="ri-folder-open-line" style="font-size: 32px; display: block; margin-bottom: 6px;"></i>
+            Belum ada materi pada sesi ini. Silakan tambahkan menggunakan form di atas.
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- MODAL EDIT MATERI -->
+<div id="modal-edit-materi" class="modal-edit" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999;">
+    <div class="modal-content-edit" style="background: #fff; border-radius: 12px; padding: 24px; max-width: 500px; width: 92%; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: left;">
+        <span class="close" onclick="closeEditMateriModal()" style="position: absolute; top: 16px; right: 20px; font-size: 24px; cursor: pointer; color: #7f8c8d;">&times;</span>
+        <h3 style="font-size: 17px; font-weight: 700; color: #1e293b; margin: 0 0 16px 0; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+            Edit Materi Sesi
+        </h3>
+
+        <form method="post" id="form-edit-materi">
+            {% csrf_token %}
+            <div style="display: grid; grid-template-columns: 95px 1fr; gap: 10px; margin-bottom: 14px;">
+                <div>
+                    <label style="font-weight: 600; font-size: 13px; margin-bottom: 5px; display: block;">Urutan <span style="color:red;">*</span></label>
+                    <input type="number" name="urutan" id="edit_materi_urutan" min="1" class="form-control" required>
+                </div>
+                <div>
+                    <label style="font-weight: 600; font-size: 13px; margin-bottom: 5px; display: block;">Judul Materi <span style="color:red;">*</span></label>
+                    <input type="text" name="judul" id="edit_materi_judul" class="form-control" required>
+                </div>
+            </div>
+            <div style="margin-bottom: 14px;">
+                <label style="font-weight: 600; font-size: 13px; margin-bottom: 5px; display: block;">Link Materi / Video</label>
+                <input type="url" name="url_materi" id="edit_materi_url" placeholder="https://..." class="form-control">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #334155; cursor: pointer;">
+                    <input type="checkbox" name="is_visible" id="edit_materi_visible">
+                    Tampilkan materi ini ke peserta
+                </label>
+            </div>
+            <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 14px;">
+                <button type="button" class="btn secondary" onclick="closeEditMateriModal()">Batal</button>
+                <button type="submit" class="btn primary">
+                    <i class="ri-save-line"></i> Simpan Perubahan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content1 %}
+
+{% block script_costum %}
+<script>
+function openEditMateriModal(btn, urutan, judul, urlMateri, isVisible) {
+    document.getElementById('form-edit-materi').action = btn.getAttribute('data-action-url');
+    document.getElementById('edit_materi_urutan').value = urutan;
+    document.getElementById('edit_materi_judul').value = judul;
+    document.getElementById('edit_materi_url').value = urlMateri;
+    document.getElementById('edit_materi_visible').checked = isVisible;
+    document.getElementById('modal-edit-materi').style.display = 'flex';
+}
+
+function closeEditMateriModal() {
+    document.getElementById('modal-edit-materi').style.display = 'none';
+}
+</script>
+{% endblock script_costum %}

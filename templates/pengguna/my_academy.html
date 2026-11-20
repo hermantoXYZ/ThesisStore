@@ -1,0 +1,568 @@
+{% extends "pengguna/base.html" %}
+
+{% block content1 %}
+<style>
+.course-detail-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 1.5rem;
+    align-items: start;
+}
+@media (max-width: 992px) {
+    .course-detail-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.panel-box {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 1.35rem;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.15rem;
+}
+
+/* ACCORDION SESI PEMBELAJARAN */
+.session-accordion {
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background: #ffffff;
+    margin-bottom: 0.75rem;
+}
+.session-accordion:last-child {
+    margin-bottom: 0;
+}
+.session-accordion[open] {
+    border-color: #cbd5e1;
+}
+
+.session-summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 0.9rem 1rem;
+    background: #f8fafc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    user-select: none;
+    transition: background 0.15s;
+}
+.session-summary::-webkit-details-marker {
+    display: none;
+}
+.session-summary:hover {
+    background: #f1f5f9;
+}
+.session-accordion[open] .session-summary {
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.session-summary-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.session-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #2c4cf4;
+    background: #eff6ff;
+    border: 1px solid #dbeafe;
+    padding: 3px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.session-title {
+    margin: 0 0 3px 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.35;
+}
+
+.session-meta {
+    font-size: 0.78rem;
+    color: #64748b;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+}
+
+.session-summary-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+.session-chevron {
+    font-size: 1.15rem;
+    color: #64748b;
+    transition: transform 0.2s ease;
+}
+.session-accordion[open] .session-chevron {
+    transform: rotate(180deg);
+    color: #2c4cf4;
+}
+
+/* ISI EXPAND: ALUR PRE-TEST -> MATERI -> QUIZ */
+.session-flow {
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.flow-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+.flow-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0.2rem;
+}
+.flow-row:first-child {
+    padding-top: 0.2rem;
+}
+
+.flow-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.flow-tag {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+.flow-tag.pretest {
+    color: #6b21a8;
+    background: #f3e8ff;
+}
+.flow-tag.materi {
+    color: #1d4ed8;
+    background: #eff6ff;
+}
+.flow-tag.quiz {
+    color: #b45309;
+    background: #fef3c7;
+}
+
+.flow-title {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #0f172a;
+    display: block;
+    line-height: 1.35;
+}
+
+.flow-sub {
+    font-size: 0.76rem;
+    color: #64748b;
+    display: block;
+    margin-top: 2px;
+}
+
+.flow-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: 4px;
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.cert-card-box {
+    background: #1e3a8a;
+    border: 1px solid #1e40af;
+    border-radius: 6px;
+    padding: 1.35rem;
+    color: #ffffff;
+}
+
+@media (max-width: 640px) {
+    .session-summary {
+        align-items: flex-start;
+    }
+    .session-summary-left {
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+    .flow-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.55rem;
+    }
+    .flow-btn {
+        width: 100%;
+        box-sizing: border-box;
+    }
+}
+</style>
+
+<div class="dashboard-content">
+
+    <!-- BREADCRUMB & HEADER -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+        <div style="flex: 1; min-width: 240px;">
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: #64748b; margin-bottom: 0.3rem;">
+                <a href="{% url 'app:my_courses' %}" style="color: inherit; text-decoration: none;">Pelatihan Saya</a>
+                <i class="ri-arrow-right-s-line"></i>
+                <span style="color: #0f172a; font-weight: 600;">{{ course.name|truncatewords:6 }}</span>
+            </div>
+            <h1 style="font-size: 1.4rem; font-weight: 700; color: #0f172a; margin: 0; line-height: 1.35;">
+                {{ course.name }}
+            </h1>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="{% url 'app:my_courses' %}" class="btn secondary" style="display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none; padding: 8px 14px; font-weight: 600; font-size: 0.85rem; border-radius: 4px;">
+                <i class="ri-arrow-left-line"></i> Daftar Pelatihan
+            </a>
+            {% if course.meeting_url and is_active %}
+                <a href="{{ course.meeting_url }}" target="_blank" rel="noopener noreferrer" class="btn primary" style="display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none; padding: 8px 16px; font-weight: 700; font-size: 0.85rem; border-radius: 4px;">
+                    <i class="ri-video-chat-line"></i> Masuk Ruang Virtual
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- MAIN TWO COLUMN LAYOUT -->
+    <div class="course-detail-layout">
+        <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+            <div class="panel-box">
+                <div class="panel-header">
+                    <h2 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="ri-calendar-event-line" style="color: #2c4cf4;"></i>
+                        Jadwal &amp; Rincian Sesi Pembelajaran
+                    </h2>
+                    <span style="font-size: 0.78rem; color: #475569; background: #f1f5f9; border: 1px solid #e2e8f0; padding: 3px 9px; border-radius: 3px; font-weight: 600;">
+                        {{ agendas|length }} Sesi
+                    </span>
+                </div>
+
+                {% if agendas %}
+                    <div>
+                        {% for ag in agendas %}
+                        <details class="session-accordion" {% if forloop.first %}open{% endif %}>
+                            <summary class="session-summary">
+                                <div class="session-summary-left">
+                                    <span class="session-badge">
+                                        Sesi {{ ag.session_number|default:forloop.counter }}
+                                    </span>
+                                    <div style="min-width: 0;">
+                                        <h4 class="session-title">{{ ag.title }}</h4>
+                                        <div class="session-meta">
+                                            {% if ag.agenda_date %}
+                                                <span><i class="ri-calendar-line"></i> {{ ag.agenda_date|date:"d M Y, H:i" }} WIB</span>
+                                            {% else %}
+                                                <span><i class="ri-calendar-line"></i> Jadwal menyusul</span>
+                                            {% endif %}
+                                            {% if ag.jp_count %}
+                                                <span><i class="ri-time-line"></i> {{ ag.jp_count }} JP</span>
+                                            {% endif %}
+                                            {% if ag.pengajar %}
+                                                <span><i class="ri-user-line"></i> {{ ag.pengajar.user.first_name|default:ag.pengajar.user.username }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="session-summary-right">
+                                    <i class="ri-arrow-down-s-line session-chevron"></i>
+                                </div>
+                            </summary>
+
+                            {% if is_active %}
+                                <div class="session-flow">
+                                    <!-- A. PRE-TEST -->
+                                    {% for quiz in ag.quizzes.all %}
+                                        {% if quiz.is_visible and quiz.tipe_tes == 'pretest' %}
+                                        <div class="flow-row">
+                                            <div class="flow-info">
+                                                <span class="flow-tag pretest">Pre-Test</span>
+                                                <div>
+                                                    <span class="flow-title">{{ quiz.judul }}</span>
+                                                    <span class="flow-sub">
+                                                        {{ quiz.questions.count }} Soal &bull; Lulus min. {{ quiz.passing_score }}%
+                                                        {% if quiz.user_best_score is not None %}
+                                                            &bull; <strong style="color: {% if quiz.user_passed %}#059669{% else %}#d97706{% endif %};">Skor: {{ quiz.user_best_score }}%</strong>
+                                                        {% endif %}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <a href="{% url 'app:my_course_quiz' order_item.id quiz.id %}"
+                                               class="btn {% if quiz.user_passed %}secondary{% else %}primary{% endif %} small flow-btn">
+                                                {% if quiz.user_passed %}
+                                                    <i class="ri-check-line"></i> Lulus (Ulangi)
+                                                {% elif quiz.user_best_score is not None %}
+                                                    <i class="ri-refresh-line"></i> Ulangi Pre-Test
+                                                {% else %}
+                                                    <i class="ri-play-line"></i> Mulai Pre-Test
+                                                {% endif %}
+                                            </a>
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    <!-- B. MATERI PEMBELAJARAN -->
+                                    {% for materi in ag.materials.all %}
+                                        {% if materi.is_visible and materi.url_materi %}
+                                        <div class="flow-row">
+                                            <div class="flow-info">
+                                                <div>
+                                                    <span class="flow-title">{{ materi.judul|truncatewords:13 }}</span>
+                                                    <span class="flow-sub">Bahan bacaan / presentasi sesi</span>
+                                                </div>
+                                            </div>
+                                            <a href="{{ materi.url_materi }}" target="_blank" rel="noopener noreferrer"
+                                               class="btn secondary small flow-btn">
+                                                <i class="ri-external-link-line"></i>Materi
+                                            </a>
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    <!-- C. QUIZ / EVALUASI -->
+                                    {% for quiz in ag.quizzes.all %}
+                                        {% if quiz.is_visible and quiz.tipe_tes == 'quiz' %}
+                                        <div class="flow-row">
+                                            <div class="flow-info">
+                                                <div>
+                                                    <span class="flow-sub">
+                                                        {{ quiz.questions.count }} Soal &bull; Lulus min. {{ quiz.passing_score }}%
+                                                        {% if quiz.user_best_score is not None %}
+                                                            &bull; <strong style="color: {% if quiz.user_passed %}#059669{% else %}#d97706{% endif %};">Skor: {{ quiz.user_best_score }}%</strong>
+                                                        {% endif %}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <a href="{% url 'app:my_course_quiz' order_item.id quiz.id %}"
+                                               class="btn {% if quiz.user_passed %}secondary{% else %}primary{% endif %} small flow-btn">
+                                                {% if quiz.user_passed %}
+                                                    <i class="ri-check-line"></i> Lulus (Ulangi)
+                                                {% elif quiz.user_best_score is not None %}
+                                                    <i class="ri-refresh-line"></i> Ulangi Quiz
+                                                {% else %}
+                                                    <i class="ri-edit-line"></i> Kerjakan Quiz
+                                                {% endif %}
+                                            </a>
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if not ag.materials.all and not ag.quizzes.all %}
+                                        <div style="font-size: 0.82rem; color: #94a3b8; padding: 0.4rem 0;">
+                                            Belum ada materi atau quiz yang tersedia untuk sesi ini.
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <div style="padding: 0.85rem 1rem; font-size: 0.82rem; color: #64748b;">
+                                    Materi dan quiz akan terbuka setelah pendaftaran Anda aktif.
+                                </div>
+                            {% endif %}
+                        </details>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div style="text-align: center; color: #94a3b8; padding: 2rem 1rem; border: 1px dashed #cbd5e1; border-radius: 4px;">
+                        <i class="ri-calendar-line" style="font-size: 2rem; color: #cbd5e1; margin-bottom: 0.4rem; display: block;"></i>
+                        <p style="margin: 0; font-size: 0.88rem;">Rincian jadwal sesi akan dibagikan sebelum kegiatan berlangsung.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- 2. DESKRIPSI & SILABUS KEGIATAN -->
+            <div class="panel-box">
+                <div class="panel-header">
+                    <h2 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="ri-file-list-2-line" style="color: #2c4cf4;"></i>
+                        Tentang Program Pelatihan Ini
+                    </h2>
+                </div>
+                <div style="font-size: 0.9rem; color: #334155; line-height: 1.7;">
+                    {{ course.description|safe }}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: SERTIFIKAT, INSTRUKTUR, INVOICE, BANTUAN -->
+        <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+
+            <!-- 1. KARTU SERTIFIKAT PELATIHAN -->
+            <div class="cert-card-box">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 0.8rem;">
+                    <div style="width: 36px; height: 36px; border-radius: 4px; background: rgba(255, 255, 255, 0.16); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; color: #fde047; flex-shrink: 0;">
+                        <i class="ri-award-fill"></i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1rem; font-weight: 700; margin: 0; color: #ffffff;">
+                            E-Sertifikat Resmi
+                        </h3>
+                        <span style="font-size: 0.76rem; opacity: 0.85;">Bernomor Seri Resmi ThesisEdu</span>
+                    </div>
+                </div>
+
+                {% if is_active %}
+                    {% if wajib_quiz %}
+                        <p style="font-size: 0.84rem; line-height: 1.5; margin: 0 0 1rem 0; opacity: 0.92;">
+                            Selesaikan seluruh Pre-Test &amp; Quiz Evaluasi dengan memenuhi Passing Grade untuk membuka E-Sertifikat Anda.
+                        </p>
+                        <button disabled style="width: 100%; background: rgba(255, 255, 255, 0.18); color: rgba(255, 255, 255, 0.9); font-weight: 600; font-size: 0.85rem; padding: 9px 12px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.25); cursor: not-allowed; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <i class="ri-lock-line"></i> Selesaikan Quiz Terlebih Dahulu
+                        </button>
+                    {% elif wajib_kuesioner %}
+                        <p style="font-size: 0.84rem; line-height: 1.5; margin: 0 0 1rem 0; opacity: 0.92;">
+                            Silakan lengkapi kuesioner evaluasi terlebih dahulu untuk membuka akses unduhan E-Sertifikat Anda.
+                        </p>
+                        <a href="{% url 'app:my_course_survey' order_item.id %}" class="btn" style="width: 100%; background: #fde047; color: #0f172a; font-weight: 700; font-size: 0.88rem; padding: 10px 12px; border-radius: 4px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; box-sizing: border-box;">
+                            <i class="ri-survey-line"></i>
+                            Isi Kuesioner &amp; Buka Sertifikat
+                        </a>
+                    {% else %}
+                        <p style="font-size: 0.84rem; line-height: 1.5; margin: 0 0 1rem 0; opacity: 0.92;">
+                            Sertifikat Anda telah siap. Klik tombol di bawah untuk melihat atau mengunduh dokumen PDF sertifikat Anda.
+                        </p>
+                        <a href="{% url 'app:sertifikat_pengguna' order_item.id %}" target="_blank" class="btn" style="width: 100%; background: #ffffff; color: #1e3a8a; font-weight: 700; font-size: 0.88rem; padding: 10px 12px; border-radius: 4px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; box-sizing: border-box;">
+                            <i class="ri-download-2-line" style="color: #2c4cf4;"></i>
+                            Lihat &amp; Unduh Sertifikat
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <p style="font-size: 0.84rem; line-height: 1.5; margin: 0 0 1rem 0; opacity: 0.92;">
+                        Sertifikat dapat diunduh segera setelah pembayaran pendaftaran Anda diverifikasi.
+                    </p>
+                    <button disabled style="width: 100%; background: rgba(255, 255, 255, 0.18); color: rgba(255, 255, 255, 0.75); font-weight: 600; font-size: 0.85rem; padding: 9px 12px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); cursor: not-allowed; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <i class="ri-lock-line"></i> Sertifikat Terkunci
+                    </button>
+                {% endif %}
+            </div>
+
+            <!-- 2. INSTRUKTUR / PEMATERI -->
+            <div class="panel-box" style="padding: 1.15rem;">
+                <h3 style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin: 0 0 0.85rem 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.6rem; display: flex; align-items: center; gap: 6px;">
+                    <i class="ri-user-star-line" style="color: #f59e0b;"></i> Instruktur &amp; Pemateri
+                </h3>
+
+                {% if course.coaches.exists %}
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        {% for coach in course.coaches.all %}
+                        <div style="display: flex; gap: 0.7rem; align-items: center;">
+                            <div style="width: 40px; height: 40px; border-radius: 4px; overflow: hidden; background: #eff6ff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid #bfdbfe;">
+                                {% if coach.photo %}
+                                    <img src="{{ coach.photo.url }}" alt="{{ coach.user.first_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    <i class="ri-user-3-line" style="font-size: 1.15rem; color: #2c4cf4;"></i>
+                                {% endif %}
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <strong style="font-size: 0.86rem; color: #0f172a; display: block; line-height: 1.3;">
+                                    {{ coach.user.first_name|default:coach.user.username }}
+                                </strong>
+                                {% if coach.bidang_keahlian %}
+                                    <span style="font-size: 0.76rem; color: #64748b; display: block;">
+                                        {{ coach.bidang_keahlian.nama_bidang }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p style="font-size: 0.84rem; color: #94a3b8; margin: 0;">Tim Instruktur Spesialis ThesisEdu</p>
+                {% endif %}
+            </div>
+
+            <!-- 3. INFORMASI PENDAFTARAN & PESANAN -->
+            <div class="panel-box" style="padding: 1.15rem;">
+                <h3 style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin: 0 0 0.85rem 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.6rem;">
+                    Informasi Pendaftaran
+                </h3>
+
+                <div style="font-size: 0.84rem; display: flex; flex-direction: column; gap: 0.55rem;">
+                    <div style="display: flex; justify-content: space-between; gap: 8px;">
+                        <span style="color: #64748b;">No. Pesanan:</span>
+                        <a href="{% url 'app:pesanan_detail' order.order_number %}" style="font-weight: 700; color: #2c4cf4; text-decoration: none;">
+                            #{{ order.order_number }}
+                        </a>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; gap: 8px;">
+                        <span style="color: #64748b;">Biaya Pendaftaran:</span>
+                        <strong style="color: #0f172a;">
+                            {% if order_item.harga_satuan == 0 %}
+                                <span style="color: #059669;">Gratis</span>
+                            {% else %}
+                                Rp{{ order_item.harga_satuan|floatformat:0 }}
+                            {% endif %}
+                        </strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; gap: 8px;">
+                        <span style="color: #64748b;">Metode Bayar:</span>
+                        <span style="color: #334155;">{{ order.metode_pembayaran }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; gap: 8px;">
+                        <span style="color: #64748b;">Tanggal Daftar:</span>
+                        <span style="color: #334155;">{{ order.created_at|date:"d M Y" }}</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 0.85rem; padding-top: 0.7rem; border-top: 1px solid #e2e8f0;">
+                    <a href="{% url 'app:pesanan_detail' order.order_number %}" style="font-size: 0.82rem; color: #2c4cf4; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                        <i class="ri-file-list-line"></i> Lihat Rincian Invoice Pesanan
+                    </a>
+                </div>
+            </div>
+
+            <!-- 4. BUTUH BANTUAN -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 1.15rem; text-align: center;">
+                <i class="ri-customer-service-2-line" style="font-size: 1.6rem; color: #2c4cf4; margin-bottom: 0.25rem; display: block;"></i>
+                <strong style="font-size: 0.88rem; color: #0f172a; display: block; margin-bottom: 0.25rem;">Butuh Bantuan Pelatihan?</strong>
+                <p style="font-size: 0.78rem; color: #64748b; margin: 0 0 0.7rem 0;">Hubungi helpdesk kami jika mengalami kendala akses atau sertifikat.</p>
+                <a href="https://wa.me/6281234567890?text=Halo%20Admin%20ThesisEdu,%20saya%20memerlukan%20bantuan%20terkait%20pelatihan%20*{{ course.name|urlencode }}*%20(Pesanan%20%23{{ order.order_number }})." target="_blank" rel="noopener noreferrer" style="font-size: 0.82rem; color: #16a34a; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                    <i class="ri-whatsapp-line"></i> Hubungi via WhatsApp
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock content1 %}
