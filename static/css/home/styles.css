@@ -1,6 +1,6 @@
 :root {
   /* Brand Palette */
-  --apb-primary: #0088cc;
+  --apb-primary: #2a4ff6;
   --apb-primary-dark: #006699;
   --apb-primary-light: #e6f4fa;
   --apb-secondary: #a4a4a4;
@@ -127,8 +127,8 @@ textarea {
   align-items: center;
   gap: 0.5rem;
   padding: 0.35rem 1rem;
-  background: var(--apb-primary-light);
-  color: var(--apb-primary);
+  background: #2a4ff6;
+  color: #ffffff;
   font-weight: 700;
   font-size: 0.8rem;
   text-transform: uppercase;
@@ -175,13 +175,11 @@ textarea {
 .apb-btn-primary {
   background-color: var(--apb-accent);
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(0, 180, 216, 0.3);
 }
 
 .apb-btn-primary:hover {
-  background-color: #0096c7;
+  background-color: #2a4ff6;
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0, 180, 216, 0.4);
 }
 
 .apb-btn-outline {
@@ -1644,7 +1642,7 @@ textarea {
 .apb-footer-newsletter-btn {
   align-self: flex-start;
   padding: 0.55rem 1.4rem;
-  background: #00b4d8;
+  background: #8c52ff;
   color: #ffffff;
   font-weight: 600;
   font-size: 0.875rem;
@@ -1657,7 +1655,7 @@ textarea {
 }
 
 .apb-footer-newsletter-btn:hover {
-  background: #0096c7;
+  background: #8f70cf;
 }
 
 /* Address & Contact */
@@ -1697,12 +1695,13 @@ textarea {
   gap: 0.75rem;
 }
 
+
 .apb-footer-social-link {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #e0f2fe;
-  color: #0088cc;
+  background: #2a4ff6;
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1711,10 +1710,11 @@ textarea {
 }
 
 .apb-footer-social-link:hover {
-  background: #0088cc;
+  background: #8c52ff;
   color: #ffffff;
   transform: translateY(-2px);
 }
+
 
 .apb-footer-copyright {
   font-size: 0.8rem;

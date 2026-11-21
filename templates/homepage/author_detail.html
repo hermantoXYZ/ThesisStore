@@ -1,0 +1,172 @@
+{% extends 'homepage/base_public.html' %}
+
+{% block content %}
+<div class="container" style="max-width: 1040px; margin: 2.5rem auto; padding: 0 1rem;">
+
+    <!-- KARTU PROFIL UTAMA -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.75rem; display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.75rem;">
+        {% if anggota.photo %}
+            <img src="{{ anggota.photo.url }}" alt="{{ anggota.user.first_name|default:anggota.user.username }}" style="width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 2px solid #e2e8f0;">
+        {% else %}
+            <img src="https://ui-avatars.com/api/?name={{ anggota.user.first_name|default:anggota.user.username|urlencode }}&background=2c4cf4&color=fff&size=96" alt="{{ anggota.user.first_name|default:anggota.user.username }}" style="width: 96px; height: 96px; border-radius: 50%;">
+        {% endif %}
+
+        <div style="flex: 1; min-width: 240px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px;">
+                {% if coached_courses %}
+                    <span style="background: #eff6ff; color: #1d4ed8; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 999px;">Narasumber</span>
+                {% endif %}
+                {% if penulis_buku %}
+                    <span style="background: #ecfdf5; color: #047857; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 999px;">Penulis Buku</span>
+                {% endif %}
+                {% if editor_buku %}
+                    <span style="background: #fffbeb; color: #b45309; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 999px;">Editor Buku</span>
+                {% endif %}
+                {% if approved_reviewer %}
+                    <span style="background: #f5f3ff; color: #6d28d9; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 999px;">Reviewer / Editor Jurnal</span>
+                {% endif %}
+            </div>
+
+            <h1 style="font-size: 1.45rem; font-weight: 700; color: #0f172a; margin: 0 0 4px 0;">
+                {{ anggota.user.first_name|default:anggota.user.username }}
+            </h1>
+
+            <p style="font-size: 0.9rem; color: #475569; margin: 0 0 8px 0;">
+                {% if anggota.jabatan_fungsional and anggota.jabatan_fungsional != 'Tanpa Jabatan Fungsional' %}
+                    {{ anggota.jabatan_fungsional }} &bull;
+                {% endif %}
+                {{ anggota.universitas|default:"Akademisi & Praktisi" }}
+                {% if anggota.program_studi %} ({{ anggota.program_studi }}){% endif %}
+            </p>
+
+            {% if anggota.bidang_keahlian %}
+                <div style="font-size: 0.82rem; color: #64748b; margin-bottom: 10px;">
+                    Bidang Keahlian: <strong style="color: #1e293b;">{{ anggota.bidang_keahlian.nama_bidang }}</strong>
+                </div>
+            {% endif %}
+
+            <!-- TAUTAN AKADEMIK -->
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                {% if anggota.link_sinta %}<a href="{{ anggota.link_sinta }}" target="_blank" rel="noopener" style="font-size: 0.78rem; padding: 4px 10px; border: 1px solid #cbd5e1; border-radius: 6px; color: #1e293b; text-decoration: none;">SINTA</a>{% endif %}
+                {% if anggota.link_scopus %}<a href="{{ anggota.link_scopus }}" target="_blank" rel="noopener" style="font-size: 0.78rem; padding: 4px 10px; border: 1px solid #cbd5e1; border-radius: 6px; color: #1e293b; text-decoration: none;">Scopus</a>{% endif %}
+                {% if anggota.link_google_scholar %}<a href="{{ anggota.link_google_scholar }}" target="_blank" rel="noopener" style="font-size: 0.78rem; padding: 4px 10px; border: 1px solid #cbd5e1; border-radius: 6px; color: #1e293b; text-decoration: none;">Google Scholar</a>{% endif %}
+                {% if anggota.link_orcid %}<a href="{{ anggota.link_orcid }}" target="_blank" rel="noopener" style="font-size: 0.78rem; padding: 4px 10px; border: 1px solid #cbd5e1; border-radius: 6px; color: #1e293b; text-decoration: none;">ORCID</a>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 1. SEBAGAI NARASUMBER -->
+    {% if coached_courses %}
+    <div style="margin-bottom: 1.75rem;">
+        <h2 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0 0 12px 0;">
+            Narasumber Pelatihan &amp; Kegiatan ({{ coached_courses.count }})
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+            {% for c in coached_courses %}
+            <a href="{{ c.get_absolute_url }}" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; text-decoration: none; color: inherit; display: flex; flex-direction: column;">
+                {% if c.thumbnail %}
+                    <img src="{{ c.thumbnail.url }}" alt="{{ c.name }}" style="width: 100%; height: 455px; object-fit: cover; border-bottom: 1px solid #f1f5f9;">
+                {% else %}
+                    <div style="width: 100%; height: 455px; background: linear-gradient(135deg, #eff6ff, #dbeafe); display: flex; align-items: center; justify-content: center; color: #2c4cf4; font-size: 2rem; border-bottom: 1px solid #f1f5f9;">
+                        <i class="ri-slideshow-3-line"></i>
+                    </div>
+                {% endif %}
+                <div style="padding: 14px; flex: 1; display: flex; flex-direction: column;">
+                    <span style="font-size: 0.72rem; font-weight: 700; color: #2c4cf4;">{{ c.get_course_type_display }} &bull; {{ c.get_format_display }}</span>
+                    <h3 style="font-size: 0.95rem; font-weight: 600; color: #0f172a; margin: 4px 0 6px 0; line-height: 1.4;">{{ c.name }}</h3>
+                    <span style="font-size: 0.8rem; color: #64748b; margin-top: auto;">{{ c.start_date|date:"d M Y"|default:"Jadwal menyusul" }}</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 2. SEBAGAI PENULIS BUKU -->
+    <!-- 2. SEBAGAI PENULIS BUKU -->
+    {% if penulis_buku %}
+    <div style="margin-bottom: 1.75rem;">
+        <h2 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0 0 12px 0;">
+            Buku yang Ditulis ({{ penulis_buku.count }})
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px;">
+            {% for b in penulis_buku %}
+            <a href="{{ b.get_absolute_url }}" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; text-decoration: none; color: inherit; display: flex; flex-direction: column;">
+                <div style="width: 100%; aspect-ratio: 3 / 4; background: #f8fafc; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #f1f5f9; overflow: hidden;">
+                    {% if b.featured_image %}
+                        <img src="{{ b.featured_image.url }}" alt="{{ b.judul }}" style="width: 100%; height: 100%; object-fit: contain;">
+                    {% else %}
+                        <i class="ri-book-2-line" style="font-size: 2.2rem; color: #059669;"></i>
+                    {% endif %}
+                </div>
+                <div style="padding: 12px; flex: 1; display: flex; flex-direction: column;">
+                    <span style="font-size: 0.72rem; font-weight: 700; color: #059669;">Penulis</span>
+                    <h3 style="font-size: 0.9rem; font-weight: 600; color: #0f172a; margin: 4px 0 6px 0; line-height: 1.4;">{{ b.judul }}</h3>
+                    <span style="font-size: 0.78rem; color: #64748b; margin-top: auto;">{{ b.nama_penerbit }}{% if b.tahun %} ({{ b.tahun }}){% endif %}</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 3. SEBAGAI EDITOR BUKU -->
+    {% if editor_buku %}
+    <div style="margin-bottom: 1.75rem;">
+        <h2 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0 0 12px 0;">
+            Buku yang Diedit ({{ editor_buku.count }})
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px;">
+            {% for b in editor_buku %}
+            <a href="{{ b.get_absolute_url }}" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; text-decoration: none; color: inherit; display: flex; flex-direction: column;">
+                <div style="width: 100%; aspect-ratio: 3 / 4; background: #f8fafc; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #f1f5f9; overflow: hidden;">
+                    {% if b.featured_image %}
+                        <img src="{{ b.featured_image.url }}" alt="{{ b.judul }}" style="width: 100%; height: 100%; object-fit: contain;">
+                    {% else %}
+                        <i class="ri-book-open-line" style="font-size: 2.2rem; color: #d97706;"></i>
+                    {% endif %}
+                </div>
+                <div style="padding: 12px; flex: 1; display: flex; flex-direction: column;">
+                    <span style="font-size: 0.72rem; font-weight: 700; color: #d97706;">Editor</span>
+                    <h3 style="font-size: 0.9rem; font-weight: 600; color: #0f172a; margin: 4px 0 6px 0; line-height: 1.4;">{{ b.judul }}</h3>
+                    <span style="font-size: 0.78rem; color: #64748b; margin-top: auto;">{{ b.nama_penerbit }}{% if b.tahun %} ({{ b.tahun }}){% endif %}</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 4. SEBAGAI REVIEWER / EDITOR JURNAL -->
+    {% if approved_reviewer %}
+    <div style="margin-bottom: 1.75rem;">
+        <h2 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0 0 12px 0;">
+            Dewan Reviewer &amp; Editor Jurnal
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px;">
+            {% for app in approved_reviewer %}
+                {% for jurnal in app.journal_interests.all %}
+                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; display: flex; gap: 12px; align-items: center;">
+                        {% if jurnal.cover %}
+                            <img src="{{ jurnal.cover.url }}" alt="{{ jurnal.nama }}" style="width: 52px; height: 68px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; flex-shrink: 0;">
+                        {% else %}
+                            <div style="width: 52px; height: 68px; background: #f5f3ff; color: #6d28d9; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;">
+                                <i class="ri-article-line"></i>
+                            </div>
+                        {% endif %}
+                        <div style="min-width: 0;">
+                            <span style="font-size: 0.72rem; font-weight: 700; color: #6d28d9; text-transform: capitalize; display: block;">{{ app.role_applied }}</span>
+                            <strong style="font-size: 0.88rem; color: #0f172a; display: block; line-height: 1.35;">{{ jurnal.nama }}</strong>
+                            {% if jurnal.issn or jurnal.e_issn %}
+                                <span style="font-size: 0.75rem; color: #64748b;">ISSN: {{ jurnal.e_issn|default:jurnal.issn }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock content %}

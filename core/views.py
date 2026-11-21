@@ -9,7 +9,8 @@ from app.models import (
     Article, Category, KerjaSama, HeroSlide, Page, JurnalMaster, Cart, CartItem
 )
 from django.urls import reverse
-
+from django.http import Http404
+from django.utils.text import slugify
 
 def _transfer_pending_cart(request, user):
     pending = request.session.pop('pending_cart_item', None)
@@ -430,3 +431,31 @@ def katalog_pelatihan(request):
     return render(request, 'homepage/katalog_pelatihan.html', context)
     
     
+def author_detail(request, uid, slug):
+    qs = UserPengguna.objects.select_related(
+        'user', 'provinsi_pengguna', 'bidang_keahlian'
+    ).prefetch_related(
+        'coached_courses',
+        'penulis_buku__kategori',
+        'editor_buku__kategori',
+        'reviewer_applications__journal_interests',
+    ).filter(uuid__istartswith=uid)
+
+    anggota = next(
+        (u for u in qs if slugify(u.user.first_name) == slug or slugify(u.user.username) == slug),
+        qs.first()
+    )
+    if not anggota:
+        messages.error(request, 'Penulis tidak ditemukan')
+        return redirect('homepage')
+
+    return render(request, 'homepage/author_detail.html', {
+        'title': anggota.user.first_name or anggota.user.username,
+        'webname': 'ThesisStore',
+        'web_name': 'Toko Buku & Publikasi Akademik',
+        'anggota': anggota,
+        'coached_courses': anggota.coached_courses.filter(is_active=True).order_by('-start_date'),
+        'penulis_buku': anggota.penulis_buku.order_by('-created_at'),
+        'editor_buku': anggota.editor_buku.order_by('-created_at'),
+        'approved_reviewer': anggota.reviewer_applications.filter(status='approved'),
+    })

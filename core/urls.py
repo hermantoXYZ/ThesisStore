@@ -54,6 +54,7 @@ urlpatterns += [
     path('login/', views.loginView, name='login'),
     path('register/', views.registerView, name='register'),
     path('logout/', views.LogoutView, name='logout'),
+    path('author/<str:uid>/<slug:slug>/', views.author_detail, name='author_detail'),
 
     ########## reset pass ##########
     path('password/reset/', auth_views.PasswordResetView.as_view(form_class=CustomPasswordResetForm, template_name='password_reset/password_reset_form.html', email_template_name='password_reset/password_reset_email.txt', html_email_template_name='password_reset/password_reset_email.html', subject_template_name='password_reset/password_reset_subject.txt', ), name='password_reset'),

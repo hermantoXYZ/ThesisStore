@@ -196,11 +196,13 @@
                 <span class="spec-divider">:</span>
                 <span class="spec-val">
                   {% for p in book.penulis.all %}
-                    {{ p.user.first_name|default:p.user.username }}{% if not forloop.last %}, {% endif %}
+                      <a href="{% url 'author_detail' p.uuid|stringformat:'s'|slice:':5' p.user.first_name|default:p.user.username|slugify %}" style="color: inherit; text-decoration: underline;">
+                          {{ p.user.first_name|default:p.user.username }}
+                      </a>{% if not forloop.last %}, {% endif %}
                   {% empty %}
-                    Anonim / Tim Penulis
+                      Anonim / Tim Penulis
                   {% endfor %}
-                </span>
+              </span>
               </div>
               {% if book.editor.all %}
               <div class="spec-row">
