@@ -33,7 +33,8 @@ from .models import (
     CallForReviewer,
     CourseQuizAttempt,
     CourseQuizQuestion,
-    CourseQuiz
+    CourseQuiz,
+    CourseMaterialAttempt
 )
 
 admin.site.register(CategoryBooks)
@@ -70,3 +71,4 @@ admin.site.register(CallForReviewer)
 admin.site.register(CourseQuizAttempt)
 admin.site.register(CourseQuizQuestion)
 admin.site.register(CourseQuiz)
+admin.site.register(CourseMaterialAttempt)

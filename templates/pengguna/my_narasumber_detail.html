@@ -70,7 +70,7 @@
             <div style="background: #ffffff; border-radius: 14px; padding: 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); border: 1px solid #eef2f6;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                     <h3 style="font-size: 16px; font-weight: 700; color: #1e293b; margin: 0; display: flex; align-items: center; gap: 8px;">
-                        <i class="ri-calendar-2-line" style="color: #2c4cf4;"></i> Jadwal Sesi &amp; Materi Pembelajaran
+                        Jadwal Sesi &amp; Materi Pembelajaran
                     </h3>
                     <span style="font-size: 12px; color: #64748b; font-weight: 500;">
                         {{ agendas.count }} Sesi Terjadwal
@@ -102,7 +102,7 @@
                                     {{ agenda.title }}
                                 </strong>
                                 <span style="font-size: 12px; color: #64748b;">
-                                    Pengajar: <strong>{{ agenda.pengajar.nama_lengkap|default:"Tim Pemateri" }}</strong>
+                                    Pengajar: <strong>{{ agenda.pengajar.user.first_name|default:"Tim Pemateri" }}</strong>
                                 </span>
                             </div>
 
@@ -131,10 +131,9 @@
                                         <a href="{% url 'app:narasumber_agenda_quiz' agenda.uuid %}" class="btn secondary small" style="font-size: 11px; padding: 5px 10px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">
                                             <i class="ri-questionnaire-line"></i> Kelola Pre-Test / Quiz ({{ agenda.quizzes.count }})
                                         </a>
-                                        <button type="button" class="btn primary small" style="font-size: 11px; padding: 5px 10px; display: inline-flex; align-items: center; gap: 4px;"
-                                            onclick="bukaModalTambahMateri('{{ agenda.uuid }}', 'Sesi #{{ agenda.session_number|default:forloop.counter }} - {{ agenda.title|escapejs }}')">
-                                            <i class="ri-add-line"></i> Tambah Materi
-                                        </button>
+                                        <a href="{% url 'app:narasumber_agenda_material' agenda.uuid %}" class="btn primary small" style="font-size: 11px; padding: 5px 10px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">
+                                            <i class="ri-folder-open-line"></i> Kelola Materi ({{ agenda.materials.count }})
+                                        </a>
                                     </div>
                                 {% endif %}
                             </div>
@@ -158,7 +157,7 @@
                                                 </div>
                                                 {% if materi.url_materi %}
                                                     <a href="{{ materi.url_materi }}" target="_blank" style="font-size: 11px; color: #2c4cf4; text-decoration: none; word-break: break-all;">
-                                                        {{ materi.url_materi }} <i class="ri-external-link-line"></i>
+                                                        {{ materi.url_materi|truncatechars:40 }} <i class="ri-external-link-line"></i>
                                                     </a>
                                                 {% endif %}
                                             </div>
@@ -166,10 +165,9 @@
 
                                         {% if agenda.pengajar == userpengguna %}
                                         <div style="display: flex; gap: 6px; align-items: center;">
-                                            <button type="button" class="btn info small" title="Edit Materi" style="padding: 4px 8px;"
-                                                onclick="bukaModalEditMateri('{{ materi.id }}', '{{ materi.urutan }}', '{{ materi.judul|escapejs }}', '{{ materi.url_materi|default:''|escapejs }}', {{ materi.is_visible|yesno:'true,false' }})">
+                                            <a href="{% url 'app:narasumber_agenda_material_edit' materi.id %}" class="btn info small" title="Edit Materi" style="padding: 4px 8px; text-decoration: none;">
                                                 <i class="ri-edit-line"></i>
-                                            </button>
+                                            </a>
                                             <a href="{% url 'app:narasumber_materi_delete' materi.id %}" class="btn danger small" title="Hapus Materi" style="padding: 4px 8px;"
                                                onclick="return confirm('Yakin ingin menghapus materi &quot;{{ materi.judul|escapejs }}&quot;?');">
                                                 <i class="ri-delete-bin-line"></i>
@@ -199,7 +197,8 @@
         <!-- KOLOM KANAN -->
         <div style="display: flex; flex-direction: column; gap: 20px;">
 
-            <!-- CARD E-SERTIFIKAT NARASUMBER -->
+           <!-- CARD E-SERTIFIKAT NARASUMBER -->
+            {% now "Y-m-d" as today %}
             <div style="background: linear-gradient(145deg, #1e3a8a, #2c4cf4); color: #ffffff; border-radius: 14px; padding: 22px; box-shadow: 0 4px 14px rgba(44,76,244,0.25);">
                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px;">
                     <div style="width: 42px; height: 42px; background: rgba(255,255,255,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #facc15;">
@@ -210,12 +209,22 @@
                         <span style="font-size: 11px; opacity: 0.85;">Bernomor Seri Resmi ThesisEdu</span>
                     </div>
                 </div>
-                <p style="font-size: 12px; line-height: 1.6; opacity: 0.92; margin: 0 0 16px 0;">
-                    Terima kasih atas kontribusi Anda sebagai narasumber. Klik tombol di bawah untuk melihat atau mengunduh sertifikat narasumber Anda.
-                </p>
-                <a href="{% url 'app:sertifikat_narasumber' course.uuid %}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; background: #ffffff; color: #1e3a8a; font-weight: 700; font-size: 13px; padding: 10px 16px; border-radius: 8px; text-decoration: none;">
-                    <i class="ri-download-2-line"></i> Lihat &amp; Unduh Sertifikat
-                </a>
+
+                {% if course.end_date and course.end_date|date:"Y-m-d" < today %}
+                    <p style="font-size: 12px; line-height: 1.6; opacity: 0.92; margin: 0 0 16px 0;">
+                        Terima kasih atas kontribusi Anda sebagai narasumber. Klik tombol di bawah untuk melihat atau mengunduh sertifikat narasumber Anda.
+                    </p>
+                    <a href="{% url 'app:sertifikat_narasumber' course.uuid %}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; background: #ffffff; color: #1e3a8a; font-weight: 700; font-size: 13px; padding: 10px 16px; border-radius: 8px; text-decoration: none;">
+                        <i class="ri-download-2-line"></i> Lihat &amp; Unduh Sertifikat
+                    </a>
+                {% else %}
+                    <p style="font-size: 12px; line-height: 1.6; opacity: 0.92; margin: 0 0 16px 0;">
+                        E-Sertifikat narasumber dapat diunduh setelah seluruh rangkaian kegiatan selesai{% if course.end_date %} (setelah {{ course.end_date|date:"d M Y" }}){% endif %}.
+                    </p>
+                    <button disabled style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; background: rgba(255,255,255,0.18); color: rgba(255,255,255,0.85); font-weight: 600; font-size: 13px; padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); cursor: not-allowed;">
+                        <i class="ri-lock-line"></i> Sertifikat Belum Tersedia
+                    </button>
+                {% endif %}
             </div>
 
             <!-- CARD INSTRUKTUR & PEMATERI -->
@@ -250,105 +259,4 @@
     </div>
 </div>
 
-<!-- MODAL TAMBAH MATERI -->
-<div id="modalTambahMateri" class="modal-edit">
-    <div class="modal-content-edit" style="max-width: 460px; text-align: left;">
-        <span class="close" onclick="closeModal('modalTambahMateri')">&times;</span>
-        <h3 style="color: #1e293b; margin-top: 0; margin-bottom: 6px; font-size: 18px;">
-            Tambah Materi Sesi
-        </h3>
-        <p id="labelSesiTambah" style="font-size: 12px; color: #64748b; margin-top: 0; margin-bottom: 16px; border-bottom: 1px solid #eee; padding-bottom: 10px;"></p>
-
-        <form id="formTambahMateri" method="post" action="">
-            {% csrf_token %}
-            <div style="display: grid; grid-template-columns: 90px 1fr; gap: 10px; margin-bottom: 14px;">
-                <div>
-                    <label style="display: block; font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Urutan *</label>
-                    <input type="number" name="urutan" value="1" min="1" required class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px;">
-                </div>
-                <div>
-                    <label style="display: block; font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Judul Materi *</label>
-                    <input type="text" name="judul" required placeholder="Contoh: Slide Presentasi Sesi 1 / Modul Praktik" class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px;">
-                </div>
-            </div>
-            <div style="margin-bottom: 14px;">
-                <label style="display: block; font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Link Materi / Video (Google Drive / YouTube)</label>
-                <input type="url" name="url_materi" placeholder="https://drive.google.com/..." class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px;">
-            </div>
-            <div style="margin-bottom: 20px;">
-                <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #334155; cursor: pointer;">
-                    <input type="checkbox" name="is_visible" checked>
-                    Tampilkan materi ini ke peserta
-                </label>
-            </div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button type="button" class="btn secondary" onclick="closeModal('modalTambahMateri')">Batal</button>
-                <button type="submit" class="btn primary">
-                    <i class="ri-save-line"></i> Simpan Materi
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- MODAL EDIT MATERI -->
-<div id="modalEditMateri" class="modal-edit">
-    <div class="modal-content-edit" style="max-width: 460px; text-align: left;">
-        <span class="close" onclick="closeModal('modalEditMateri')">&times;</span>
-        <h3 style="color: #1e293b; margin-top: 0; margin-bottom: 16px; font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-            Edit Materi Sesi
-        </h3>
-
-        <form id="formEditMateri" method="post" action="">
-            {% csrf_token %}
-            <div style="display: grid; grid-template-columns: 90px 1fr; gap: 10px; margin-bottom: 14px;">
-                <div>
-                    <label style="display: block; font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Urutan *</label>
-                    <input type="number" id="editUrutanMateri" name="urutan" min="1" required class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px;">
-                </div>
-                <div>
-                    <label style="display: block; font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Judul Materi *</label>
-                    <input type="text" id="editJudulMateri" name="judul" required class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px;">
-                </div>
-            </div>
-            <div style="margin-bottom: 14px;">
-                <label style="display: block; font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Link Materi / Video</label>
-                <input type="url" id="editUrlMateri" name="url_materi" placeholder="https://..." class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px;">
-            </div>
-            <div style="margin-bottom: 20px;">
-                <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #334155; cursor: pointer;">
-                    <input type="checkbox" id="editVisibleMateri" name="is_visible">
-                    Tampilkan materi ini ke peserta
-                </label>
-            </div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button type="button" class="btn secondary" onclick="closeModal('modalEditMateri')">Batal</button>
-                <button type="submit" class="btn primary">
-                    <i class="ri-save-line"></i> Simpan Perubahan
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-function bukaModalTambahMateri(agendaUuid, labelSesi) {
-    var baseUrl = "{% url 'app:narasumber_materi_add' '00000000-0000-0000-0000-000000000000' %}";
-    var actionUrl = baseUrl.replace('00000000-0000-0000-0000-000000000000', agendaUuid);
-    document.getElementById('formTambahMateri').setAttribute('action', actionUrl);
-    document.getElementById('labelSesiTambah').textContent = labelSesi;
-    openModal('modalTambahMateri');
-}
-
-function bukaModalEditMateri(materiId, urutan, judul, urlMateri, isVisible) {
-    var baseUrl = "{% url 'app:narasumber_materi_edit' '00000000-0000-0000-0000-000000000000' %}";
-    var actionUrl = baseUrl.replace('00000000-0000-0000-0000-000000000000', materiId);
-    document.getElementById('formEditMateri').setAttribute('action', actionUrl);
-    document.getElementById('editUrutanMateri').value = urutan;
-    document.getElementById('editJudulMateri').value = judul;
-    document.getElementById('editUrlMateri').value = urlMateri;
-    document.getElementById('editVisibleMateri').checked = isVisible;
-    openModal('modalEditMateri');
-}
-</script>
 {% endblock content1 %}

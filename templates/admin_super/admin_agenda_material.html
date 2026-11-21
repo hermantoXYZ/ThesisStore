@@ -1,6 +1,37 @@
 {% extends "admin_super/base.html" %}
 
 {% block content1 %}
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+<style>
+.material-meta-grid {
+    display: grid;
+    grid-template-columns: 100px 1.4fr 1.6fr;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+@media (max-width: 900px) {
+    .material-meta-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.note-editor.note-frame {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    overflow: hidden;
+    background: #ffffff;
+}
+.note-toolbar {
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+.note-editing-area .note-editable {
+    background: #ffffff !important;
+    color: #1e293b !important;
+    font-size: 14px !important;
+    line-height: 1.65 !important;
+}
+</style>
+
 <div class="dashboard-content">
 
     <!-- HEADER & BREADCRUMB -->
@@ -17,7 +48,7 @@
                 Kelola Materi: {% if agenda.session_number %}Sesi {{ agenda.session_number }} - {% endif %}{{ agenda.title }}
             </h3>
             <p style="font-size: 13px; color: #64748b; margin: 4px 0 0 0;">
-                Tambahkan tautan slide presentasi, modul PDF, dataset praktik, atau rekaman video untuk sesi ini.
+                Tambahkan atau perbarui bacaan modul, tautan slide presentasi, dataset praktik, atau rekaman video untuk sesi ini.
             </p>
         </div>
 
@@ -26,38 +57,78 @@
         </a>
     </div>
 
-    <!-- FORM TAMBAH MATERI -->
-    <div style="background: #ffffff; border-radius: 12px; padding: 22px 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); margin-bottom: 22px;">
-        <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin: 0 0 16px 0; border-left: 4px solid #2c4cf4; padding-left: 10px;">
-            Tambah Materi Sesi Baru
-        </h4>
+    <!-- FORM TAMBAH / EDIT MATERI -->
+    <div style="background: #ffffff; border-radius: 12px; padding: 22px 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); margin-bottom: 22px; ">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+            {% if edit_materi %}
+                <span style="background: #fef3c7; color: #b45309; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px;">
+                    Mode Edit Materi
+                </span>
+            {% else %}
+                <h4 style="font-size: 15px; font-weight: 700; color: #2c4cf4; margin: 0; border-left: 3px solid #2c4cf4; padding-left: 10px;">
+                    Tambah Materi Sesi Baru
+                </h4>
+            {% endif %}
+        </div>
 
         <form method="post" action="">
             {% csrf_token %}
-            <div style="display: grid; grid-template-columns: 100px 1.4fr 1.6fr; gap: 14px; margin-bottom: 14px;">
+
+            <!-- Baris 1: Input Ringkas Sejajar -->
+            <div class="material-meta-grid">
                 <div>
-                    <label style="font-weight: 600; font-size: 13px; color: #334155; display: block; margin-bottom: 6px;">Urutan <span style="color: red;">*</span></label>
-                    <input type="number" name="urutan" value="{{ materials.count|add:1 }}" min="1" required class="form-control">
+                    <label for="{{ form.urutan.id_for_label }}" style="font-weight: 600; font-size: 13px; color: #334155; display: block; margin-bottom: 6px;">
+                        Urutan <span style="color: red;">*</span>
+                    </label>
+                    {{ form.urutan }}
+                    {% if form.urutan.errors %}<small style="color: #e74c3c;">{{ form.urutan.errors.0 }}</small>{% endif %}
                 </div>
                 <div>
-                    <label style="font-weight: 600; font-size: 13px; color: #334155; display: block; margin-bottom: 6px;">Judul Materi <span style="color: red;">*</span></label>
-                    <input type="text" name="judul" required placeholder="Contoh: Slide Presentasi Sesi 1 / Modul Praktik" class="form-control">
+                    <label for="{{ form.judul.id_for_label }}" style="font-weight: 600; font-size: 13px; color: #334155; display: block; margin-bottom: 6px;">
+                        Judul Materi <span style="color: red;">*</span>
+                    </label>
+                    {{ form.judul }}
+                    {% if form.judul.errors %}<small style="color: #e74c3c;">{{ form.judul.errors.0 }}</small>{% endif %}
                 </div>
                 <div>
-                    <label style="font-weight: 600; font-size: 13px; color: #334155; display: block; margin-bottom: 6px;">Link Materi / Video (Google Drive / YouTube)</label>
-                    <input type="url" name="url_materi" placeholder="https://drive.google.com/..." class="form-control">
+                    <label for="{{ form.url_materi.id_for_label }}" style="font-weight: 600; font-size: 13px; color: #334155; display: block; margin-bottom: 6px;">
+                        Link Materi / Video (Google Drive / YouTube)
+                    </label>
+                    {{ form.url_materi }}
+                    {% if form.url_materi.errors %}<small style="color: #e74c3c;">{{ form.url_materi.errors.0 }}</small>{% endif %}
                 </div>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding-top: 8px;">
-                <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: #334155; cursor: pointer; margin: 0;">
-                    <input type="checkbox" name="is_visible" checked>
+            <!-- Baris 2: Konten Bacaan Full-Width dengan Summernote -->
+            <div style="margin-bottom: 16px;">
+                <label for="{{ form.content.id_for_label }}" style="font-weight: 600; font-size: 13px; color: #334155; display: block; margin-bottom: 6px;">
+                    Konten Bacaan / Modul Materi (Opsional)
+                </label>
+                {{ form.content }}
+                {% if form.content.errors %}<small style="color: #e74c3c;">{{ form.content.errors.0 }}</small>{% endif %}
+            </div>
+
+            <!-- Baris 3: Opsi Tampil & Tombol Simpan / Batal Edit -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding-top: 10px; border-top: 1px solid #f1f5f9;">
+                <label for="{{ form.is_visible.id_for_label }}" style="display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: #334155; cursor: pointer; margin: 0;">
+                    {{ form.is_visible }}
                     Tampilkan materi ini kepada peserta terdaftar
                 </label>
 
-                <button type="submit" class="btn primary">
-                    <i class="ri-add-line"></i> Simpan Materi
-                </button>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    {% if edit_materi %}
+                        <a href="{% url 'app:admin_agenda_material' agenda.uuid %}" class="btn secondary">
+                            <i class="ri-close-line"></i> Batal Edit
+                        </a>
+                        <button type="submit" class="btn primary">
+                            <i class="ri-save-line"></i> Simpan Perubahan
+                        </button>
+                    {% else %}
+                        <button type="submit" class="btn primary">
+                            <i class="ri-add-line"></i> Simpan Materi
+                        </button>
+                    {% endif %}
+                </div>
             </div>
         </form>
     </div>
@@ -75,22 +146,30 @@
             <table class="student-table" style="width: 100%;">
                 <thead>
                     <tr>
-                        <th style="white-space: nowrap;">Urutan</th>
+                        <th style="white-space: nowrap; text-align: center;">Urutan</th>
                         <th style="white-space: nowrap;">Judul Materi</th>
-                        <th style="white-space: nowrap;">Tautan Materi</th>
+                        <th style="white-space: nowrap;">Konten Bacaan</th>
+                        <th style="white-space: nowrap; text-align: center;">Tautan</th>
                         <th style="white-space: nowrap; text-align: center;">Status</th>
                         <th style="white-space: nowrap; text-align: center;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for materi in materials %}
-                    <tr>
+                    <tr {% if edit_materi and edit_materi.id == materi.id %}style="background: #fffbeb;"{% endif %}>
                         <td style="text-align: center; font-weight: 700; color: #2c4cf4;">#{{ materi.urutan }}</td>
-                        <td style="font-weight: 600; color: #1e293b;">{{ materi.judul|truncatechars:40 }}</td>
-                        <td style="font-size: 13px;">
+                        <td style="font-weight: 600; color: #1e293b;">{{ materi.judul }}</td>
+                        <td style="font-size: 13px; color: #475569; max-width: 320px;">
+                            {% if materi.content %}
+                                {{ materi.content|striptags|truncatewords:2 }}
+                            {% else %}
+                                <span style="color: #94a3b8; font-style: italic;">Belum ada teks bacaan</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 13px; text-align: center;">
                             {% if materi.url_materi %}
-                                <a href="{{ materi.url_materi }}" target="_blank" rel="noopener noreferrer" style="color: #2c4cf4; text-decoration: none; word-break: break-all;">
-                                    LINK<i class="ri-external-link-line"></i>
+                                <a href="{{ materi.url_materi }}" target="_blank" rel="noopener noreferrer" style="color: #2c4cf4; font-weight: 600; text-decoration: none;">
+                                    Buka <i class="ri-external-link-line"></i>
                                 </a>
                             {% else %}
                                 <span style="color: #94a3b8;">-</span>
@@ -104,13 +183,11 @@
                             {% endif %}
                         </td>
                         <td style="text-align: center; white-space: nowrap;">
-                            <button type="button"
-                                    class="btn warning small"
-                                    title="Edit Materi"
-                                    data-action-url="{% url 'app:admin_agenda_material_edit' materi.id %}"
-                                    onclick="openEditMateriModal(this, '{{ materi.urutan }}', '{{ materi.judul|escapejs }}', '{{ materi.url_materi|default:''|escapejs }}', {{ materi.is_visible|yesno:'true,false' }})">
+                            <a href="{% url 'app:admin_agenda_material_edit' materi.id %}"
+                               class="btn warning small"
+                               title="Edit Materi">
                                 <i class="ri-edit-line"></i>
-                            </button>
+                            </a>
                             <a href="{% url 'app:admin_agenda_material_delete' materi.id %}"
                                class="btn danger small"
                                title="Hapus Materi"
@@ -132,61 +209,28 @@
     </div>
 
 </div>
-
-<!-- MODAL EDIT MATERI -->
-<div id="modal-edit-materi" class="modal-edit" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999;">
-    <div class="modal-content-edit" style="background: #fff; border-radius: 12px; padding: 24px; max-width: 500px; width: 92%; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: left;">
-        <span class="close" onclick="closeEditMateriModal()" style="position: absolute; top: 16px; right: 20px; font-size: 24px; cursor: pointer; color: #7f8c8d;">&times;</span>
-        <h3 style="font-size: 17px; font-weight: 700; color: #1e293b; margin: 0 0 16px 0; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-            Edit Materi Sesi
-        </h3>
-
-        <form method="post" id="form-edit-materi">
-            {% csrf_token %}
-            <div style="display: grid; grid-template-columns: 95px 1fr; gap: 10px; margin-bottom: 14px;">
-                <div>
-                    <label style="font-weight: 600; font-size: 13px; margin-bottom: 5px; display: block;">Urutan <span style="color:red;">*</span></label>
-                    <input type="number" name="urutan" id="edit_materi_urutan" min="1" class="form-control" required>
-                </div>
-                <div>
-                    <label style="font-weight: 600; font-size: 13px; margin-bottom: 5px; display: block;">Judul Materi <span style="color:red;">*</span></label>
-                    <input type="text" name="judul" id="edit_materi_judul" class="form-control" required>
-                </div>
-            </div>
-            <div style="margin-bottom: 14px;">
-                <label style="font-weight: 600; font-size: 13px; margin-bottom: 5px; display: block;">Link Materi / Video</label>
-                <input type="url" name="url_materi" id="edit_materi_url" placeholder="https://..." class="form-control">
-            </div>
-            <div style="margin-bottom: 20px;">
-                <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #334155; cursor: pointer;">
-                    <input type="checkbox" name="is_visible" id="edit_materi_visible">
-                    Tampilkan materi ini ke peserta
-                </label>
-            </div>
-            <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 14px;">
-                <button type="button" class="btn secondary" onclick="closeEditMateriModal()">Batal</button>
-                <button type="submit" class="btn primary">
-                    <i class="ri-save-line"></i> Simpan Perubahan
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
 {% endblock content1 %}
 
 {% block script_costum %}
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
 <script>
-function openEditMateriModal(btn, urutan, judul, urlMateri, isVisible) {
-    document.getElementById('form-edit-materi').action = btn.getAttribute('data-action-url');
-    document.getElementById('edit_materi_urutan').value = urutan;
-    document.getElementById('edit_materi_judul').value = judul;
-    document.getElementById('edit_materi_url').value = urlMateri;
-    document.getElementById('edit_materi_visible').checked = isVisible;
-    document.getElementById('modal-edit-materi').style.display = 'flex';
-}
-
-function closeEditMateriModal() {
-    document.getElementById('modal-edit-materi').style.display = 'none';
-}
+$(document).ready(function() {
+    $('#id_content, .summernote-editor').summernote({
+        placeholder: 'Tuliskan detail bacaan, ringkasan materi, atau instruksi pembelajaran di sini...',
+        tabsize: 2,
+        height: 320,
+        toolbar: [
+            ['style', ['style']],
+            ['font', ['bold', 'italic', 'underline', 'clear', 'strikethrough']],
+            ['fontname', ['fontname']],
+            ['fontsize', ['fontsize']],
+            ['color', ['color']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['table', ['table']],
+            ['insert', ['link', 'picture', 'video', 'hr']],
+            ['view', ['fullscreen', 'codeview', 'help']]
+        ]
+    });
+});
 </script>
 {% endblock script_costum %}

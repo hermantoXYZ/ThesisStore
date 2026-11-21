@@ -352,6 +352,7 @@ class CourseMaterial(models.Model):
     uploaded_by = models.ForeignKey(UserPengguna, on_delete=models.SET_NULL, null=True, blank=True, related_name='uploaded_materials', verbose_name="Diunggah Oleh")
     urutan = models.PositiveSmallIntegerField(default=1, verbose_name="Urutan Tampil")
     judul = models.CharField(max_length=255, verbose_name="Judul Materi")
+    content = models.TextField(blank=True, null=True, verbose_name="Konten Materi")
     url_materi = models.URLField(max_length=500, blank=True, null=True, verbose_name="Link Materi / Video")
     is_visible = models.BooleanField(default=True, verbose_name="Tampilkan ke Peserta")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -1081,3 +1082,17 @@ class CourseQuizAttempt(models.Model):
 
     def __str__(self):
         return f"{self.user.nama_lengkap} - {self.quiz.judul} ({self.score}%)"
+
+class CourseMaterialAttempt(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    material = models.ForeignKey(CourseMaterial, on_delete=models.CASCADE, related_name='attempts')
+    user = models.ForeignKey(UserPengguna, on_delete=models.CASCADE, related_name='material_attempts')
+    is_completed = models.BooleanField(default=True, verbose_name="Sudah Dibaca")
+    completed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('material', 'user')
+        ordering = ['-completed_at']
+
+    def __str__(self):
+        return f"{self.user.nama_lengkap} - {self.material.judul} (Selesai)"

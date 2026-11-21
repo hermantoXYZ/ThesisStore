@@ -12,7 +12,7 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from .form_pengguna import formProfile
-from .models import UserPengguna, Books, Course, CourseAgenda, Cart, CartItem, Order, OrderBookItem, OrderCourseItem, OrderShipping, CallForReviewer, JurnalMaster, CourseMaterial, CourseSurvey, SurveyQuestion, SurveyResponse, CourseQuiz, CourseQuizAttempt, CourseQuizQuestion
+from .models import UserPengguna, Books, Course, CourseAgenda, Cart, CartItem, Order, OrderBookItem, OrderCourseItem, OrderShipping, CallForReviewer, JurnalMaster, CourseMaterial, CourseSurvey, SurveyQuestion, SurveyResponse, CourseQuiz, CourseQuizAttempt, CourseQuizQuestion, CourseMaterialAttempt
 from .midtrans import create_snap_transaction, get_snap_js_url, verify_signature, sync_order_status_from_midtrans
 from django.urls import reverse
 from app.decorators_pengguna import pengguna_required, check_userpengguna
@@ -959,12 +959,24 @@ def my_course_detail(request, order_item_id):
     )
     course = order_item.course
     order = order_item.order
-    agendas = list(course.agendas.all().order_by('session_number', 'agenda_date'))
+    agendas = list(
+        course.agendas.all()
+        .prefetch_related('materials', 'quizzes__questions')
+        .order_by('session_number', 'agenda_date')
+    )
 
     is_active = (
         order.payment_status in ('paid', 'not_required') or
         order.status in ('processing', 'completed')
     ) and order.status != 'cancelled'
+
+    # Ambil semua ID materi yang sudah selesai dibaca oleh user ini (konversi ke str agar pasti cocok)
+    completed_materi_ids = [
+        str(mid) for mid in CourseMaterialAttempt.objects.filter(
+            user=userpengguna,
+            is_completed=True,
+        ).values_list('material_id', flat=True)
+    ] if userpengguna else []
 
     # Pemetaan riwayat percobaan & nilai tertinggi Pre-Test / Quiz peserta
     attempt_map = {}
@@ -986,8 +998,15 @@ def my_course_detail(request, order_item_id):
                 if att.is_passed:
                     attempt_map[qid]['has_passed'] = True
 
+    wajib_materi = False
     wajib_quiz = False
+
     for ag in agendas:
+        for m in ag.materials.all():
+            m.is_completed = str(m.id) in completed_materi_ids
+            if m.is_visible and m.content and not m.is_completed:
+                wajib_materi = True
+
         for qz in ag.quizzes.all():
             info = attempt_map.get(qz.id)
             qz.user_best_score = info['best_score'] if info else None
@@ -995,7 +1014,6 @@ def my_course_detail(request, order_item_id):
             if qz.is_visible and qz.questions.exists() and not qz.user_passed:
                 wajib_quiz = True
 
-    survey = CourseSurvey.objects.filter(course=course, is_active=True).first()
     wajib_kuesioner = CourseSurvey.objects.filter(
         course=course,
         is_active=True,
@@ -1012,10 +1030,13 @@ def my_course_detail(request, order_item_id):
         'order': order,
         'agendas': agendas,
         'is_active': is_active,
+        'wajib_materi': wajib_materi,
         'wajib_quiz': wajib_quiz,
         'wajib_kuesioner': wajib_kuesioner,
         'userpengguna': userpengguna,
         'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
+        'completed_materi_ids': completed_materi_ids,
+        'active_sesi': request.GET.get('sesi'),
     }
     return render(request, 'pengguna/my_academy.html', context)
 
@@ -1158,3 +1179,60 @@ def my_course_quiz(request, order_item_id, quiz_id):
         'userpengguna': userpengguna,
         'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
     })
+
+@pengguna_required
+@check_userpengguna
+def my_course_material_detail(request, order_item_id, materi_id):
+    userpengguna = UserPengguna.objects.filter(user=request.user).first()
+    order_item = get_object_or_404(
+        OrderCourseItem.objects.select_related('order', 'course'),
+        id=order_item_id,
+        order__user=request.user,
+        course__isnull=False
+    )
+    course = order_item.course
+    order = order_item.order
+
+    is_active = (
+        order.payment_status in ('paid', 'not_required') or
+        order.status in ('processing', 'completed')
+    ) and order.status != 'cancelled'
+
+    if not is_active:
+        messages.warning(request, 'Akses materi terbuka setelah pendaftaran Anda diverifikasi.')
+        return redirect('app:my_course_detail', order_item_id=order_item.id)
+
+    materi = get_object_or_404(
+        CourseMaterial.objects.select_related('agenda', 'uploaded_by__user'),
+        id=materi_id,
+        agenda__course=course,
+        is_visible=True
+    )
+
+    if request.method == 'POST' and userpengguna:
+        CourseMaterialAttempt.objects.update_or_create(
+            material=materi,
+            user=userpengguna,
+            defaults={'is_completed': True}
+        )
+        messages.success(request, 'Materi berhasil ditandai selesai dibaca.')
+        sesi = materi.agenda.session_number if (materi.agenda and materi.agenda.session_number) else 1
+        return redirect(f"{reverse('app:my_course_detail', kwargs={'order_item_id': order_item.id})}?sesi={sesi}")
+
+    is_completed = CourseMaterialAttempt.objects.filter(
+        material=materi, user=userpengguna, is_completed=True
+    ).exists() if userpengguna else False
+
+    context = {
+        'title': materi.judul,
+        'heading': 'Detail Materi',
+        'order_item': order_item,
+        'course': course,
+        'order': order,
+        'materi': materi,
+        'agenda': materi.agenda,
+        'is_completed': is_completed,
+        'userpengguna': userpengguna,
+        'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
+    }
+    return render(request, 'pengguna/my_course_material_detail.html', context)

@@ -1,0 +1,249 @@
+{% extends "pengguna/base.html" %}
+
+{% block content1 %}
+{% block extra_head %}
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+<style>
+.material-meta-grid {
+    display: grid;
+    grid-template-columns: 100px 1.4fr 1.6fr;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+@media (max-width: 900px) {
+    .material-meta-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.note-editor.note-frame {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    overflow: hidden;
+    background: #ffffff !important;
+}
+.note-toolbar {
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+.note-editing-area .note-editable {
+    background: #ffffff !important;
+    color: #1e293b !important;
+    font-size: 14px !important;
+    line-height: 1.65 !important;
+}
+/* Mencegah style.css dashboard menimpa tombol toolbar Summernote */
+.note-toolbar button,
+.note-toolbar .note-btn {
+    padding: 4px 8px !important;
+    font-size: 13px !important;
+    height: auto !important;
+    min-height: 28px !important;
+    background: #ffffff !important;
+    color: #334155 !important;
+    border: 1px solid #cbd5e1 !important;
+}
+</style>
+{% endblock extra_head %}
+<div class="dashboard-content">
+
+    <!-- HEADER & BREADCRUMB -->
+    <div style="background: #ffffff; border-radius: 12px; padding: 20px 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div>
+            <div style="font-size: 12.5px; color: #64748b; margin-bottom: 4px;">
+                <a href="{% url 'app:my_narasumber' %}" style="color: #2c4cf4; text-decoration: none;">Narasumber</a>
+                <span style="margin: 0 6px;">&rsaquo;</span>
+                <a href="{% url 'app:my_narasumber_detail' course.uuid %}" style="color: #2c4cf4; text-decoration: none;">{{ course.name|truncatewords:5 }}</a>
+                <span style="margin: 0 6px;">&rsaquo;</span>
+                <span>Materi Sesi</span>
+            </div>
+            <h3 style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0;">
+                Kelola Materi: {% if agenda.session_number %}Sesi {{ agenda.session_number }} - {% endif %}{{ agenda.title }}
+            </h3>
+            <p style="font-size: 13px; color: #64748b; margin: 4px 0 0 0;">
+                Tambahkan atau perbarui bacaan modul, tautan slide presentasi, dataset praktik, atau rekaman video untuk sesi ini.
+            </p>
+        </div>
+
+        <a href="{% url 'app:my_narasumber_detail' course.uuid %}" class="btn secondary">
+            <i class="ri-arrow-left-line"></i> Kembali ke Detail
+        </a>
+    </div>
+
+    <!-- FORM TAMBAH / EDIT MATERI -->
+    <div style="background: #ffffff; border-radius: 12px; padding: 22px 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); margin-bottom: 22px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+            {% if edit_materi %}
+                <span style="background: #fef3c7; color: #b45309; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px;">
+                    Mode Edit Materi
+                </span>
+            {% else %}
+                <h4 style="font-size: 15px; font-weight: 700; color: #2c4cf4; margin: 0; border-left: 3px solid #2c4cf4; padding-left: 10px;">
+                    Tambah Materi Sesi Baru
+                </h4>
+            {% endif %}
+        </div>
+
+        <form method="post" action="">
+            {% csrf_token %}
+
+            <!-- Baris 1: Input Ringkas Sejajar -->
+            <div class="material-meta-grid">
+                <div>
+                    <label for="{{ form.urutan.id_for_label }}" style="font-weight: 600; font-size: 13px; color: #334155; display: block; margin-bottom: 6px;">
+                        Urutan <span style="color: red;">*</span>
+                    </label>
+                    {{ form.urutan }}
+                    {% if form.urutan.errors %}<small style="color: #e74c3c;">{{ form.urutan.errors.0 }}</small>{% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.judul.id_for_label }}" style="font-weight: 600; font-size: 13px; color: #334155; display: block; margin-bottom: 6px;">
+                        Judul Materi <span style="color: red;">*</span>
+                    </label>
+                    {{ form.judul }}
+                    {% if form.judul.errors %}<small style="color: #e74c3c;">{{ form.judul.errors.0 }}</small>{% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.url_materi.id_for_label }}" style="font-weight: 600; font-size: 13px; color: #334155; display: block; margin-bottom: 6px;">
+                        Link Materi / Video (Google Drive / YouTube)
+                    </label>
+                    {{ form.url_materi }}
+                    {% if form.url_materi.errors %}<small style="color: #e74c3c;">{{ form.url_materi.errors.0 }}</small>{% endif %}
+                </div>
+            </div>
+
+            <!-- Baris 2: Konten Bacaan Full-Width dengan Summernote -->
+            <div style="margin-bottom: 16px;">
+                <label for="{{ form.content.id_for_label }}" style="font-weight: 600; font-size: 13px; color: #334155; display: block; margin-bottom: 6px;">
+                    Konten Bacaan / Modul Materi (Opsional)
+                </label>
+                {{ form.content }}
+                {% if form.content.errors %}<small style="color: #e74c3c;">{{ form.content.errors.0 }}</small>{% endif %}
+            </div>
+
+            <!-- Baris 3: Opsi Tampil & Tombol Simpan / Batal Edit -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding-top: 10px; border-top: 1px solid #f1f5f9;">
+                <label for="{{ form.is_visible.id_for_label }}" style="display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: #334155; cursor: pointer; margin: 0;">
+                    {{ form.is_visible }}
+                    Tampilkan materi ini kepada peserta terdaftar
+                </label>
+
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    {% if edit_materi %}
+                        <a href="{% url 'app:narasumber_agenda_material' agenda.uuid %}" class="btn secondary">
+                            <i class="ri-close-line"></i> Batal Edit
+                        </a>
+                        <button type="submit" class="btn primary">
+                            <i class="ri-save-line"></i> Simpan Perubahan
+                        </button>
+                    {% else %}
+                        <button type="submit" class="btn primary">
+                            <i class="ri-add-line"></i> Simpan Materi
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- DAFTAR MATERI SESI -->
+    <div style="background: #ffffff; border-radius: 12px; padding: 22px 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin: 0;">
+                Daftar Materi Sesi ({{ materials.count }})
+            </h4>
+        </div>
+
+        {% if materials %}
+        <div class="table-responsive">
+            <table class="student-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="white-space: nowrap; text-align: center;">Urutan</th>
+                        <th style="white-space: nowrap;">Judul Materi</th>
+                        <th style="white-space: nowrap;">Konten Bacaan</th>
+                        <th style="white-space: nowrap; text-align: center;">Tautan</th>
+                        <th style="white-space: nowrap; text-align: center;">Status</th>
+                        <th style="white-space: nowrap; text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for materi in materials %}
+                    <tr {% if edit_materi and edit_materi.id == materi.id %}style="background: #fffbeb;"{% endif %}>
+                        <td style="text-align: center; font-weight: 700; color: #2c4cf4;">#{{ materi.urutan }}</td>
+                        <td style="font-weight: 600; color: #1e293b;">{{ materi.judul }}</td>
+                        <td style="font-size: 13px; color: #475569; max-width: 320px;">
+                            {% if materi.content %}
+                                {{ materi.content|striptags|truncatewords:2 }}
+                            {% else %}
+                                <span style="color: #94a3b8; font-style: italic;">Belum ada teks bacaan</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 13px; text-align: center;">
+                            {% if materi.url_materi %}
+                                <a href="{{ materi.url_materi }}" target="_blank" rel="noopener noreferrer" style="color: #2c4cf4; font-weight: 600; text-decoration: none;">
+                                    Buka <i class="ri-external-link-line"></i>
+                                </a>
+                            {% else %}
+                                <span style="color: #94a3b8;">-</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            {% if materi.is_visible %}
+                                <span style="background: #dcfce7; color: #15803d; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;">Tampil</span>
+                            {% else %}
+                                <span style="background: #f1f5f9; color: #64748b; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;">Tersembunyi</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; white-space: nowrap;">
+                            <a href="{% url 'app:narasumber_agenda_material_edit' materi.id %}"
+                               class="btn warning small"
+                               title="Edit Materi">
+                                <i class="ri-edit-line"></i>
+                            </a>
+                            <a href="{% url 'app:narasumber_materi_delete' materi.id %}"
+                               class="btn danger small"
+                               title="Hapus Materi"
+                               onclick="return confirm('Yakin ingin menghapus materi &quot;{{ materi.judul|escapejs }}&quot;?');">
+                                <i class="ri-delete-bin-line"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 32px; color: #94a3b8; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1;">
+            <i class="ri-folder-open-line" style="font-size: 32px; display: block; margin-bottom: 6px;"></i>
+            Belum ada materi pada sesi ini. Silakan tambahkan menggunakan form di atas.
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock content1 %}
+
+{% block script_costum %}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#id_content').summernote({
+        placeholder: 'Tuliskan detail bacaan, ringkasan materi, atau instruksi pembelajaran di sini...',
+        tabsize: 2,
+        height: 320,
+        toolbar: [
+            ['style', ['style']],
+            ['font', ['bold', 'italic', 'underline', 'clear', 'strikethrough']],
+            ['fontname', ['fontname']],
+            ['fontsize', ['fontsize']],
+            ['color', ['color']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['table', ['table']],
+            ['insert', ['link', 'picture', 'video', 'hr']],
+            ['view', ['fullscreen', 'codeview', 'help']]
+        ]
+    });
+});
+</script>
+{% endblock script_costum %}

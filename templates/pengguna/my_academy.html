@@ -193,6 +193,13 @@
     margin-top: 2px;
 }
 
+.flow-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+
 .flow-btn {
     display: inline-flex;
     align-items: center;
@@ -227,6 +234,9 @@
         flex-direction: column;
         align-items: stretch;
         gap: 0.55rem;
+    }
+    .flow-actions {
+        width: 100%;
     }
     .flow-btn {
         width: 100%;
@@ -265,6 +275,20 @@
     <!-- MAIN TWO COLUMN LAYOUT -->
     <div class="course-detail-layout">
         <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+
+            <div class="panel-box">
+                <div class="panel-header">
+                    <h2 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
+                        Tentang Program Pelatihan Ini
+                    </h2>
+                </div>
+                <div style="font-size: 0.9rem; color: #334155; line-height: 1.7;">
+                    {{ course.description|safe }}
+                </div>
+            </div>
+
+
+
             <div class="panel-box">
                 <div class="panel-header">
                     <h2 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
@@ -279,7 +303,7 @@
                 {% if agendas %}
                     <div>
                         {% for ag in agendas %}
-                        <details class="session-accordion" {% if forloop.first %}open{% endif %}>
+                        <details class="session-accordion" {% if active_sesi %}{% if active_sesi == ag.session_number|stringformat:"s" or active_sesi == forloop.counter|stringformat:"s" %}open{% endif %}{% elif forloop.first %}open{% endif %}>
                             <summary class="session-summary">
                                 <div class="session-summary-left">
                                     <span class="session-badge">
@@ -341,22 +365,57 @@
                                     {% endfor %}
 
                                     <!-- B. MATERI PEMBELAJARAN -->
-                                    {% for materi in ag.materials.all %}
-                                        {% if materi.is_visible and materi.url_materi %}
-                                        <div class="flow-row">
-                                            <div class="flow-info">
-                                                <div>
-                                                    <span class="flow-title">{{ materi.judul|truncatewords:13 }}</span>
-                                                    <span class="flow-sub">Bahan bacaan / presentasi sesi</span>
-                                                </div>
-                                            </div>
-                                            <a href="{{ materi.url_materi }}" target="_blank" rel="noopener noreferrer"
-                                               class="btn secondary small flow-btn">
-                                                <i class="ri-external-link-line"></i>Materi
-                                            </a>
-                                        </div>
-                                        {% endif %}
-                                    {% endfor %}
+{% for materi in ag.materials.all %}
+    {% if materi.is_visible %}
+    <div class="flow-row">
+        <div class="flow-info">
+            <div>
+                <span class="flow-title">
+                    {{ materi.judul|truncatewords:5 }}
+                    {% if materi.content %}
+                        {% if materi.is_completed or materi.id|stringformat:"s" in completed_materi_ids %}
+                            <span style="display: inline-flex; align-items: center; gap: 3px; font-size: 0.7rem; font-weight: 700; color: #15803d; background: #dcfce7; padding: 1px 7px; border-radius: 999px; margin-left: 4px; vertical-align: middle;">
+                                <i class="ri-checkbox-circle-fill"></i> Sudah Dibaca
+                            </span>
+                        {% else %}
+                            <span style="display: inline-flex; align-items: center; gap: 3px; font-size: 0.7rem; font-weight: 600; color: #ffffff; background: #ff0000; padding: 1px 7px; border-radius: 999px; margin-left: 4px; vertical-align: middle;">
+                                Belum Dibaca
+                            </span>
+                        {% endif %}
+                    {% endif %}
+                </span>
+                <span class="flow-sub">
+                    {% if materi.content %}
+                        {{ materi.content|striptags|truncatewords:8 }}
+                    {% else %}
+                        Bahan bacaan / presentasi sesi
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <div class="flow-actions">
+            {% if materi.content %}
+                <a href="{% url 'app:my_course_material_detail' order_item.id materi.id %}"
+                   class="btn {% if materi.is_completed or materi.id|stringformat:"s" in completed_materi_ids %}secondary{% else %}primary{% endif %} small flow-btn">
+                    {% if materi.is_completed or materi.id|stringformat:"s" in completed_materi_ids %}
+                        <i class="ri-check-line"></i> Sudah Dibaca
+                    {% else %}
+                        <i class="ri-book-open-line"></i> Baca Materi
+                    {% endif %}
+                </a>
+            {% endif %}
+
+            {% if materi.url_materi %}
+                <a href="{{ materi.url_materi }}" target="_blank" rel="noopener noreferrer"
+                   class="btn secondary small flow-btn">
+                    <i class="ri-external-link-line"></i>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+{% endfor %}
 
                                     <!-- C. QUIZ / EVALUASI -->
                                     {% for quiz in ag.quizzes.all %}
@@ -364,6 +423,7 @@
                                         <div class="flow-row">
                                             <div class="flow-info">
                                                 <div>
+                                                    <span class="flow-title">{{ quiz.judul|truncatewords:8 }}</span>
                                                     <span class="flow-sub">
                                                         {{ quiz.questions.count }} Soal &bull; Lulus min. {{ quiz.passing_score }}%
                                                         {% if quiz.user_best_score is not None %}
@@ -372,9 +432,9 @@
                                                     </span>
                                                 </div>
                                             </div>
+                                            {% if quiz.user_passed %}
                                             <a href="{% url 'app:my_course_quiz' order_item.id quiz.id %}"
                                                class="btn {% if quiz.user_passed %}secondary{% else %}primary{% endif %} small flow-btn">
-                                                {% if quiz.user_passed %}
                                                     <i class="ri-check-line"></i> Lulus (Ulangi)
                                                 {% elif quiz.user_best_score is not None %}
                                                     <i class="ri-refresh-line"></i> Ulangi Quiz
@@ -407,20 +467,6 @@
                     </div>
                 {% endif %}
             </div>
-
-            <!-- 2. DESKRIPSI & SILABUS KEGIATAN -->
-            <div class="panel-box">
-                <div class="panel-header">
-                    <h2 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
-                        <i class="ri-file-list-2-line" style="color: #2c4cf4;"></i>
-                        Tentang Program Pelatihan Ini
-                    </h2>
-                </div>
-                <div style="font-size: 0.9rem; color: #334155; line-height: 1.7;">
-                    {{ course.description|safe }}
-                </div>
-            </div>
-
         </div>
 
         <!-- RIGHT COLUMN: SERTIFIKAT, INSTRUKTUR, INVOICE, BANTUAN -->
@@ -441,7 +487,14 @@
                 </div>
 
                 {% if is_active %}
-                    {% if wajib_quiz %}
+                    {% if wajib_materi %}
+                        <p style="font-size: 0.84rem; line-height: 1.5; margin: 0 0 1rem 0; opacity: 0.92;">
+                            Baca dan tandai selesai seluruh materi pembelajaran pada setiap sesi untuk membuka E-Sertifikat Anda.
+                        </p>
+                        <button disabled style="width: 100%; background: rgba(255, 255, 255, 0.18); color: rgba(255, 255, 255, 0.9); font-weight: 600; font-size: 0.85rem; padding: 9px 12px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.25); cursor: not-allowed; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <i class="ri-lock-line"></i> Baca Semua Materi Dahulu
+                        </button>
+                    {% elif wajib_quiz %}
                         <p style="font-size: 0.84rem; line-height: 1.5; margin: 0 0 1rem 0; opacity: 0.92;">
                             Selesaikan seluruh Pre-Test &amp; Quiz Evaluasi dengan memenuhi Passing Grade untuk membuka E-Sertifikat Anda.
                         </p>

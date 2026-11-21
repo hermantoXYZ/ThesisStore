@@ -3,7 +3,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.utils.text import slugify
 import uuid
-from .models import (UserAdmin, Provinsi, BidangPenelitian, CategoryBooks, MediaBooks, Books, UserPengguna, Article, Category, Page, KerjaSama, HeroSlide, WebSetting, Course, CourseAgenda, JurnalMaster, LoaJurnal, NoSuratThesis, KodeSurat, Order, CallForReviewer)
+from .models import (UserAdmin, Provinsi, BidangPenelitian, CategoryBooks, MediaBooks, Books, UserPengguna, Article, Category, Page, KerjaSama, HeroSlide, WebSetting, Course, CourseAgenda, JurnalMaster, LoaJurnal, NoSuratThesis, KodeSurat, Order, CallForReviewer, CourseMaterial)
 
 
 class formProfile(forms.ModelForm):
@@ -929,3 +929,26 @@ class AdminAddReviewerForm(forms.Form):
         self.fields['applicants'].label_from_instance = (
             lambda obj: f"{obj.nama_lengkap} (@{obj.user.username}) - {obj.universitas or obj.user.email}"
         )
+
+
+class CourseMaterialForm(forms.ModelForm):
+    class Meta:
+        model = CourseMaterial
+        fields = ['urutan', 'judul', 'content', 'url_materi', 'is_visible']
+        widgets = {
+            'urutan': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+            'judul': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Contoh: Slide Presentasi Sesi 1 / Modul Praktik'
+            }),
+            'content': forms.Textarea(attrs={
+                'class': 'form-control summernote-editor',
+                'rows': 16,
+                'placeholder': 'Tuliskan detail bacaan, ringkasan materi, atau instruksi pembelajaran di sini...'
+            }),
+            'url_materi': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://drive.google.com/...'
+            }),
+            'is_visible': forms.CheckboxInput(),
+        }

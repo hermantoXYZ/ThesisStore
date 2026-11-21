@@ -121,14 +121,16 @@ urlpatterns = [
     ###### PENGGUNA: NARASUMBER & PELATIHAN SAYA (ACADEMY) ######
     path('narasumber/', views_pengguna.my_narasumber_list, name='my_narasumber'),
     path('narasumber/<uuid:course_uuid>/', views_pengguna.my_narasumber_detail, name='my_narasumber_detail'),
+    path('narasumber/agenda/<uuid:agenda_uuid>/materi/', views_narasumber.narasumber_agenda_material, name='narasumber_agenda_material'),
     path('narasumber/agenda/<uuid:agenda_uuid>/materi/add/', views_narasumber.narasumber_materi_add, name='narasumber_materi_add'),
-    path('narasumber/materi/<uuid:materi_id>/edit/', views_pengguna.narasumber_materi_edit, name='narasumber_materi_edit'),
+    path('narasumber/materi/<uuid:materi_id>/edit/', views_narasumber.narasumber_agenda_material_edit, name='narasumber_agenda_material_edit'),
     path('narasumber/materi/<uuid:materi_id>/hapus/', views_pengguna.narasumber_materi_delete, name='narasumber_materi_delete'),
     path('narasumber/agenda/<uuid:agenda_uuid>/quiz/', views_narasumber.narasumber_agenda_quiz, name='narasumber_agenda_quiz'),
     path('academy/', views_pengguna.my_courses_list, name='my_courses'),
     path('academy/<uuid:order_item_id>/', views_pengguna.my_course_detail, name='my_course_detail'),
     path('academy/<uuid:order_item_id>/quiz/<uuid:quiz_id>/', views_pengguna.my_course_quiz, name='my_course_quiz'),
     path('academy/<uuid:order_item_id>/kuesioner/', views_pengguna.my_course_survey, name='my_course_survey'),
+    path('academy/<uuid:order_item_id>/materi/<uuid:materi_id>/', views_pengguna.my_course_material_detail, name='my_course_material_detail'),
     path('print/sertifikat/peserta/<uuid:order_item_id>/', print_sertifikat_pengguna.sertifikat_pengguna, name='sertifikat_pengguna'),
     path('print/sertifikat/narasumber/<uuid:order_item_id>/', print_sertifikat_narasumber.sertifikat_narasumber, name='sertifikat_narasumber'),
 

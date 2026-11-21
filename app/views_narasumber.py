@@ -1,42 +1,90 @@
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from app.decorators_pengguna import pengguna_required, check_userpengguna
+from app.form_admin import CourseMaterialForm
 from app.models import CourseAgenda, CourseMaterial, CourseQuiz, CourseQuizQuestion, UserPengguna
 
 
 @pengguna_required
 @check_userpengguna
-def narasumber_materi_add(request, agenda_uuid):
+def narasumber_agenda_material(request, agenda_uuid):
     userpengguna = get_object_or_404(UserPengguna, user=request.user)
-    agenda = get_object_or_404(CourseAgenda, uuid=agenda_uuid, pengajar=userpengguna)
+    agenda = get_object_or_404(
+        CourseAgenda.objects.select_related('course', 'pengajar__user'),
+        uuid=agenda_uuid,
+        pengajar=userpengguna,
+    )
+    course = agenda.course
+    materials = agenda.materials.order_by('urutan', 'id')
 
     if request.method == 'POST':
-        CourseMaterial.objects.create(
-            agenda=agenda,
-            uploaded_by=userpengguna,
-            urutan=int(request.POST.get('urutan') or 1),
-            judul=request.POST.get('judul', '').strip(),
-            url_materi=request.POST.get('url_materi', '').strip() or None,
-            is_visible=request.POST.get('is_visible') == 'on',
-        )
-        messages.success(request, 'Materi berhasil ditambahkan.')
-    return redirect('app:my_narasumber_detail', course_uuid=agenda.course.uuid)
+        form = CourseMaterialForm(request.POST)
+        if form.is_valid():
+            materi = form.save(commit=False)
+            materi.agenda = agenda
+            materi.uploaded_by = userpengguna
+            materi.save()
+            messages.success(request, f'Materi "{materi.judul}" berhasil ditambahkan.')
+            return redirect('app:narasumber_agenda_material', agenda_uuid=agenda.uuid)
+        else:
+            messages.error(request, 'Gagal menambahkan materi. Periksa kembali isian form.')
+    else:
+        form = CourseMaterialForm(initial={'urutan': materials.count() + 1, 'is_visible': True})
+
+    return render(request, 'pengguna/narasumber_agenda_material.html', {
+        'title': f'Kelola Materi - {agenda.title}',
+        'heading': 'Kelola Materi Sesi',
+        'course': course,
+        'agenda': agenda,
+        'materials': materials,
+        'form': form,
+        'userpengguna': userpengguna,
+        'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
+    })
 
 
 @pengguna_required
 @check_userpengguna
-def narasumber_materi_edit(request, materi_id):
+def narasumber_agenda_material_edit(request, materi_id):
     userpengguna = get_object_or_404(UserPengguna, user=request.user)
-    materi = get_object_or_404(CourseMaterial, id=materi_id, agenda__pengajar=userpengguna)
+    materi = get_object_or_404(
+        CourseMaterial.objects.select_related('agenda__course', 'agenda__pengajar__user'),
+        id=materi_id,
+        agenda__pengajar=userpengguna,
+    )
+    agenda = materi.agenda
+    materials = agenda.materials.order_by('urutan', 'id')
 
     if request.method == 'POST':
-        materi.urutan = int(request.POST.get('urutan') or 1)
-        materi.judul = request.POST.get('judul', '').strip()
-        materi.url_materi = request.POST.get('url_materi', '').strip() or None
-        materi.is_visible = request.POST.get('is_visible') == 'on'
-        materi.save()
-        messages.success(request, 'Materi berhasil diperbarui.')
-    return redirect('app:my_narasumber_detail', course_uuid=materi.agenda.course.uuid)
+        form = CourseMaterialForm(request.POST, instance=materi)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Materi "{materi.judul}" berhasil diperbarui.')
+            return redirect('app:narasumber_agenda_material', agenda_uuid=agenda.uuid)
+        messages.error(request, 'Gagal memperbarui materi. Periksa kembali isian form.')
+    else:
+        form = CourseMaterialForm(instance=materi)
+
+    return render(request, 'pengguna/narasumber_agenda_material.html', {
+        'title': f'Edit Materi - {materi.judul}',
+        'heading': 'Edit Materi Sesi',
+        'course': agenda.course,
+        'agenda': agenda,
+        'materials': materials,
+        'form': form,
+        'edit_materi': materi,
+        'userpengguna': userpengguna,
+        'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
+    })
+
+
+@pengguna_required
+@check_userpengguna
+def narasumber_materi_add(request, agenda_uuid):
+    """Legacy POST-only add — redirect to the full-page form."""
+    userpengguna = get_object_or_404(UserPengguna, user=request.user)
+    agenda = get_object_or_404(CourseAgenda, uuid=agenda_uuid, pengajar=userpengguna)
+    return redirect('app:narasumber_agenda_material', agenda_uuid=agenda.uuid)
 
 
 @pengguna_required
@@ -103,10 +151,12 @@ def narasumber_agenda_quiz(request, agenda_uuid):
             soal.delete()
             messages.success(request, 'Pertanyaan berhasil dihapus.')
 
-        return redirect('app:narasumber_agenda_quiz', agenda_id=agenda.id)
+        return redirect('app:narasumber_agenda_quiz', agenda_uuid=agenda.uuid)
 
     return render(request, 'pengguna/narasumber_agenda_quiz.html', {
         'agenda': agenda,
         'course': agenda.course,
         'quizzes': agenda.quizzes.all(),
+        'userpengguna': userpengguna,
+        'photo': userpengguna.photo if userpengguna and userpengguna.photo else None,
     })

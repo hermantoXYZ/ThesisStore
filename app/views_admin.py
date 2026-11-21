@@ -1,3 +1,4 @@
+from app.form_admin import CourseMaterialForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib import messages
@@ -1822,28 +1823,20 @@ def admin_agenda_material(request, agenda_uuid):
         uuid=agenda_uuid,
     )
     course = agenda.course
+    materials = agenda.materials.order_by('urutan', 'id')
 
     if request.method == 'POST':
-        urutan = request.POST.get('urutan') or 1
-        judul = request.POST.get('judul', '').strip()
-        url_materi = request.POST.get('url_materi', '').strip()
-        is_visible = request.POST.get('is_visible') == 'on'
-
-        if judul:
-            CourseMaterial.objects.create(
-                agenda=agenda,
-                urutan=int(urutan),
-                judul=judul,
-                url_materi=url_materi or None,
-                is_visible=is_visible,
-            )
-            messages.success(request, f'Materi "{judul}" berhasil ditambahkan.')
+        form = CourseMaterialForm(request.POST)
+        if form.is_valid():
+            materi = form.save(commit=False)
+            materi.agenda = agenda
+            materi.save()
+            messages.success(request, f'Materi "{materi.judul}" berhasil ditambahkan.')
+            return redirect('app:admin_agenda_material', agenda_uuid=agenda.uuid)
         else:
-            messages.error(request, 'Judul materi wajib diisi.')
-
-        return redirect('app:admin_agenda_material', agenda_uuid=agenda.uuid)
-
-    materials = agenda.materials.order_by('urutan', 'id')
+            messages.error(request, 'Gagal menambahkan materi. Periksa kembali isian form.')
+    else:
+        form = CourseMaterialForm(initial={'urutan': materials.count() + 1, 'is_visible': True})
 
     return render(request, 'admin_super/admin_agenda_material.html', {
         'title': f'Kelola Materi - {agenda.title}',
@@ -1851,32 +1844,54 @@ def admin_agenda_material(request, agenda_uuid):
         'course': course,
         'agenda': agenda,
         'materials': materials,
+        'form': form,
     })
 
 
+# @admin_required
+# def admin_agenda_material_edit(request, materi_id):
+#     materi = get_object_or_404(
+#         CourseMaterial.objects.select_related('agenda'),
+#         id=materi_id,
+#     )
+#     if request.method == 'POST':
+#         form = CourseMaterialForm(request.POST, instance=materi)
+#         if form.is_valid():
+#             form.save()
+#             messages.success(request, f'Materi "{materi.judul}" berhasil diperbarui.')
+#         else:
+#             messages.error(request, 'Gagal memperbarui materi. Periksa kembali isian form.')
+
+#     return redirect('app:admin_agenda_material', agenda_uuid=materi.agenda.uuid)
+
 @admin_required
 def admin_agenda_material_edit(request, materi_id):
-    materi = get_object_or_404(CourseMaterial, id=materi_id)
-    agenda_uuid = materi.agenda.uuid
+    materi = get_object_or_404(
+        CourseMaterial.objects.select_related('agenda__course', 'agenda__pengajar__user'),
+        id=materi_id,
+    )
+    agenda = materi.agenda
+    materials = agenda.materials.order_by('urutan', 'id')
 
     if request.method == 'POST':
-        urutan = request.POST.get('urutan') or 1
-        judul = request.POST.get('judul', '').strip()
-        url_materi = request.POST.get('url_materi', '').strip()
-        is_visible = request.POST.get('is_visible') == 'on'
+        form = CourseMaterialForm(request.POST, instance=materi)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Materi "{materi.judul}" berhasil diperbarui.')
+            return redirect('app:admin_agenda_material', agenda_uuid=agenda.uuid)
+        messages.error(request, 'Gagal memperbarui materi. Periksa kembali isian form.')
+    else:
+        form = CourseMaterialForm(instance=materi)
 
-        if judul:
-            materi.urutan = int(urutan)
-            materi.judul = judul
-            materi.url_materi = url_materi or None
-            materi.is_visible = is_visible
-            materi.save()
-            messages.success(request, f'Materi "{judul}" berhasil diperbarui.')
-        else:
-            messages.error(request, 'Judul materi wajib diisi.')
-
-    return redirect('app:admin_agenda_material', agenda_uuid=agenda_uuid)
-
+    return render(request, 'admin_super/admin_agenda_material.html', {
+        'title': f'Edit Materi - {materi.judul}',
+        'heading': 'Edit Materi Sesi',
+        'course': agenda.course,
+        'agenda': agenda,
+        'materials': materials,
+        'form': form,
+        'edit_materi': materi,
+    })
 
 @admin_required
 def admin_agenda_material_delete(request, materi_id):

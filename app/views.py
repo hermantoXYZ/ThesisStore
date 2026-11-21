@@ -46,7 +46,7 @@ def index(request):
             messages.error(request, 'Profil pengguna belum tersedia.')
             return redirect('app:profile_pengguna')
 
-        if not userC.photo or not userC.telp or not userC.provinsi_pengguna or not userC.alamat:
+        if not userC.telp or not userC.provinsi_pengguna or not userC.alamat:
             messages.error(request, 'Harap lengkapi profil Anda terlebih dahulu.')
             return redirect('app:profile_pengguna')
 
